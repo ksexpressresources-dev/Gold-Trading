@@ -195,7 +195,7 @@
 
   <section class="gr-panel" id="signal">
     <h2>Signal scalp <span class="gr-fresh" data-draw="fresh" data-source="summary" data-field="generated" data-row="0">—</span></h2>
-    <p class="gr-note">Cara main: tunggu harga masuk zone Order Block 1H, kemudian tunggu candle 15m break structure (CHoCH/BOS) ke arah setup. Entry pada tutup candle itu, SL di luar high/low 15m dalam zone, TP separuh pada 1.5R dan baki pada 3R. Ambil hanya setup bertanda "Disyorkan" (sama arah dengan trend harian).</p>
+    <p class="gr-note">Cara main: tunggu harga masuk zone Order Block 1H, kemudian tunggu candle 15m break structure (CHoCH/BOS) ke arah setup. Entry pada tutup candle itu, SL di luar high/low 15m dalam zone, TP separuh pada 1.5R dan baki pada 3R. Ambil hanya setup bertanda "Disyorkan", iaitu harga di sebelah betul EMA 200 harian. Penapis ini lulus ujian; ADX, RSI divergence dan penapis sesi tidak membantu scalp.</p>
     <p class="gr-empty" id="no-signal" hidden>Tiada zone 1H aktif sekarang. Jangan scalp membuta tuli, tunggu zone baru terbentuk.</p>
     <div class="gr-setups" data-draw="signals" data-source="signals"></div>
   </section>
@@ -222,7 +222,7 @@
   <div class="gr-two">
     <section class="gr-panel" id="log">
       <h2>Log trade scalp <span class="gr-fresh" data-draw="fresh" data-source="summary" data-field="generated" data-row="0">—</span></h2>
-      <p class="gr-note">Setiap entry yang model ini ambil dalam 60 hari lepas, terbaru di atas. R selepas tolak kos 0.4 point.</p>
+      <p class="gr-note">Setiap entry yang model ini ambil dalam 60 hari lepas, terbaru di atas. ✓ = disyorkan (EMA200 harian searah). R selepas tolak kos 0.4 point.</p>
       <div class="gr-tablewrap">
         <table data-source="trades" data-row-key="key" aria-label="Log trade scalp">
           <thead><tr><th data-field="time">Masa (MYT)</th><th data-field="side">Arah</th><th data-field="grade">Gred</th><th class="r" data-field="entry">Entry</th><th class="r" data-field="risk">SL (pt)</th><th data-field="state">Hasil</th><th class="r" data-field="result_r">R</th></tr></thead>
@@ -316,8 +316,8 @@
   simple('k-btw', 'bt_aligned_win', (v) => d3.format('.0f')(+v));
 
   window.GR.pick = (rows) => rows.find((r) => r.fresh) || rows.find((r) => r.state === 'IN TRADE')
-    || rows.find((r) => r.state === 'IN ZONE' && r.htf_aligned) || rows.find((r) => r.state === 'IN ZONE')
-    || rows.find((r) => r.htf_aligned) || rows[0];
+    || rows.find((r) => r.state === 'IN ZONE' && r.reco) || rows.find((r) => r.state === 'IN ZONE')
+    || rows.find((r) => r.reco) || rows[0];
   window.GR.stateWord = (r) => r.fresh ? 'MASUK SEKARANG' : r.state === 'IN TRADE' ? 'Sedang berjalan'
     : r.state === 'IN ZONE' ? 'Tunggu CHoCH 15m' : 'Tunggu harga ke zone';
 
@@ -371,7 +371,7 @@
         const zv = G.el('span', 'val');
         zv.append(G.mark(G.el('span', null, G.f2(s.zone_bottom)), 'signals', 'zone_bottom', i), '–', G.mark(G.el('span', null, G.f2(s.zone_top)), 'signals', 'zone_top', i));
         zone.append(zv);
-        grid.append(cell('Setup', null, `${s.side} · ${s.grade}${s.htf_aligned ? ' ✓' : ''}`, s.side === 'BUY' ? 'gr-up' : 'gr-down'), zone);
+        grid.append(cell('Setup', null, `${s.side} · ${s.grade}${s.reco ? ' ✓' : ''}`, s.side === 'BUY' ? 'gr-up' : 'gr-down'), zone);
         if (s.entry != null) grid.append(cell('Entry', 'entry', G.f2(s.entry)), cell('SL', 'sl', G.f2(s.sl), 'gr-down'),
           cell('TP 1.5R', 'tp_half', G.f2(s.tp_half), 'gr-up'), cell('TP 3R', 'tp', G.f2(s.tp), 'gr-up'));
         else grid.append(cell('Langkah', null, G.stateWord(s)));
@@ -396,7 +396,7 @@
     document.querySelectorAll('#no-signal').forEach((p) => { p.hidden = !(s.status === 'ok' && s.data.length === 0); });
     if (s.status !== 'ok') { el.textContent = s.status === 'error' ? 'Gagal load signal' : '—'; return; }
     el.replaceChildren();
-    const order = [...s.data].sort((a, b) => (b.fresh - a.fresh) || (b.htf_aligned - a.htf_aligned));
+    const order = [...s.data].sort((a, b) => (b.fresh - a.fresh) || (b.reco - a.reco));
     order.forEach((r) => {
       const i = s.data.indexOf(r);
       const card = G.el('article', 'gr-setup'); card.dataset.side = r.side; card.id = `signal-${i}`;
@@ -404,8 +404,8 @@
       top.append(G.el('span', 'gr-side ' + (r.side === 'BUY' ? 'gr-up' : 'gr-down'), r.side),
         G.el('span', 'gr-pill gold', `Zone 1H gred ${r.grade}`),
         G.el('span', 'gr-pill ' + (r.fresh ? 'trig' : r.state === 'IN TRADE' ? 'live' : ''), G.stateWord(r)));
-      if (r.htf_aligned) top.append(G.el('span', 'gr-reco', 'Disyorkan · sama arah trend harian'));
-      else top.append(G.el('span', 'gr-pill', 'Lawan trend harian · risiko lebih tinggi'));
+      if (r.reco) top.append(G.el('span', 'gr-reco', 'Disyorkan · EMA200 harian searah'));
+      else top.append(G.el('span', 'gr-pill', 'Lawan EMA200 harian · risiko lebih tinggi'));
 
       const steps = G.el('div', 'gr-steps');
       const level = r.state === 'WATCH' ? 1 : r.state === 'IN ZONE' ? 2 : 4;
@@ -433,7 +433,7 @@
           item('Batal jika lepas', 'h1_sl', G.f2(r.h1_sl), 'gr-down'));
       }
       const meta = G.el('div', 'gr-meta');
-      [r.action, `Zone sedia sejak ${G.t(r.created)} MYT`, r.entry_time ? `CHoCH 15m pada ${G.t(r.entry_time)} MYT` : null,
+      [r.action, `EMA200 harian: ${r.ema200_d ? 'searah ✓' : 'lawan ✗'}`, `ADX 1H: ${r.adx == null ? '—' : d3.format('.0f')(r.adx)}`, `Zone sedia sejak ${G.t(r.created)} MYT`, r.entry_time ? `CHoCH 15m pada ${G.t(r.entry_time)} MYT` : null,
        r.moved_r != null ? `Harga sekarang ${r.moved_r > 0 ? '+' : ''}${r.moved_r}R dari entry` : null]
         .filter(Boolean).forEach((t) => meta.append(G.el('span', null, t)));
       card.append(top, steps, lv, meta);
@@ -449,7 +449,7 @@
     a.data.forEach((r) => {
       const tr = G.el('tr'); tr.dataset.key = r.key;
       const td = (txt, cls) => tr.append(G.el('td', cls, txt));
-      td(G.t(r.time)); td(r.side, r.side === 'BUY' ? 'gr-up' : 'gr-down'); td(r.grade + (r.htf_aligned ? ' ✓' : ''));
+      td(G.t(r.time)); td(r.side, r.side === 'BUY' ? 'gr-up' : 'gr-down'); td(r.grade + (r.reco ? ' ✓' : ''));
       td(G.f2(r.entry), 'r'); td(d3.format('.1f')(r.risk), 'r');
       td({ WIN: 'Menang', LOSS: 'Kalah', 'TIME EXIT': 'Tamat masa', 'IN TRADE': 'Berjalan', ENTRY: 'Baru masuk' }[r.state] || r.state);
       td(r.result_r == null ? '—' : (r.result_r > 0 ? '+' : '') + d3.format('.2f')(r.result_r), 'r ' + (r.result_r > 0 ? 'gr-up' : r.result_r < 0 ? 'gr-down' : ''));

@@ -4,6 +4,8 @@ Research (Nov 2026, 60 days of 15m data, 0.4 pt cost per trade):
   six common M15 scalping methods were tested walk-forward. Only this
   multi-timeframe model stayed profitable across every parameter setting:
   daily-aligned 1H setups, RR 3 -> 11 trades, 45% win, +8.4R, max DD 2.1R.
+  Indicator test (research/indicator_filters.py): the daily EMA 200 is a better
+  "recommended" filter than daily structure -> 10 trades, 50% win, +9.4R.
   Asian-range sweep, NY opening-range breakout, EMA pullback, FVG
   continuation and Bollinger mean reversion failed out-of-sample or on 2y of 1H.
 
@@ -22,6 +24,7 @@ import numpy as np
 import pandas as pd
 
 from . import engine
+from .indicators import Filters
 
 
 @dataclass
@@ -61,6 +64,7 @@ def run(m15: pd.DataFrame, h1: pd.DataFrame, d1: pd.DataFrame,
         if e.kind in ("BOS", "CHoCH"):
             bos_at.setdefault(e.idx, set()).add(e.side)
 
+    filt = Filters(d1, h1)
     rows = []
     for s in st1.setups:
         t_ready = h1.index[s.created] + pd.Timedelta("1h")
@@ -119,11 +123,14 @@ def run(m15: pd.DataFrame, h1: pd.DataFrame, d1: pd.DataFrame,
                              result_r=(c[kk] - e) * sd / risk - cfg.cost / risk)
             else:
                 r["state"] = "SKIP"
+        fl = filt.at(r["entry_t"] if r["entry_t"] is not None else t15[-1] + pd.Timedelta("15min"), s.side)
+        r["ema200_d"], r["adx"] = fl["ema200_d"], fl["adx"]
+        r["reco"] = fl["ema200_d"]          # passed testing: trade only on the daily-EMA200 side
         rows.append(r)
 
     done = [r for r in rows if r["result_r"] is not None]
     rr = np.array([r["result_r"] for r in done]) if done else np.array([])
-    aligned = np.array([r["result_r"] for r in done if r["htf_aligned"]]) if done else np.array([])
+    aligned = np.array([r["result_r"] for r in done if r["reco"]]) if done else np.array([])
     eq = np.cumsum(rr) if len(rr) else np.array([0.0])
     stats = {
         "trades": int(len(rr)), "win_rate": float((rr > 0).mean() * 100) if len(rr) else None,

@@ -61,3 +61,14 @@ Kajian walk-forward 7 strategi scalping M15 (60 hari data 15m, kos 0.4 point/tra
 python scalp.py --dash reports/scalp
 ```
 Exit code `2` = ENTRY segar (CHoCH dalam 4 candle 15m terakhir, harga belum lari >0.5R).
+
+## Penapis indicator (`smc/indicators.py`, kajian: `research/indicator_filters.py`)
+Diuji walk-forward (pilih setting tahun 1, nilai tahun 2):
+
+| Penapis | Swing 1H (2 tahun) | Keputusan |
+|---|---|---|
+| Tiada | 208 trade, +61.5R, avg +0.30, DD 8.5R | asas |
+| **EMA200 harian + ADX(1H) > 20** | **78 trade, +46R, avg +0.59, DD 5R, 9/10 suku untung** | **Dipakai (swing)** |
+| EMA200 harian sahaja | 124 trade, +61.5R, avg +0.50, DD 14R | Dipakai (scalp: 10 trade, +9.4R) |
+| RSI divergence | tidak membantu (scalp: -4.1R) | Ditolak |
+| Sesi London/NY | tidak membantu | Ditolak |

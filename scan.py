@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 
 from smc import data, engine, export, history
+from smc.indicators import ADX_MIN, Filters
 
 TZ = "Asia/Kuala_Lumpur"
 HTF_FOR = {"5m": "1h", "15m": "1h", "30m": "1h", "1h": "1d"}
@@ -46,6 +47,9 @@ def main() -> int:
     htf_trend = engine.trend_series(htf, cfg)
     st = engine.run(ltf, cfg, htf_trend)
     st_htf = engine.run(htf, cfg)
+    d1 = htf if htf_tf == "1d" else data.drop_unclosed(data.fetch(args.symbol, "1d"), "1d")
+    h1 = ltf if args.tf == "1h" else data.drop_unclosed(data.fetch(args.symbol, "1h"), "1h")
+    filt = Filters(d1, h1)
 
     a = engine.atr(ltf, cfg.atr_len)[-1]
     price = float(ltf["close"].iloc[-1])
@@ -64,7 +68,10 @@ def main() -> int:
                 action = "ENTRY TRIGGER - price in zone"
             else:
                 action = f"WAIT - limit at entry ({dist:+.2f} away)"
+            fl = filt.at(ltf.index[s.created] + pd.Timedelta(args.tf.replace("m", "min")), s.side)
             signals.append({
+                "ema200_d": fl["ema200_d"], "adx": round(fl["adx"], 1) if fl["adx"] is not None else None,
+                "filter_ok": fl["ema200_d"] and fl["adx_ok"],
                 "side": s.side, "grade": s.grade, "score": s.score, "action": action,
                 "trigger": in_zone and s.status == "PENDING",
                 "zone": [round(s.zone_bottom, 2), round(s.zone_top, 2)],
@@ -82,6 +89,11 @@ def main() -> int:
     an_ltf, sum_ltf = history.analogs(ltf, window=64, horizon=32)
     an_htf, sum_htf = history.analogs(htf, window=48, horizon=24)
     bt_ltf = history.backtest_stats(st)
+    # same backtest, keeping only setups that pass the EMA200-daily + ADX filter
+    step = pd.Timedelta(args.tf.replace("m", "min"))
+    kept = [x for x in st.setups if x.status in ("WIN", "LOSS")
+            and (lambda f: f["ema200_d"] and f["adx_ok"])(filt.at(ltf.index[x.created] + step, x.side))]
+    bt_f = history.backtest_stats(engine.State(setups=kept))
     bt_htf = history.backtest_stats(engine.run(htf, cfg, None))
 
     # ---------- report ----------
@@ -107,7 +119,9 @@ def main() -> int:
           f" (TP1 separuh posisi, SL ke BE)")
         w(f"- Liquidity sweep: {s['sweep']} · BOS: {s['bos']}")
         w(f"- FVG confluence: {'✅' if s['fvg'] else '❌'} · HTF bias sama arah: "
-          f"{'✅' if s['htf_aligned'] else '❌'} · Luput dalam {s['expires_in_bars']} candle\n")
+          f"{'✅' if s['htf_aligned'] else '❌'} · Luput dalam {s['expires_in_bars']} candle")
+        w(f"- Penapis: EMA200 harian {'✅' if s['ema200_d'] else '❌'} · ADX {s['adx']} {'✅' if (s['adx'] or 0) > ADX_MIN else '❌'}"
+          f" → **{'LEPAS PENAPIS' if s['filter_ok'] else 'TAK LEPAS PENAPIS (risiko lebih tinggi)'}**\n")
 
     w("## Struktur terkini")
     for e in st.events[-8:]:
@@ -146,6 +160,9 @@ def main() -> int:
                 w(f"  - Grade {g}: {v['trades']} trade, win {v['win_rate']:.0f}%, {v['total_r']:+.1f}R")
         else:
             w(f"- **{tf}:** tiada trade selesai")
+    if bt_f.get("trades"):
+        w(f"- **Dengan penapis EMA200 harian + ADX>{ADX_MIN:.0f}:** {bt_f['trades']} trade · win {bt_f['win_rate']:.0f}% · "
+          f"{bt_f['total_r']:+.1f}R · avg {bt_f['avg_r']:+.2f}R · max DD {bt_f['max_dd_r']:.1f}R")
     w("\n_Data: Yahoo Finance GC=F (gold futures, beza sikit dari spot XAUUSD). "
       "Bukan nasihat kewangan. Sentiasa guna SL & risk management._")
 
@@ -158,13 +175,13 @@ def main() -> int:
         "trend": st.trend, "htf_trend": st_htf.trend, "trigger": bool(triggers),
         "new_setup": any(x["new"] for x in signals),
         "signals": signals, "history_ltf": sum_ltf, "history_htf": sum_htf,
-        "backtest_ltf": bt_ltf, "backtest_htf": bt_htf,
+        "backtest_ltf": bt_ltf, "backtest_htf": bt_htf, "backtest_filtered": bt_f,
     }, indent=2, default=lambda x: bool(x) if isinstance(x, np.bool_) else str(x)))
     if args.dash:
         export.write(Path(args.dash), symbol=args.symbol, tf=args.tf, htf_tf=htf_tf, ltf=ltf,
                      st=st, st_htf=st_htf, signals=signals, atr=float(a), price=price,
                      an_ltf=an_ltf, sum_ltf=sum_ltf, an_htf=an_htf, sum_htf=sum_htf,
-                     bt_ltf=bt_ltf, bt_htf=bt_htf)
+                     bt_ltf=bt_ltf, bt_htf=bt_htf, bt_f=bt_f)
     print(report)
     return 2 if triggers else 0
 

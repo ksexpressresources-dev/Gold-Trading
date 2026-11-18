@@ -116,6 +116,9 @@
   .gr-bias b { color: var(--gr-gold-2); }
   .gr-bt { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--cds-gap-md); }
   .gr-bt .gr-kpi { padding: 12px; border-radius: var(--cds-radius); background: rgba(255, 255, 255, .03); border: 1px solid rgba(255, 255, 255, .05); }
+  .gr-filterbt { margin-top: var(--cds-gap-md); padding: 12px 14px; border-radius: var(--cds-radius); border: 1px solid rgba(227,187,85,.4); background: rgba(227,187,85,.06); display: grid; gap: 6px; justify-items: start; }
+  .gr-filterbt p { margin: 0; }
+  .gr-reco { font-size: 11.5px; padding: 3px 10px; border-radius: 999px; background: rgba(227,187,85,.15); color: var(--gr-gold-2); border: 1px solid rgba(227,187,85,.5); white-space: nowrap; }
   .gr-foot { color: var(--gr-lilac); font-size: var(--cds-font-size-caption); margin: 0; max-width: 85ch; line-height: 1.5; }
 
   /* custom cursor */
@@ -232,6 +235,11 @@
         <div class="gr-kpi"><span class="lab">Jumlah</span><span class="val" data-draw="b-r" data-source="summary" data-field="bt_total_r" data-row="0">—</span></div>
         <div class="gr-kpi"><span class="lab">Max drawdown</span><span class="val" data-draw="b-dd" data-source="summary" data-field="bt_max_dd_r" data-row="0">—</span></div>
       </div>
+      <div class="gr-filterbt" id="filter-bt">
+        <span class="gr-reco">Penapis EMA200 harian + ADX &gt; 20</span>
+        <p><b class="gr-num" data-draw="f-n" data-source="summary" data-field="bt_f_trades" data-row="0">—</b> trade · win <b class="gr-num" data-draw="f-w" data-source="summary" data-field="bt_f_win" data-row="0">—</b>% · <b class="gr-num" data-draw="f-r" data-source="summary" data-field="bt_f_r" data-row="0">—</b>R · purata <b class="gr-num" data-draw="f-a" data-source="summary" data-field="bt_f_avg" data-row="0">—</b>R · max DD <b class="gr-num" data-draw="f-dd" data-source="summary" data-field="bt_f_dd" data-row="0">—</b>R</p>
+        <p class="gr-note" style="margin: 0">Ambil hanya setup bila harga di sebelah betul EMA 200 harian dan ADX(14) 1H melebihi 20. Trade lebih sedikit, tapi purata dan drawdown jauh lebih baik. RSI divergence dan penapis sesi turut diuji dan tidak membantu.</p>
+      </div>
       <p class="gr-note" style="margin: var(--cds-gap-md) 0 0">Gred A+ sahaja: <b class="gr-num" data-draw="b-ap-n" data-source="summary" data-field="bt_aplus_trades" data-row="0">—</b> trade, win <b class="gr-num" data-draw="b-ap-w" data-source="summary" data-field="bt_aplus_win" data-row="0">—</b>%, <b class="gr-num" data-draw="b-ap-r" data-source="summary" data-field="bt_aplus_r" data-row="0">—</b>R. Atas candle harian (10 tahun): <b class="gr-num" data-draw="b-d-n" data-source="summary" data-field="bt_htf_trades" data-row="0">—</b> trade, <b class="gr-num" data-draw="b-d-r" data-source="summary" data-field="bt_htf_total_r" data-row="0">—</b>R. Pada 15m strategi ini rugi (-10.5R dalam 60 hari), sebab itu dashboard guna 1H.</p>
     </section>
   </div>
@@ -328,6 +336,11 @@
   simple('b-ap-r', 'bt_aplus_r', signed('.1f'));
   simple('b-d-n', 'bt_htf_trades', (v) => v);
   simple('b-d-r', 'bt_htf_total_r', signed('.1f'));
+  simple('f-n', 'bt_f_trades', (v) => v);
+  simple('f-w', 'bt_f_win', (v) => d3.format('.0f')(+v));
+  simple('f-r', 'bt_f_r', signed('.1f'), (v) => (v > 0 ? 'gr-up' : 'gr-down'));
+  simple('f-a', 'bt_f_avg', signed('.2f'));
+  simple('f-dd', 'bt_f_dd', (v) => d3.format('.1f')(+v));
 
   dash.draw('k-chg', (el) => {
     const c = dash.data('chg24');
@@ -342,9 +355,10 @@
     const trig = s.data.find((r) => r.status === 'TRIGGER');
     const live = s.data.find((r) => r.status === 'IN TRADE');
     const wait = s.data.find((r) => r.status === 'WAIT');
-    el.textContent = trig ? `ENTRY TRIGGER ${trig.side} (gred ${trig.grade}), harga dalam zone`
-      : live ? `setup ${live.side} gred ${live.grade} sudah capai entry, sedang berjalan`
-      : wait ? `setup ${wait.side} gred ${wait.grade} menunggu harga retrace ke zone`
+    const pf = (r) => (r.filter_ok ? ', lepas penapis' : ', tak lepas penapis');
+    el.textContent = trig ? `ENTRY TRIGGER ${trig.side} (gred ${trig.grade}${pf(trig)}), harga dalam zone`
+      : live ? `setup ${live.side} gred ${live.grade}${pf(live)}, sudah capai entry dan sedang berjalan`
+      : wait ? `setup ${wait.side} gred ${wait.grade}${pf(wait)}, menunggu harga retrace ke zone`
       : 'tiada setup aktif, tunggu';
   });
 </script>
@@ -394,7 +408,8 @@
           d.append(v); return d;
         };
         grid.append(
-          cell('Setup', null, `${s.side} · Gred ${s.grade}`, s.side === 'BUY' ? 'gr-up' : 'gr-down'),
+          cell('Setup', null, `${s.side} · Gred ${s.grade}${s.filter_ok ? ' ✓' : ''}`, s.side === 'BUY' ? 'gr-up' : 'gr-down'),
+          cell('Penapis', null, s.filter_ok ? 'Lepas' : 'Tak lepas', s.filter_ok ? 'gr-up' : 'gr-down'),
           cell('Entry', 'entry', G.f2(s.entry)),
           cell('Stop loss', 'sl', G.f2(s.sl), 'gr-down'),
           cell('TP1', 'tp1', G.f2(s.tp1), 'gr-up'),
@@ -438,6 +453,7 @@
         G.el('span', 'gr-pill ' + (r.status === 'TRIGGER' ? 'trig' : r.status === 'IN TRADE' ? 'live' : ''),
           r.status === 'TRIGGER' ? 'ENTRY TRIGGER' : r.status === 'IN TRADE' ? 'Entry sudah kena' : 'Tunggu retrace'));
       if (r.new) top.append(G.el('span', 'gr-pill gold', 'Baru'));
+      top.append(r.filter_ok ? G.el('span', 'gr-reco', 'Lepas penapis') : G.el('span', 'gr-pill', 'Tak lepas penapis · risiko lebih tinggi'));
 
       const lv = G.el('div', 'gr-levels');
       const item = (lab, field, txt, cls, extra) => {
@@ -461,7 +477,8 @@
 
       const meta = G.el('div', 'gr-meta');
       [`Sweep: ${r.sweep} MYT`, `BOS: ${r.bos} MYT`, `FVG: ${r.fvg ? 'ada ✓' : 'tiada'}`,
-       `Trend harian: ${r.htf_aligned ? 'sama arah ✓' : 'lawan arah'}`, `RR ke TP2: ${r.rr_tp2}`,
+       `Trend harian: ${r.htf_aligned ? 'sama arah ✓' : 'lawan arah'}`,
+       `EMA200 harian: ${r.ema200_d ? 'searah ✓' : 'lawan ✗'}`, `ADX 1H: ${r.adx == null ? '—' : d3.format('.0f')(r.adx)} ${r.adx > 20 ? '✓' : '✗'}`, `RR ke TP2: ${r.rr_tp2}`,
        `Luput dalam ${r.expires_in_bars} candle`].forEach((t) => meta.append(G.el('span', null, t)));
       card.append(top, lv, meta);
       el.append(card);

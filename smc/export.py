@@ -17,7 +17,7 @@ def _r(x, n=2):
 
 
 def write(out: Path, *, symbol, tf, htf_tf, ltf, st, st_htf, signals, atr, price,
-          an_ltf, sum_ltf, an_htf, sum_htf, bt_ltf, bt_htf, bars: int = 120) -> list[Path]:
+          an_ltf, sum_ltf, an_htf, sum_htf, bt_ltf, bt_htf, bt_f=None, bars: int = 120) -> list[Path]:
     out.mkdir(parents=True, exist_ok=True)
     n = len(ltf)
     lo_i = max(0, n - bars)
@@ -41,6 +41,7 @@ def write(out: Path, *, symbol, tf, htf_tf, ltf, st, st_htf, signals, atr, price
             "sweep": s["sweep"], "bos": s["bos"],
             "fvg": bool(s["fvg"]), "htf_aligned": bool(s["htf_aligned"]),
             "expires_in_bars": s["expires_in_bars"], "new": bool(s["new"]),
+            "ema200_d": bool(s["ema200_d"]), "adx": s["adx"], "filter_ok": bool(s["filter_ok"]),
         })
 
     levels = []
@@ -78,6 +79,8 @@ def write(out: Path, *, symbol, tf, htf_tf, ltf, st, st_htf, signals, atr, price
         "bt_aplus_r": _r(aplus.get("total_r")),
         "bt_htf_trades": bt_htf.get("trades"), "bt_htf_total_r": bt(bt_htf, "total_r"),
         "bt_htf_win_rate": bt(bt_htf, "win_rate"),
+        "bt_f_trades": (bt_f or {}).get("trades"), "bt_f_win": bt(bt_f or {}, "win_rate"),
+        "bt_f_r": bt(bt_f or {}, "total_r"), "bt_f_avg": bt(bt_f or {}, "avg_r"), "bt_f_dd": bt(bt_f or {}, "max_dd_r"),
     }]
 
     analogs = []

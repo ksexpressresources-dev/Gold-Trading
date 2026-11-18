@@ -53,6 +53,7 @@ def main() -> int:
         sd = 1 if r["side"] == "BUY" else -1
         row = {
             "side": r["side"], "grade": r["grade"], "htf_aligned": r["htf_aligned"], "state": r["state"],
+            "reco": bool(r["reco"]), "ema200_d": bool(r["ema200_d"]), "adx": r2(r["adx"], 1),
             "zone_bottom": r2(r["zone_bottom"]), "zone_top": r2(r["zone_top"]),
             "h1_sl": r2(r["h1_sl"]), "created": iso(r["created"]),
             "dist": r2((price - r["zone_top"]) if sd > 0 else (r["zone_bottom"] - price)),
@@ -81,14 +82,14 @@ def main() -> int:
     print(f"# Gold Scalp M15 · {args.symbol} · {fmt(last_t)} MYT · harga {price:.2f} · sesi {res['session']}")
     print(f"Trend 15m {res['trend15'].upper()} · 1H {res['trend1h'].upper()} · ATR15 {a15:.2f}")
     for x in live:
-        print(f"- {x['side']} {x['grade']}{' (bias harian ✓)' if x['htf_aligned'] else ''} · {x['state']} · "
+        print(f"- {x['side']} {x['grade']}{' (Disyorkan: EMA200 harian ✓)' if x['reco'] else ' (lawan EMA200 harian)'} · {x['state']} · "
               f"zone {x['zone_bottom']}–{x['zone_top']} · {x['action']}"
               + (f" · entry {x['entry']} SL {x['sl']} TP {x['tp']} (risk {x['risk']})" if x['entry'] else ""))
     if not live:
         print("- Tiada zone 1H aktif. Tunggu.")
     if st["trades"]:
         print(f"Backtest 60 hari: {st['trades']} trade · win {st['win_rate']:.0f}% · {st['total_r']:+.1f}R · "
-              f"sama arah harian: {st['aligned_trades']} trade, {st['aligned_r']:+.1f}R")
+              f"disyorkan (EMA200 harian): {st['aligned_trades']} trade, {st['aligned_r']:+.1f}R")
 
     if args.dash:
         out = Path(args.dash); out.mkdir(parents=True, exist_ok=True)
@@ -112,7 +113,7 @@ def main() -> int:
         trades = []
         for r in sorted((r for r in rows if r["entry_t"] is not None), key=lambda r: r["entry_t"], reverse=True)[:15]:
             trades.append({"key": iso(r["entry_t"]), "time": iso(r["entry_t"]), "side": r["side"],
-                           "grade": r["grade"], "htf_aligned": r["htf_aligned"], "entry": r2(r["entry"]),
+                           "grade": r["grade"], "htf_aligned": r["htf_aligned"], "reco": bool(r["reco"]), "entry": r2(r["entry"]),
                            "sl": r2(r["sl"]), "tp": r2(r["tp"]), "risk": r2(r.get("risk")),
                            "state": r["state"], "result_r": r2(r["result_r"])})
         summary = [{
