@@ -19,7 +19,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from smc import data, engine, history
+from smc import data, engine, export, history
 
 TZ = "Asia/Kuala_Lumpur"
 HTF_FOR = {"5m": "1h", "15m": "1h", "30m": "1h", "1h": "1d"}
@@ -36,6 +36,7 @@ def main() -> int:
     ap.add_argument("--htf", default=None)
     ap.add_argument("--aplus", action="store_true", help="require FVG confluence")
     ap.add_argument("--out", default="reports")
+    ap.add_argument("--dash", default=None, help="also write dashboard JSON files to this folder")
     args = ap.parse_args()
     htf_tf = args.htf or HTF_FOR.get(args.tf, "1d")
     cfg = engine.Config(require_fvg=args.aplus)
@@ -159,6 +160,11 @@ def main() -> int:
         "signals": signals, "history_ltf": sum_ltf, "history_htf": sum_htf,
         "backtest_ltf": bt_ltf, "backtest_htf": bt_htf,
     }, indent=2, default=lambda x: bool(x) if isinstance(x, np.bool_) else str(x)))
+    if args.dash:
+        export.write(Path(args.dash), symbol=args.symbol, tf=args.tf, htf_tf=htf_tf, ltf=ltf,
+                     st=st, st_htf=st_htf, signals=signals, atr=float(a), price=price,
+                     an_ltf=an_ltf, sum_ltf=sum_ltf, an_htf=an_htf, sum_htf=sum_htf,
+                     bt_ltf=bt_ltf, bt_htf=bt_htf)
     print(report)
     return 2 if triggers else 0
 

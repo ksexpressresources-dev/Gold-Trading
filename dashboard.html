@@ -1,0 +1,717 @@
+<meta name="dash-one-writer">
+<style>
+  /* Layout: a deep-violet trading desk; gold marks money and attention, a sticky "dynamic island" carries live status. */
+  .gr {
+    --gr-ink: #120a22; --gr-ink-2: #1b1131; --gr-ink-3: #261843; --gr-line: #3a2963;
+    --gr-violet: #8b5cf6; --gr-lilac: #b9a8e8; --gr-fg: #f4effd;
+    --gr-gold: #e3bb55; --gr-gold-2: #f6dc92; --gr-up: #3ddc97; --gr-dn: #ff6b81;
+    position: relative; display: grid; gap: var(--cds-gap-lg);
+    font-family: var(--font-anthropic-sans); color: var(--gr-fg);
+    background: radial-gradient(1200px 500px at 85% -10%, #3b1f6e 0%, transparent 60%), radial-gradient(900px 400px at -10% 110%, #2a1450 0%, transparent 55%), var(--gr-ink);
+    border-radius: calc(var(--cds-radius) * 2); padding: var(--cds-pad-lg); overflow: hidden;
+  }
+  @media (pointer: fine) { .gr, .gr * { cursor: none; } }
+  .gr-num { font-variant-numeric: tabular-nums; }
+  .gr-up { color: var(--gr-up); } .gr-down { color: var(--gr-dn); } .gr-flat { color: var(--gr-lilac); }
+
+  /* dynamic island */
+  .gr-islandbar { position: sticky; top: 8px; z-index: 6; display: flex; justify-content: center; pointer-events: none; }
+  .gr-island { pointer-events: auto; background: #050308; color: var(--gr-fg); border-radius: 26px; border: 1px solid #2c1d4d;
+    box-shadow: 0 10px 30px rgba(10, 4, 24, .55), 0 0 0 1px rgba(227, 187, 85, .08) inset;
+    padding: 8px 16px; max-width: min(100%, 360px); overflow: hidden; outline: none;
+    transition: max-width .45s cubic-bezier(.2, .9, .2, 1.1), border-radius .45s, padding .45s, box-shadow .3s; }
+  .gr-island:focus-visible { box-shadow: 0 0 0 2px var(--gr-gold); }
+  .gr-island.open { max-width: min(100%, 560px); border-radius: 28px; padding: 14px 20px 16px; }
+  .gr-island.hot { box-shadow: 0 0 0 1px var(--gr-gold), 0 0 28px rgba(227, 187, 85, .45); }
+  .gr-isl-row { display: flex; align-items: center; gap: 10px; white-space: nowrap; font-size: 13px; }
+  .gr-isl-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--gr-lilac); flex: none; }
+  .gr-isl-dot.trig { background: var(--gr-gold); box-shadow: 0 0 10px var(--gr-gold); }
+  .gr-isl-dot.live { background: var(--gr-up); }
+  .gr-isl-sym { color: var(--gr-gold); font-weight: 700; letter-spacing: .06em; }
+  .gr-isl-px { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .gr-isl-chip { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--gr-ink-3); color: var(--gr-lilac); }
+  .gr-isl-chip.trig { background: var(--gr-gold); color: #1a1000; font-weight: 700; }
+  .gr-isl-more { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .45s cubic-bezier(.2, .9, .2, 1), opacity .3s; }
+  .gr-island.open .gr-isl-more { grid-template-rows: 1fr; opacity: 1; }
+  .gr-isl-more > div { overflow: hidden; }
+  .gr-isl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 10px 14px; padding-top: 12px; }
+  .gr-isl-grid .lab { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--gr-lilac); display: block; }
+  .gr-isl-grid .val { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .gr-isl-foot { margin: 10px 0 0; font-size: 11px; color: var(--gr-lilac); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  @media (prefers-reduced-motion: reduce) { .gr-island, .gr-isl-more { transition: none; } }
+  @media (prefers-reduced-motion: no-preference) {
+    .gr-island.hot { animation: grglow 2s ease-in-out infinite; }
+    .gr-isl-dot.trig, .gr-isl-dot.live { animation: grdot 1.6s ease-in-out infinite; }
+  }
+  @keyframes grglow { 50% { box-shadow: 0 0 0 1px var(--gr-gold), 0 0 44px rgba(227, 187, 85, .7); } }
+  @keyframes grdot { 50% { opacity: .35; } }
+
+  /* header */
+  .gr-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: clamp(1.8rem, 4vw, 2.6rem); margin: 0; letter-spacing: -.01em; text-wrap: balance;
+    background: linear-gradient(92deg, var(--gr-gold-2), var(--gr-gold) 45%, #c99a2e); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .gr-sub { color: var(--gr-lilac); font-size: var(--cds-font-size-caption); margin: 6px 0 0; letter-spacing: .02em; }
+  .gr-take { font-size: var(--cds-font-size-body); line-height: 1.6; margin: 10px 0 0; max-width: 72ch; color: var(--gr-fg); }
+  .gr-take b { color: var(--gr-gold-2); font-weight: 600; }
+
+  /* cards */
+  .gr-panel { background: linear-gradient(180deg, rgba(139, 92, 246, .10), rgba(139, 92, 246, .03)); border: 1px solid var(--gr-line); border-radius: calc(var(--cds-radius) * 1.5); padding: var(--cds-pad-lg); min-width: 0; transition: border-color .25s; }
+  .gr-panel:hover { border-color: rgba(227, 187, 85, .45); }
+  .gr h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0 0 6px; color: var(--gr-fg); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .gr h2::before { content: ""; width: 6px; height: 6px; border-radius: 2px; background: var(--gr-gold); transform: rotate(45deg); flex: none; }
+  .gr-note { color: var(--gr-lilac); font-size: var(--cds-font-size-caption); margin: 0 0 var(--cds-gap-md); max-width: 78ch; line-height: 1.5; }
+
+  .gr-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--cds-gap-md); }
+  .gr-kpi { display: grid; gap: 6px; }
+  .gr-kpi .lab { font-size: 10.5px; color: var(--gr-lilac); letter-spacing: .1em; text-transform: uppercase; }
+  .gr-kpi .val { font-family: var(--font-anthropic-serif); font-size: 1.75rem; font-variant-numeric: tabular-nums; line-height: 1.1; color: var(--gr-fg); }
+  .gr-kpi .val.gold { color: var(--gr-gold-2); }
+  .gr-kpi .note { font-size: var(--cds-font-size-caption); color: var(--gr-lilac); }
+
+  .gr-setups { display: grid; gap: var(--cds-gap-md); }
+  .gr-setup { position: relative; border-radius: calc(var(--cds-radius) * 1.5); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-md); background: var(--gr-ink-2); border: 1px solid var(--gr-line); overflow: hidden; }
+  .gr-setup::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--gr-dn); }
+  .gr-setup[data-side="BUY"]::after { background: var(--gr-up); }
+  .gr-setup-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .gr-side { font-weight: 800; font-size: 1.2rem; letter-spacing: .08em; }
+  .gr-pill { font-size: 11.5px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--gr-line); color: var(--gr-lilac); white-space: nowrap; }
+  .gr-pill.gold { border-color: rgba(227, 187, 85, .6); color: var(--gr-gold-2); }
+  .gr-pill.trig { background: var(--gr-gold); color: #1a1000; border-color: transparent; font-weight: 700; }
+  .gr-pill.live { background: rgba(61, 220, 151, .15); color: var(--gr-up); border-color: rgba(61, 220, 151, .4); }
+  .gr-levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 12px; }
+  .gr-lv { display: grid; gap: 2px; padding: 10px 12px; border-radius: var(--cds-radius); background: rgba(255, 255, 255, .03); border: 1px solid rgba(255, 255, 255, .05); transition: background .2s, border-color .2s; }
+  .gr-lv:hover { background: rgba(227, 187, 85, .08); border-color: rgba(227, 187, 85, .35); }
+  .gr-lv .lab { font-size: 10.5px; color: var(--gr-lilac); text-transform: uppercase; letter-spacing: .08em; }
+  .gr-lv .val { font-size: 1.12rem; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .gr-lv.entry .val { color: var(--gr-gold-2); }
+  .gr-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: var(--cds-font-size-caption); color: var(--gr-lilac); }
+  .gr-empty { margin: 0; color: var(--gr-lilac); padding: 14px 16px; border: 1px dashed var(--gr-line); border-radius: var(--cds-radius); }
+
+  .gr-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .gr-btn { font: inherit; font-size: 12px; color: var(--gr-gold-2); background: rgba(227, 187, 85, .08); border: 1px solid rgba(227, 187, 85, .4); padding: 5px 12px; border-radius: 999px; transition: background .2s, transform .15s; }
+  .gr-btn:hover { background: rgba(227, 187, 85, .18); }
+  .gr-btn:active { transform: scale(.96); }
+  .gr-btn:focus-visible { outline: 2px solid var(--gr-gold); outline-offset: 2px; }
+  .gr-hint { font-size: 11.5px; color: var(--gr-lilac); }
+  .gr-chartbox { position: relative; min-height: 340px; border-radius: var(--cds-radius); background: rgba(5, 3, 8, .35); touch-action: none; user-select: none; }
+  .gr-chartbox svg { display: block; width: 100%; }
+  .gr-chartbox .gr-ax text { fill: var(--gr-lilac); font-size: 11px; font-family: var(--font-anthropic-sans); }
+  .gr-chartbox .gr-ax line { stroke: rgba(185, 168, 232, .12); }
+  .gr-chartbox .gr-ax .domain { display: none; }
+  .gr-tip { position: absolute; pointer-events: none; background: rgba(8, 4, 16, .92); border: 1px solid rgba(227, 187, 85, .45); box-shadow: 0 8px 24px rgba(0, 0, 0, .45); border-radius: 10px; padding: 8px 10px; font-size: 12px; font-variant-numeric: tabular-nums; line-height: 1.55; white-space: nowrap; z-index: 2; color: var(--gr-fg); }
+  .gr-tip .t { color: var(--gr-gold-2); }
+  .gr-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--cds-font-size-caption); color: var(--gr-lilac); margin-top: 10px; }
+  .gr-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .gr-sw { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  .gr-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: var(--cds-gap-lg); }
+  .gr-tablewrap { overflow-x: auto; }
+  .gr table { border-collapse: collapse; width: 100%; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .gr th, .gr td { text-align: left; padding: 7px 8px; border-bottom: 1px solid rgba(185, 168, 232, .12); white-space: nowrap; }
+  .gr th { color: var(--gr-lilac); font-weight: var(--cds-font-weight-medium); font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; }
+  .gr tbody tr { transition: background .15s; }
+  .gr tbody tr:hover { background: rgba(227, 187, 85, .07); }
+  .gr td.r, .gr th.r { text-align: right; }
+  .gr-bias { display: grid; gap: 6px; margin-bottom: var(--cds-gap-md); }
+  .gr-bias p { margin: 0; }
+  .gr-bias b { color: var(--gr-gold-2); }
+  .gr-bt { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--cds-gap-md); }
+  .gr-bt .gr-kpi { padding: 12px; border-radius: var(--cds-radius); background: rgba(255, 255, 255, .03); border: 1px solid rgba(255, 255, 255, .05); }
+  .gr-foot { color: var(--gr-lilac); font-size: var(--cds-font-size-caption); margin: 0; max-width: 85ch; line-height: 1.5; }
+
+  /* custom cursor */
+  .gr-cursor { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; z-index: 20; transition: opacity .2s; }
+  .gr-cursor .ring { position: absolute; left: 0; top: 0; width: 26px; height: 26px; margin: -13px 0 0 -13px; border: 1.5px solid var(--gr-gold); border-radius: 50%; transition: width .2s, height .2s, margin .2s, background .2s; }
+  .gr-cursor .dot { position: absolute; left: 0; top: 0; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: var(--gr-gold-2); }
+  .gr-cursor.big .ring { width: 46px; height: 46px; margin: -23px 0 0 -23px; background: rgba(227, 187, 85, .12); }
+  .gr-cursor.down .ring { width: 18px; height: 18px; margin: -9px 0 0 -9px; }
+  .gr-cursor.off { opacity: 0; }
+  @media (pointer: coarse) { .gr-cursor { display: none; } }
+  #kpi-trend .val { font-size: 1.3rem; }
+  .gr .gr-up, .gr .val.gr-up { color: var(--gr-up); }
+  .gr .gr-down, .gr .val.gr-down { color: var(--gr-dn); }
+  .gr .gr-flat, .gr .val.gr-flat { color: var(--gr-lilac); }
+</style>
+
+<div class="gr" lang="ms" data-read>
+  <div class="gr-cursor off" data-draw="cursor" aria-hidden="true"></div>
+
+  <div class="gr-islandbar">
+    <div class="gr-island" id="island" role="button" tabindex="0" aria-expanded="false" aria-label="Status emas. Tekan untuk butiran" data-draw="island" data-source="summary setups chg24"></div>
+  </div>
+
+  <header class="gr-head" id="top">
+    <h1>Gold SMC Radar</h1>
+    <p class="gr-sub">XAU · Gold futures (GC=F) · Entry 1H, bias harian · Candle terakhir <span data-draw="last-time" data-source="summary" data-field="time" data-row="0">—</span> MYT · Dikemaskini setiap jam</p>
+    <p class="gr-take" id="takeaway">Harga emas <b class="gr-num" data-draw="tk-price" data-source="summary" data-field="price" data-row="0">—</b>, trend 1H <b data-draw="tk-trend" data-source="summary" data-field="trend_ltf" data-row="0">—</b> dan trend harian <b data-draw="tk-htrend" data-source="summary" data-field="trend_htf" data-row="0">—</b>. Status: <b data-draw="tk-status" data-source="setups">—</b>.</p>
+  </header>
+
+  <section class="gr-kpis" id="kpis" aria-label="Ringkasan">
+    <div class="gr-panel gr-kpi" id="kpi-price">
+      <span class="lab">Harga</span>
+      <span class="val gold" data-draw="k-price" data-source="summary" data-field="price" data-row="0">—</span>
+      <span class="note">24 jam: <span data-draw="k-chg" data-source="chg24">—</span></span>
+    </div>
+    <div class="gr-panel gr-kpi" id="kpi-trend">
+      <span class="lab">Struktur 1H / 1D</span>
+      <span class="val"><span data-draw="k-trend" data-source="summary" data-field="trend_ltf" data-row="0">—</span> / <span data-draw="k-htrend" data-source="summary" data-field="trend_htf" data-row="0">—</span></span>
+      <span class="note">Ikut BOS / CHoCH terakhir</span>
+    </div>
+    <div class="gr-panel gr-kpi" id="kpi-atr">
+      <span class="lab">ATR 1H</span>
+      <span class="val" data-draw="k-atr" data-source="summary" data-field="atr" data-row="0">—</span>
+      <span class="note">Purata julat satu candle (point)</span>
+    </div>
+    <div class="gr-panel gr-kpi" id="kpi-hist">
+      <span class="lab">Pattern sejarah 1H</span>
+      <span class="val" data-draw="k-hist" data-source="summary" data-field="hist_ltf_bias" data-row="0">—</span>
+      <span class="note"><span data-draw="k-histpct" data-source="summary" data-field="hist_ltf_pct_up" data-row="0">—</span>% naik selepas 32 candle</span>
+    </div>
+  </section>
+
+  <section class="gr-panel" id="signal">
+    <h2>Signal entry</h2>
+    <p class="gr-note">Model: liquidity sweep → BOS → retrace ke Order Block. Entry pada 50% OB, SL di luar titik sweep, TP1 = 2R (tutup separuh, alih SL ke BE), TP2 = sasaran liquidity seterusnya. Gred: B = sweep + BOS + OB, +1 jika ada FVG, +1 jika sama arah dengan trend harian.</p>
+    <p class="gr-empty" id="no-setup" hidden>Tiada setup aktif sekarang. Jangan entry, tunggu harga sweep liquidity dan break structure dulu.</p>
+    <div class="gr-setups" data-draw="setups" data-source="setups"></div>
+  </section>
+
+  <section class="gr-panel" id="chart">
+    <h2>Chart 1H dengan zone SMC</h2>
+    <div class="gr-tools">
+      <button type="button" class="gr-btn" id="zoom-in" data-zoom="in">Zoom +</button>
+      <button type="button" class="gr-btn" id="zoom-out" data-zoom="out">Zoom −</button>
+      <button type="button" class="gr-btn" id="zoom-reset" data-zoom="reset">Reset</button>
+      <span class="gr-hint">Scroll atau pinch untuk zoom di posisi pointer · drag untuk geser · double-click untuk reset</span>
+    </div>
+    <div class="gr-chartbox" data-draw="chart" data-source="candles levels setups"></div>
+    <div class="gr-legend" aria-hidden="true">
+      <span><i class="gr-sw" style="background: #3ddc97; opacity: .45"></i>OB bullish</span>
+      <span><i class="gr-sw" style="background: #ff6b81; opacity: .45"></i>OB bearish</span>
+      <span><i class="gr-sw" style="border: 1px dashed #b9a8e8"></i>FVG</span>
+      <span><i class="gr-sw" style="border-top: 2px dashed #e3bb55; height: 0"></i>Entry</span>
+      <span>▲▼ Liquidity sweep</span>
+      <span>BOS / CHoCH = break structure</span>
+    </div>
+  </section>
+
+  <div class="gr-two">
+    <section class="gr-panel" id="history">
+      <h2>Banding dengan sejarah</h2>
+      <p class="gr-note">Bentuk pergerakan harga terkini dibanding dengan semua tempoh lalu (korelasi bentuk + saiz pergerakan). "Selepas" ialah apa yang berlaku selepas pattern itu.</p>
+      <div class="gr-bias">
+        <p>1H: <b data-draw="h-ltf" data-source="summary" data-field="hist_ltf_bias" data-row="0">—</b> · <span class="gr-num" data-draw="h-ltf-pct" data-source="summary" data-field="hist_ltf_pct_up" data-row="0">—</span>% naik, median <span class="gr-num" data-draw="h-ltf-med" data-source="summary" data-field="hist_ltf_median" data-row="0">—</span>% dalam 32 jam</p>
+        <p>Harian: <b data-draw="h-htf" data-source="summary" data-field="hist_htf_bias" data-row="0">—</b> · <span class="gr-num" data-draw="h-htf-pct" data-source="summary" data-field="hist_htf_pct_up" data-row="0">—</span>% naik, median <span class="gr-num" data-draw="h-htf-med" data-source="summary" data-field="hist_htf_median" data-row="0">—</span>% dalam 24 hari</p>
+      </div>
+      <div class="gr-tablewrap">
+        <table data-source="analogs" data-row-key="key" aria-label="Pattern sejarah paling serupa">
+          <thead><tr><th data-field="tf">TF</th><th data-field="end">Pattern tamat</th><th class="r" data-field="corr">Corr</th><th class="r" data-field="fwd_ret">Selepas</th><th class="r" data-field="max_up">Max naik</th><th class="r" data-field="max_down">Max turun</th></tr></thead>
+          <tbody data-draw="analogs"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="gr-panel" id="backtest">
+      <h2>Prestasi strategi dalam sejarah</h2>
+      <p class="gr-note">Backtest model yang sama atas 2 tahun data 1H, tanpa intip data masa depan. R = gandaan risiko (1R = jarak entry ke SL).</p>
+      <div class="gr-bt">
+        <div class="gr-kpi"><span class="lab">Trade</span><span class="val" data-draw="b-trades" data-source="summary" data-field="bt_trades" data-row="0">—</span></div>
+        <div class="gr-kpi"><span class="lab">Win rate</span><span class="val" data-draw="b-win" data-source="summary" data-field="bt_win_rate" data-row="0">—</span></div>
+        <div class="gr-kpi"><span class="lab">Jumlah</span><span class="val" data-draw="b-r" data-source="summary" data-field="bt_total_r" data-row="0">—</span></div>
+        <div class="gr-kpi"><span class="lab">Max drawdown</span><span class="val" data-draw="b-dd" data-source="summary" data-field="bt_max_dd_r" data-row="0">—</span></div>
+      </div>
+      <p class="gr-note" style="margin: var(--cds-gap-md) 0 0">Gred A+ sahaja: <b class="gr-num" data-draw="b-ap-n" data-source="summary" data-field="bt_aplus_trades" data-row="0">—</b> trade, win <b class="gr-num" data-draw="b-ap-w" data-source="summary" data-field="bt_aplus_win" data-row="0">—</b>%, <b class="gr-num" data-draw="b-ap-r" data-source="summary" data-field="bt_aplus_r" data-row="0">—</b>R. Atas candle harian (10 tahun): <b class="gr-num" data-draw="b-d-n" data-source="summary" data-field="bt_htf_trades" data-row="0">—</b> trade, <b class="gr-num" data-draw="b-d-r" data-source="summary" data-field="bt_htf_total_r" data-row="0">—</b>R. Pada 15m strategi ini rugi (-10.5R dalam 60 hari), sebab itu dashboard guna 1H.</p>
+    </section>
+  </div>
+
+  <p class="gr-foot">Harga GC=F (gold futures) biasanya beza beberapa dollar dari XAUUSD spot di broker, jadi laraskan zone ikut chart broker anda. Risiko $ dikira untuk 0.01 lot (1 oz). Tetapan strategi dipilih menggunakan data yang sama dengan backtest, jadi prestasi sebenar mungkin lebih rendah. Bukan nasihat kewangan.</p>
+</div>
+
+<script>
+  window.GR = (() => {
+    const tzFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kuala_Lumpur', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+    const dayFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kuala_Lumpur', day: '2-digit', month: 'short', year: '2-digit' });
+    const hmFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kuala_Lumpur', hour: '2-digit', minute: '2-digit', hour12: false });
+    const f2 = d3.format(',.2f');
+    return {
+      f2,
+      t: (iso) => tzFmt.format(new Date(iso)),
+      hm: (d) => hmFmt.format(d),
+      day: (iso) => dayFmt.format(new Date(iso)),
+      pct: (v) => (v > 0 ? '+' : '') + d3.format('.2f')(v) + '%',
+      trendWord: (t) => ({ bull: 'BULLISH', bear: 'BEARISH' })[t] || 'TIADA',
+      trendCls: (t) => ({ bull: 'gr-up', bear: 'gr-down' })[t] || 'gr-flat',
+      biasCls: (b) => ({ BULLISH: 'gr-up', BEARISH: 'gr-down' })[b] || 'gr-flat',
+      row: (id) => { const d = dash.data(id); return d.status === 'ok' && d.data.length ? d.data[0] : null; },
+      up: '#3ddc97', dn: '#ff6b81', gold: '#e3bb55', gold2: '#f6dc92', lilac: '#b9a8e8', ink: '#120a22',
+      el: (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; },
+      mark: (e, src, field, row) => { e.dataset.source = src; e.dataset.field = field; e.dataset.row = String(row); return e; },
+    };
+  })();
+
+  dash.calc('chg24', {
+    title: 'Perubahan 24 jam',
+    description: 'Peratus perubahan harga tutup candle 1H terakhir berbanding 24 candle sebelumnya.',
+    inputs: ['candles'],
+    fn: (candles) => {
+      if (!candles || candles.length < 25) return null;
+      const last = +candles[candles.length - 1].close, prev = +candles[candles.length - 25].close;
+      return Math.round((last / prev - 1) * 10000) / 100;
+    },
+  });
+
+  // island: tap / Enter / hover toggles the expanded state (class only)
+  document.querySelectorAll('.gr-island').forEach((isl) => {
+    const set = (open) => { isl.classList.toggle('open', open); isl.setAttribute('aria-expanded', String(open)); };
+    let pinned = false;
+    isl.addEventListener('click', () => { pinned = !pinned; set(pinned); });
+    isl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pinned = !pinned; set(pinned); } });
+    if (matchMedia('(pointer: fine)').matches) {
+      isl.addEventListener('pointerenter', () => set(true));
+      isl.addEventListener('pointerleave', () => set(pinned));
+    }
+  });
+</script>
+
+<script>
+  const G = window.GR;
+  const simple = (name, field, fmt, cls) => dash.draw(name, (el) => {
+    const r = G.row('summary');
+    if (!r || r[field] == null) { el.textContent = '—'; return; }
+    el.textContent = fmt ? fmt(r[field], r) : r[field];
+    if (cls) { el.classList.remove('gr-up', 'gr-down', 'gr-flat'); el.classList.add(cls(r[field])); }
+  });
+  const signed = (d) => (v) => (v > 0 ? '+' : '') + d3.format(d)(+v);
+  simple('last-time', 'time', (v) => G.t(v));
+  simple('tk-price', 'price', (v) => G.f2(+v));
+  simple('k-price', 'price', (v) => G.f2(+v));
+  simple('k-atr', 'atr', (v) => G.f2(+v));
+  for (const [n, f] of [['tk-trend', 'trend_ltf'], ['tk-htrend', 'trend_htf'], ['k-trend', 'trend_ltf'], ['k-htrend', 'trend_htf']])
+    simple(n, f, G.trendWord, G.trendCls);
+  for (const [n, f] of [['k-hist', 'hist_ltf_bias'], ['h-ltf', 'hist_ltf_bias'], ['h-htf', 'hist_htf_bias']])
+    simple(n, f, (v) => v, G.biasCls);
+  for (const [n, f] of [['k-histpct', 'hist_ltf_pct_up'], ['h-ltf-pct', 'hist_ltf_pct_up'], ['h-htf-pct', 'hist_htf_pct_up']])
+    simple(n, f, (v) => d3.format('.0f')(+v));
+  simple('h-ltf-med', 'hist_ltf_median', signed('.2f'));
+  simple('h-htf-med', 'hist_htf_median', signed('.2f'));
+  simple('b-trades', 'bt_trades', (v) => d3.format(',')(+v));
+  simple('b-win', 'bt_win_rate', (v) => d3.format('.0f')(+v) + '%');
+  simple('b-r', 'bt_total_r', (v) => signed('.1f')(v) + 'R', (v) => (v > 0 ? 'gr-up' : 'gr-down'));
+  simple('b-dd', 'bt_max_dd_r', (v) => d3.format('.1f')(+v) + 'R');
+  simple('b-ap-n', 'bt_aplus_trades', (v) => v);
+  simple('b-ap-w', 'bt_aplus_win', (v) => d3.format('.0f')(+v));
+  simple('b-ap-r', 'bt_aplus_r', signed('.1f'));
+  simple('b-d-n', 'bt_htf_trades', (v) => v);
+  simple('b-d-r', 'bt_htf_total_r', signed('.1f'));
+
+  dash.draw('k-chg', (el) => {
+    const c = dash.data('chg24');
+    if (c.status !== 'ok' || c.data == null) { el.textContent = '—'; return; }
+    el.textContent = G.pct(c.data);
+    el.className = c.data > 0 ? 'gr-up' : c.data < 0 ? 'gr-down' : 'gr-flat';
+  });
+
+  dash.draw('tk-status', (el) => {
+    const s = dash.data('setups');
+    if (s.status !== 'ok') { el.textContent = '—'; return; }
+    const trig = s.data.find((r) => r.status === 'TRIGGER');
+    const live = s.data.find((r) => r.status === 'IN TRADE');
+    const wait = s.data.find((r) => r.status === 'WAIT');
+    el.textContent = trig ? `ENTRY TRIGGER ${trig.side} (gred ${trig.grade}), harga dalam zone`
+      : live ? `setup ${live.side} gred ${live.grade} sudah capai entry, sedang berjalan`
+      : wait ? `setup ${wait.side} gred ${wait.grade} menunggu harga retrace ke zone`
+      : 'tiada setup aktif, tunggu';
+  });
+</script>
+
+<script>
+  // Dynamic island: compact status pill that expands into the active setup
+  dash.draw('island', {
+    mount() {
+      const st = { next: null, cd: null };
+      st.timer = setInterval(() => {
+        if (!st.next || !st.cd) return;
+        const ms = Math.max(0, st.next - Date.now());
+        st.cd.textContent = `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')}`;
+      }, 1000);
+      return st;
+    },
+    update(el, st) {
+      const G = window.GR;
+      const sum = G.row('summary');
+      const S = dash.data('setups'), C = dash.data('chg24');
+      if (!sum) { el.textContent = '—'; return; }
+      const setups = S.status === 'ok' ? S.data : [];
+      const s = setups.find((r) => r.status === 'TRIGGER') || setups.find((r) => r.status === 'IN TRADE') || setups[0];
+      const i = s ? setups.indexOf(s) : -1;
+      el.classList.toggle('hot', !!(s && s.status === 'TRIGGER'));
+      el.replaceChildren();
+
+      const row = G.el('div', 'gr-isl-row');
+      row.append(G.el('span', 'gr-isl-dot' + (s ? (s.status === 'TRIGGER' ? ' trig' : s.status === 'IN TRADE' ? ' live' : '') : '')),
+        G.el('span', 'gr-isl-sym', 'XAU'), G.mark(G.el('span', 'gr-isl-px', G.f2(+sum.price)), 'summary', 'price', 0));
+      if (C.status === 'ok' && C.data != null) {
+        const ch = G.el('span', C.data > 0 ? 'gr-up' : 'gr-down', G.pct(C.data));
+        ch.dataset.source = 'chg24'; row.append(ch);
+      }
+      row.append(G.el('span', 'gr-isl-chip' + (s && s.status === 'TRIGGER' ? ' trig' : ''),
+        !s ? 'Tiada setup' : s.status === 'TRIGGER' ? `${s.side} TRIGGER` : s.status === 'IN TRADE' ? `${s.side} berjalan` : `${s.side} tunggu`));
+      el.append(row);
+
+      const more = G.el('div', 'gr-isl-more');
+      const inner = G.el('div');
+      if (s) {
+        const grid = G.el('div', 'gr-isl-grid');
+        const cell = (lab, field, txt, cls) => {
+          const d = G.el('div'); d.append(G.el('span', 'lab', lab));
+          const v = G.el('span', 'val ' + (cls || ''), txt);
+          if (field) G.mark(v, 'setups', field, i);
+          d.append(v); return d;
+        };
+        grid.append(
+          cell('Setup', null, `${s.side} · Gred ${s.grade}`, s.side === 'BUY' ? 'gr-up' : 'gr-down'),
+          cell('Entry', 'entry', G.f2(s.entry)),
+          cell('Stop loss', 'sl', G.f2(s.sl), 'gr-down'),
+          cell('TP1', 'tp1', G.f2(s.tp1), 'gr-up'),
+          cell('TP2', 'tp2', G.f2(s.tp2), 'gr-up'),
+          cell('Risiko 0.01 lot', 'risk_usd_001', '$' + G.f2(s.risk_usd_001)));
+        inner.append(grid);
+      } else {
+        inner.append(G.el('p', 'gr-isl-foot', 'Tiada setup aktif. Tunggu sweep → BOS → OB.'));
+      }
+      const foot = G.el('div', 'gr-isl-foot');
+      foot.append(G.el('span', null, `Candle terakhir ${G.t(sum.time)} MYT`));
+      // the hourly scan runs at minute 3 of every UTC hour on weekdays
+      const now = new Date(), next = new Date(now); next.setUTCMinutes(3, 0, 0);
+      if (next <= now) next.setUTCHours(next.getUTCHours() + 1);
+      const cdWrap = G.el('span', null, `Scan seterusnya ${G.hm(next)} · `);
+      const cd = G.el('span', 'gr-num', '—'); cdWrap.append(cd);
+      foot.append(cdWrap);
+      inner.append(foot);
+      more.append(inner);
+      el.append(more);
+      st.next = next; st.cd = cd;
+    },
+    unmount(el, st) { clearInterval(st.timer); },
+  });
+</script>
+
+<script>
+  dash.draw('setups', (el) => {
+    const G = window.GR;
+    const s = dash.data('setups');
+    document.querySelectorAll('#no-setup').forEach((p) => { p.hidden = !(s.status === 'ok' && s.data.length === 0); });
+    if (s.status !== 'ok') { el.textContent = s.status === 'error' ? 'Gagal load data setup' : '—'; return; }
+    el.replaceChildren();
+    s.data.forEach((r, i) => {
+      const card = G.el('article', 'gr-setup');
+      card.dataset.side = r.side;
+      card.id = `setup-${i}`;
+      const top = G.el('div', 'gr-setup-top');
+      top.append(
+        G.el('span', 'gr-side ' + (r.side === 'BUY' ? 'gr-up' : 'gr-down'), r.side),
+        G.el('span', 'gr-pill gold', `Gred ${r.grade} · ${r.score}/5`),
+        G.el('span', 'gr-pill ' + (r.status === 'TRIGGER' ? 'trig' : r.status === 'IN TRADE' ? 'live' : ''),
+          r.status === 'TRIGGER' ? 'ENTRY TRIGGER' : r.status === 'IN TRADE' ? 'Entry sudah kena' : 'Tunggu retrace'));
+      if (r.new) top.append(G.el('span', 'gr-pill gold', 'Baru'));
+
+      const lv = G.el('div', 'gr-levels');
+      const item = (lab, field, txt, cls, extra) => {
+        const d = G.el('div', 'gr-lv ' + (extra || ''));
+        d.append(G.el('span', 'lab', lab));
+        d.append(G.mark(G.el('span', 'val ' + (cls || ''), txt), 'setups', field, i));
+        return d;
+      };
+      const zone = G.el('div', 'gr-lv');
+      zone.append(G.el('span', 'lab', 'Zone OB'));
+      const zv = G.el('span', 'val');
+      zv.append(G.mark(G.el('span', null, G.f2(r.zone_bottom)), 'setups', 'zone_bottom', i), ' – ',
+        G.mark(G.el('span', null, G.f2(r.zone_top)), 'setups', 'zone_top', i));
+      zone.append(zv);
+      lv.append(zone,
+        item('Entry (50% OB)', 'entry', G.f2(r.entry), '', 'entry'),
+        item('Stop loss', 'sl', G.f2(r.sl), 'gr-down'),
+        item('TP1 (2R)', 'tp1', G.f2(r.tp1), 'gr-up'),
+        item('TP2', 'tp2', G.f2(r.tp2), 'gr-up'),
+        item('Risiko / 0.01 lot', 'risk_usd_001', '$' + G.f2(r.risk_usd_001)));
+
+      const meta = G.el('div', 'gr-meta');
+      [`Sweep: ${r.sweep} MYT`, `BOS: ${r.bos} MYT`, `FVG: ${r.fvg ? 'ada ✓' : 'tiada'}`,
+       `Trend harian: ${r.htf_aligned ? 'sama arah ✓' : 'lawan arah'}`, `RR ke TP2: ${r.rr_tp2}`,
+       `Luput dalam ${r.expires_in_bars} candle`].forEach((t) => meta.append(G.el('span', null, t)));
+      card.append(top, lv, meta);
+      el.append(card);
+    });
+  });
+
+  dash.draw('analogs', (tb) => {
+    const G = window.GR;
+    const a = dash.data('analogs');
+    tb.replaceChildren();
+    if (a.status !== 'ok') return;
+    a.data.forEach((r) => {
+      const tr = G.el('tr'); tr.dataset.key = r.key;
+      const td = (txt, cls) => tr.append(G.el('td', cls, txt));
+      td(r.tf);
+      td(r.tf === '1d' ? G.day(r.end) : G.t(r.end));
+      td(d3.format('.2f')(r.corr), 'r');
+      td(G.pct(r.fwd_ret), 'r ' + (r.fwd_ret > 0 ? 'gr-up' : 'gr-down'));
+      td(G.pct(r.max_up), 'r');
+      td(G.pct(r.max_down), 'r');
+      tb.append(tr);
+    });
+  });
+</script>
+
+<script>
+  // Custom cursor: gold ring that trails the pointer and grows over things you can press
+  dash.draw('cursor', {
+    mount(el) {
+      const root = el.closest('.gr');
+      const ring = window.GR.el('div', 'ring'), dot = window.GR.el('div', 'dot');
+      el.append(ring, dot);
+      if (!root || !matchMedia('(pointer: fine)').matches) return { off: () => {} };
+      const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let tx = 0, ty = 0, rx = 0, ry = 0, raf = 0;
+      const tick = () => {
+        rx += (tx - rx) * (calm ? 1 : 0.22); ry += (ty - ry) * (calm ? 1 : 0.22);
+        ring.style.transform = `translate(${rx}px, ${ry}px)`;
+        raf = Math.abs(tx - rx) + Math.abs(ty - ry) > 0.3 ? requestAnimationFrame(tick) : 0;
+      };
+      const move = (e) => {
+        const b = root.getBoundingClientRect();
+        tx = e.clientX - b.left; ty = e.clientY - b.top;
+        dot.style.transform = `translate(${tx}px, ${ty}px)`;
+        const t = e.target;
+        el.classList.toggle('off', !!t.closest('.gr-chartbox'));
+        el.classList.toggle('big', !!t.closest('button, [role="button"], .gr-lv, tbody tr, .gr-pill'));
+        if (!raf) raf = requestAnimationFrame(tick);
+      };
+      const leave = () => el.classList.add('off');
+      const down = () => el.classList.add('down');
+      const up = () => el.classList.remove('down');
+      root.addEventListener('pointermove', move);
+      root.addEventListener('pointerleave', leave);
+      root.addEventListener('pointerdown', down);
+      window.addEventListener('pointerup', up);
+      return { off: () => {
+        root.removeEventListener('pointermove', move); root.removeEventListener('pointerleave', leave);
+        root.removeEventListener('pointerdown', down); window.removeEventListener('pointerup', up);
+        cancelAnimationFrame(raf);
+      } };
+    },
+    update() {},
+    unmount(el, made) { made.off(); },
+  });
+</script>
+
+<script>
+  // Candlestick chart with SMC overlays, zoom at the pointer, drag to pan and a gold crosshair cursor
+  dash.draw('chart', {
+    mount(el) {
+      const G = window.GR;
+      const svg = d3.select(el).append('svg').attr('role', 'img');
+      svg.append('defs').append('clipPath').attr('id', 'grclip').append('rect');
+      const plot = svg.append('g');
+      const cur = svg.append('g').style('pointer-events', 'none').style('display', 'none');
+      const tip = G.el('div', 'gr-tip'); tip.hidden = true; el.append(tip);
+      const st = { svg, plot, cur, tip, t: d3.zoomIdentity, init: false };
+      st.zoom = d3.zoom().scaleExtent([1, 12])
+        .filter((ev) => (ev.type === 'wheel' || !ev.button) && ev.type !== 'dblclick')
+        .on('zoom', (ev) => { st.t = ev.transform; if (st.render) st.render(); if (st.lastEv) st.hover(st.lastEv); });
+      svg.call(st.zoom).on('dblclick.zoom', null)
+        .on('dblclick', () => svg.transition().duration(350).call(st.zoom.transform, st.home || d3.zoomIdentity));
+      svg.on('pointermove', (ev) => { st.lastEv = ev; if (st.hover) st.hover(ev); })
+        .on('pointerleave', () => { st.lastEv = null; cur.style('display', 'none'); tip.hidden = true; plot.selectAll('.gr-ax text').style('opacity', null); });
+      st.btn = (e) => {
+        const k = e.currentTarget.dataset.zoom;
+        if (k === 'reset') svg.transition().duration(350).call(st.zoom.transform, st.home || d3.zoomIdentity);
+        else svg.transition().duration(250).call(st.zoom.scaleBy, k === 'in' ? 1.6 : 1 / 1.6, [st.right || 0, 0]);
+      };
+      document.querySelectorAll('[data-zoom]').forEach((b) => b.addEventListener('click', st.btn));
+      return st;
+    },
+    unmount(el, st) { document.querySelectorAll('[data-zoom]').forEach((b) => b.removeEventListener('click', st.btn)); },
+    update(el, st) {
+      const G = window.GR;
+      const c = dash.data('candles'), L = dash.data('levels'), S = dash.data('setups');
+      if (c.status !== 'ok' || !c.data.length) {
+        st.render = null;
+        st.plot.selectAll('*').remove();
+        st.svg.attr('viewBox', '0 0 300 60');
+        st.plot.append('text').attr('x', 12).attr('y', 30).style('fill', G.lilac).text(c.status === 'error' ? 'Gagal load chart' : '—');
+        return;
+      }
+      const rows = c.data.map((d) => ({ t: d.time, o: +d.open, h: +d.high, l: +d.low, c: +d.close }));
+      const levels = L.status === 'ok' ? L.data : [];
+      const setups = S.status === 'ok' ? S.data : [];
+      const n = rows.length;
+      const W = Math.max(300, el.clientWidth);
+      const H = W < 520 ? 340 : 460;
+      const m = { t: 14, r: 70, b: 28, l: 10 };
+      const iw = W - m.l - m.r, ih = H - m.t - m.b;
+      const times = rows.map((d) => +new Date(d.t));
+      const idxOf = (iso) => Math.min(n - 1, Math.max(0, d3.bisectLeft(times, +new Date(iso))));
+      st.svg.attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%')
+        .attr('aria-label', `Chart candlestick emas 1H, ${n} candle, dengan zone order block, FVG dan setup aktif. Boleh zoom dan geser.`);
+      st.svg.select('#grclip rect').attr('x', m.l).attr('y', m.t).attr('width', iw).attr('height', ih);
+      const x0 = d3.scaleLinear().domain([-0.5, n - 0.5]).range([m.l, m.l + iw]);
+      st.zoom.extent([[m.l, m.t], [m.l + iw, m.t + ih]]).translateExtent([[m.l, -Infinity], [m.l + iw, Infinity]]);
+      st.right = m.l + iw;
+
+      st.render = () => {
+        const xz = st.t.rescaleX(x0);
+        const [a, b] = xz.domain();
+        const i0 = Math.max(0, Math.floor(a)), i1 = Math.min(n - 1, Math.ceil(b));
+        const vis = rows.slice(i0, i1 + 1);
+        let ymin = d3.min(vis, (d) => d.l), ymax = d3.max(vis, (d) => d.h);
+        setups.forEach((s) => { ymin = Math.min(ymin, s.zone_bottom, s.entry); ymax = Math.max(ymax, s.zone_top, s.entry); });
+        const pad = (ymax - ymin) * 0.07;
+        const y = d3.scaleLinear().domain([ymin - pad, ymax + pad]).range([m.t + ih, m.t]);
+        const step = xz(1) - xz(0), bw = Math.max(1, step * 0.66);
+        st.geo = { xz, y, m, iw, ih, rows, W };
+        const P = st.plot; P.selectAll('*').remove();
+
+        // grid + price axis
+        P.append('g').attr('class', 'gr-ax').attr('transform', `translate(${m.l + iw},0)`)
+          .call(d3.axisRight(y).ticks(Math.max(3, ih / 55)).tickSize(-iw).tickPadding(8).tickFormat(d3.format(',.0f')));
+        // time axis: day labels, or hour labels when zoomed in
+        const ax = P.append('g').attr('class', 'gr-ax').attr('transform', `translate(0,${m.t + ih})`);
+        const hourly = step > 14;
+        const ticks = []; let lastKey = '';
+        for (let i = i0; i <= i1; i++) {
+          const key = hourly ? G.t(rows[i].t) : G.day(rows[i].t);
+          if (key !== lastKey && xz(i) >= m.l + 34 && xz(i) <= m.l + iw - 34
+              && (!ticks.length || xz(i) - xz(ticks[ticks.length - 1]) >= (hourly ? 90 : 56))) ticks.push(i);
+          lastKey = key;
+        }
+        ticks.forEach((i) => {
+          const g = ax.append('g').attr('transform', `translate(${xz(i)},0)`);
+          g.append('line').attr('y2', 4).style('stroke', 'rgba(185,168,232,.35)');
+          g.append('text').attr('y', 17).attr('text-anchor', 'middle').text(hourly ? G.t(rows[i].t) : G.day(rows[i].t).slice(0, 6));
+        });
+
+        const body = P.append('g').attr('clip-path', 'url(#grclip)');
+        const labels = P.append('g');
+        const placed = [];
+        // a label stays only if it fits inside the plot and meets no other label (measured, not guessed)
+        const label = (tx, ty, txt, col, size = 10, anchor = 'start') => {
+          const t = labels.append('text').attr('x', tx).attr('y', ty).attr('text-anchor', anchor).text(txt)
+            .style('fill', col).style('font-size', size + 'px').style('font-weight', 600)
+            .style('paint-order', 'stroke').style('stroke', G.ink).style('stroke-width', 3);
+          const bb = t.node().getBBox();
+          const r = { x: bb.x - 3, y: bb.y - 2, w: bb.width + 6, h: bb.height + 4 };
+          const out = r.x < m.l || r.x + r.w > m.l + iw || r.y < m.t || r.y + r.h > m.t + ih;
+          const hit = placed.some((q) => r.x < q.x + q.w && r.x + r.w > q.x && r.y < q.y + q.h && r.y + r.h > q.y);
+          if (out || hit) { t.remove(); return false; }
+          placed.push(r); return true;
+        };
+
+        // zones
+        levels.filter((z) => z.kind === 'OB' || z.kind === 'FVG').forEach((z) => {
+          const col = z.side === 'bull' ? G.up : G.dn, zx = xz(idxOf(z.time) - 0.5);
+          body.append('rect').attr('x', zx).attr('width', Math.max(0, m.l + iw - zx))
+            .attr('y', y(z.top)).attr('height', Math.max(1, y(z.bottom) - y(z.top)))
+            .style('fill', col).style('fill-opacity', z.kind === 'OB' ? 0.16 : 0.05)
+            .style('stroke', col).style('stroke-opacity', z.kind === 'OB' ? 0.55 : 0.4)
+            .style('stroke-dasharray', z.kind === 'FVG' ? '3 3' : null);
+        });
+        // candles
+        const cg = body.append('g');
+        for (let i = i0; i <= i1; i++) {
+          const d = rows[i], col = d.c >= d.o ? G.up : G.dn, cx = xz(i);
+          cg.append('line').attr('x1', cx).attr('x2', cx).attr('y1', y(d.h)).attr('y2', y(d.l)).style('stroke', col);
+          cg.append('rect').attr('x', cx - bw / 2).attr('width', bw)
+            .attr('y', y(Math.max(d.o, d.c))).attr('height', Math.max(1, Math.abs(y(d.o) - y(d.c)))).style('fill', col);
+        }
+        // setup zone, lines and labels first, so other labels give way to them
+        const [d0, d1] = y.domain();
+        setups.forEach((s) => {
+          if (s.zone_top >= d0 && s.zone_bottom <= d1)
+            body.append('rect').attr('x', m.l).attr('width', iw).attr('y', y(s.zone_top))
+              .attr('height', Math.max(1, y(s.zone_bottom) - y(s.zone_top))).style('fill', G.gold).style('fill-opacity', 0.07);
+          [['Entry', s.entry, G.gold2], ['SL', s.sl, G.dn], ['TP1', s.tp1, G.up], ['TP2', s.tp2, G.up]].forEach(([lab, v, col], k) => {
+            const inside = v >= d0 && v <= d1;
+            if (inside) body.append('line').attr('x1', m.l).attr('x2', m.l + iw).attr('y1', y(v)).attr('y2', y(v))
+              .style('stroke', col).style('stroke-dasharray', '6 4').style('stroke-width', lab === 'Entry' ? 1.6 : 1.1);
+            const yy = inside ? y(v) - 5 : v > d1 ? m.t + 16 + k * 15 : m.t + ih - 6 - (3 - k) * 15;
+            label(m.l + iw - 6, yy, `${lab} ${G.f2(v)}${inside ? '' : v > d1 ? ' ↑' : ' ↓'}`, col, 11, 'end');
+          });
+        });
+        levels.filter((z) => z.kind === 'OB' || z.kind === 'FVG').forEach((z) => {
+          label(Math.max(m.l + 4, xz(idxOf(z.time) - 0.5) + 4), y(z.top) + 12, z.kind, z.side === 'bull' ? G.up : G.dn);
+        });
+        // structure events
+        levels.filter((e) => e.price != null).forEach((e) => {
+          const i = idxOf(e.time);
+          if (i < i0 - 8 || i > i1) return;
+          const col = e.side === 'bull' ? G.up : G.dn;
+          if (e.kind === 'SWEEP') {
+            const d = rows[i], bull = e.side === 'bull';
+            body.append('path').attr('d', d3.symbol(d3.symbolTriangle, Math.max(20, Math.min(60, step * 4)))())
+              .attr('transform', `translate(${xz(i)},${bull ? y(d.l) + 10 : y(d.h) - 10}) rotate(${bull ? 0 : 180})`)
+              .style('fill', G.gold);
+          } else {
+            const xa = xz(Math.max(0, i - 8));
+            body.append('line').attr('x1', xa).attr('x2', xz(i)).attr('y1', y(e.price)).attr('y2', y(e.price))
+              .style('stroke', col).style('stroke-dasharray', '2 2');
+            label(Math.max(m.l + 4, xa), y(e.price) + (e.side === 'bull' ? -4 : 12), e.kind, col);
+          }
+        });
+        // last price tag (axis numbers under it are dropped)
+        const last = rows[n - 1];
+        const py = Math.max(m.t + 10, Math.min(m.t + ih - 10, y(last.c)));
+        P.selectAll('.gr-ax .tick').filter((v) => typeof v === 'number' && v > 1000 && Math.abs(y(v) - py) < 16).select('text').remove();
+        P.append('rect').attr('x', m.l + iw + 3).attr('y', py - 10).attr('width', m.r - 6).attr('height', 20).attr('rx', 10).style('fill', G.gold);
+        P.append('text').attr('x', m.l + iw + 3 + (m.r - 6) / 2).attr('y', py + 4).attr('text-anchor', 'middle')
+          .text(d3.format(',.1f')(last.c)).style('fill', '#1a1000').style('font-size', '11px').style('font-weight', 700);
+      };
+
+      // gold crosshair cursor with price and time read-outs
+      st.hover = (ev) => {
+        const g = st.geo; if (!g) return;
+        const [px, py] = d3.pointer(ev, st.svg.node());
+        if (px < g.m.l || px > g.m.l + g.iw || py < g.m.t || py > g.m.t + g.ih) {
+          st.cur.style('display', 'none'); st.tip.hidden = true; st.plot.selectAll('.gr-ax text').style('opacity', null); return;
+        }
+        const i = Math.max(0, Math.min(g.rows.length - 1, Math.round(g.xz.invert(px))));
+        const d = g.rows[i], cx = g.xz(i);
+        const C = st.cur.style('display', null); C.selectAll('*').remove();
+        C.append('line').attr('x1', cx).attr('x2', cx).attr('y1', g.m.t).attr('y2', g.m.t + g.ih).style('stroke', G.gold).style('stroke-opacity', 0.55).style('stroke-dasharray', '3 3');
+        C.append('line').attr('x1', g.m.l).attr('x2', g.m.l + g.iw).attr('y1', py).attr('y2', py).style('stroke', G.gold).style('stroke-opacity', 0.55).style('stroke-dasharray', '3 3');
+        C.append('circle').attr('cx', px).attr('cy', py).attr('r', 9).style('fill', 'none').style('stroke', G.gold).style('stroke-width', 1.5);
+        C.append('circle').attr('cx', px).attr('cy', py).attr('r', 2).style('fill', G.gold2);
+        C.append('rect').attr('x', g.m.l + g.iw + 3).attr('y', py - 10).attr('width', g.m.r - 6).attr('height', 20).attr('rx', 4).style('fill', '#2a1b4a').style('stroke', G.gold);
+        C.append('text').attr('x', g.m.l + g.iw + 3 + (g.m.r - 6) / 2).attr('y', py + 4).attr('text-anchor', 'middle')
+          .text(d3.format(',.1f')(g.y.invert(py))).style('fill', G.gold2).style('font-size', '11px').style('font-weight', 600);
+        const tl = G.t(d.t), tw = tl.length * 6.4 + 14;
+        const tx = Math.max(g.m.l, Math.min(g.m.l + g.iw - tw, cx - tw / 2));
+        // hide axis labels the read-outs would cover
+        st.plot.selectAll('.gr-ax .tick text, .gr-ax g > text').style('opacity', function () {
+          const b = this.getBBox(), ctm = this.getCTM(), bx = b.x + ctm.e, by = b.y + ctm.f;
+          const underTime = by > g.m.t + g.ih && bx < tx + tw + 4 && bx + b.width > tx - 4;
+          const underPrice = bx > g.m.l + g.iw && Math.abs(by + b.height / 2 - py) < 16;
+          return underTime || underPrice ? 0 : null;
+        });
+        C.append('rect').attr('x', tx).attr('y', g.m.t + g.ih + 4).attr('width', tw).attr('height', 19).attr('rx', 4).style('fill', '#2a1b4a').style('stroke', G.gold);
+        C.append('text').attr('x', tx + tw / 2).attr('y', g.m.t + g.ih + 17).attr('text-anchor', 'middle').text(tl).style('fill', G.gold2).style('font-size', '11px');
+        const tip = st.tip; tip.replaceChildren();
+        const chg = (d.c / d.o - 1) * 100;
+        tip.append(G.el('div', 't', tl + ' MYT'), G.el('div', null, `O ${G.f2(d.o)}   H ${G.f2(d.h)}`),
+          G.el('div', null, `L ${G.f2(d.l)}   C ${G.f2(d.c)}`), G.el('div', chg >= 0 ? 'gr-up' : 'gr-down', G.pct(chg)));
+        tip.hidden = false;
+        const bw = el.clientWidth, s = bw / g.W;
+        const left = px * s + 18 + 170 > bw ? px * s - 18 - 160 : px * s + 18;
+        tip.style.left = Math.max(4, left) + 'px';
+        tip.style.top = Math.max(4, Math.min(el.clientHeight - 100, py * s - 40)) + 'px';
+      };
+
+      if (!st.init) {
+        // open zoomed on the latest ~60 candles; Reset and double-click come back here
+        st.init = true;
+        const k = Math.max(1, n / 60), right = m.l + iw;
+        st.home = d3.zoomIdentity.translate(right - right * k, 0).scale(k);
+        st.svg.call(st.zoom.transform, st.home);
+      } else st.render();
+    },
+  });
+</script>
