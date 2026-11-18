@@ -74,6 +74,7 @@ def main() -> int:
                 "bos": f"{fmt_t(ltf.index[s.created])} @ {s.bos_level:.2f}",
                 "fvg": s.has_fvg, "htf_aligned": s.htf_aligned,
                 "expires_in_bars": cfg.setup_expiry - (n - 1 - s.created),
+                "new": n - 1 - s.created == 0,  # created on the latest closed candle
             })
 
     # ---------- history comparison ----------
@@ -154,6 +155,7 @@ def main() -> int:
     (out / "signal.json").write_text(json.dumps({
         "symbol": args.symbol, "tf": args.tf, "time": last_t.isoformat(), "price": price,
         "trend": st.trend, "htf_trend": st_htf.trend, "trigger": bool(triggers),
+        "new_setup": any(x["new"] for x in signals),
         "signals": signals, "history_ltf": sum_ltf, "history_htf": sum_htf,
         "backtest_ltf": bt_ltf, "backtest_htf": bt_htf,
     }, indent=2, default=lambda x: bool(x) if isinstance(x, np.bool_) else str(x)))
