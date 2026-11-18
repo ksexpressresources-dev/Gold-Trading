@@ -131,6 +131,18 @@
   .gr .gr-down, .gr .val.gr-down { color: var(--gr-dn); }
   .gr .gr-flat, .gr .val.gr-flat { color: var(--gr-lilac); }
 </style>
+<style>
+  .gr-fresh { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 400; color: var(--gr-lilac);
+    padding: 3px 10px; border-radius: 999px; border: 1px solid var(--gr-line); background: rgba(255,255,255,.03); white-space: nowrap;
+    font-variant-numeric: tabular-nums; letter-spacing: 0; text-transform: none; }
+  .gr-fresh-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gr-up); flex: none; }
+  .gr-fresh.late { border-color: rgba(255,107,129,.5); color: var(--gr-dn); }
+  .gr-fresh.late .gr-fresh-dot { background: var(--gr-dn); }
+  .gr-fresh.static .gr-fresh-dot { background: var(--gr-lilac); }
+  .gr-head .gr-fresh { margin: 10px 0 0; }
+  @media (prefers-reduced-motion: no-preference) { .gr-fresh:not(.late):not(.static) .gr-fresh-dot { animation: grdot 2.4s ease-in-out infinite; } }
+  @media (max-width: 460px) { .gr h2 .gr-fresh { margin-left: 0; } }
+</style>
 
 <div class="gr" lang="ms" data-read>
   <div class="gr-cursor off" data-draw="cursor" aria-hidden="true"></div>
@@ -141,6 +153,7 @@
 
   <header class="gr-head" id="top">
     <h1>Gold SMC Radar</h1>
+    <div><span class="gr-fresh" data-draw="fresh" data-source="summary" data-field="generated" data-row="0">—</span></div>
     <p class="gr-sub">XAU · Gold futures (GC=F) · Entry 1H, bias harian · Candle terakhir <span data-draw="last-time" data-source="summary" data-field="time" data-row="0">—</span> MYT · Dikemaskini setiap jam</p>
     <p class="gr-take" id="takeaway">Harga emas <b class="gr-num" data-draw="tk-price" data-source="summary" data-field="price" data-row="0">—</b>, trend 1H <b data-draw="tk-trend" data-source="summary" data-field="trend_ltf" data-row="0">—</b> dan trend harian <b data-draw="tk-htrend" data-source="summary" data-field="trend_htf" data-row="0">—</b>. Status: <b data-draw="tk-status" data-source="setups">—</b>.</p>
   </header>
@@ -169,14 +182,14 @@
   </section>
 
   <section class="gr-panel" id="signal">
-    <h2>Signal entry</h2>
+    <h2>Signal entry <span class="gr-fresh" data-draw="fresh" data-source="summary" data-field="generated" data-row="0">—</span></h2>
     <p class="gr-note">Model: liquidity sweep → BOS → retrace ke Order Block. Entry pada 50% OB, SL di luar titik sweep, TP1 = 2R (tutup separuh, alih SL ke BE), TP2 = sasaran liquidity seterusnya. Gred: B = sweep + BOS + OB, +1 jika ada FVG, +1 jika sama arah dengan trend harian.</p>
     <p class="gr-empty" id="no-setup" hidden>Tiada setup aktif sekarang. Jangan entry, tunggu harga sweep liquidity dan break structure dulu.</p>
     <div class="gr-setups" data-draw="setups" data-source="setups"></div>
   </section>
 
   <section class="gr-panel" id="chart">
-    <h2>Chart 1H dengan zone SMC</h2>
+    <h2>Chart 1H dengan zone SMC <span class="gr-fresh" data-draw="fresh" data-source="summary" data-field="generated" data-row="0">—</span></h2>
     <div class="gr-tools">
       <button type="button" class="gr-btn" id="zoom-in" data-zoom="in">Zoom +</button>
       <button type="button" class="gr-btn" id="zoom-out" data-zoom="out">Zoom −</button>
@@ -196,7 +209,7 @@
 
   <div class="gr-two">
     <section class="gr-panel" id="history">
-      <h2>Banding dengan sejarah</h2>
+      <h2>Banding dengan sejarah <span class="gr-fresh" data-draw="fresh" data-source="summary" data-field="generated" data-row="0">—</span></h2>
       <p class="gr-note">Bentuk pergerakan harga terkini dibanding dengan semua tempoh lalu (korelasi bentuk + saiz pergerakan). "Selepas" ialah apa yang berlaku selepas pattern itu.</p>
       <div class="gr-bias">
         <p>1H: <b data-draw="h-ltf" data-source="summary" data-field="hist_ltf_bias" data-row="0">—</b> · <span class="gr-num" data-draw="h-ltf-pct" data-source="summary" data-field="hist_ltf_pct_up" data-row="0">—</span>% naik, median <span class="gr-num" data-draw="h-ltf-med" data-source="summary" data-field="hist_ltf_median" data-row="0">—</span>% dalam 32 jam</p>
@@ -211,7 +224,7 @@
     </section>
 
     <section class="gr-panel" id="backtest">
-      <h2>Prestasi strategi dalam sejarah</h2>
+      <h2>Prestasi strategi dalam sejarah <span class="gr-fresh" data-draw="fresh" data-source="summary" data-field="generated" data-row="0">—</span></h2>
       <p class="gr-note">Backtest model yang sama atas 2 tahun data 1H, tanpa intip data masa depan. R = gandaan risiko (1R = jarak entry ke SL).</p>
       <div class="gr-bt">
         <div class="gr-kpi"><span class="lab">Trade</span><span class="val" data-draw="b-trades" data-source="summary" data-field="bt_trades" data-row="0">—</span></div>
@@ -247,6 +260,19 @@
       mark: (e, src, field, row) => { e.dataset.source = src; e.dataset.field = field; e.dataset.row = String(row); return e; },
     };
   })();
+
+  // the hourly scan fires at minute 3 of each UTC hour, Monday to Friday (UTC), and takes ~2 minutes
+  window.GR.nextRun = (from) => {
+    const t = new Date(from); t.setUTCSeconds(0, 0);
+    if (t.getUTCMinutes() >= 3) t.setUTCHours(t.getUTCHours() + 1);
+    t.setUTCMinutes(3);
+    while (t.getUTCDay() === 0 || t.getUTCDay() === 6) { t.setUTCDate(t.getUTCDate() + 1); t.setUTCHours(0, 3, 0, 0); }
+    return new Date(+t + 2 * 60000);
+  };
+  window.GR.cd = (ms) => {
+    const s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+    return h ? `${h}j ${m}m` : `${m}:${String(x).padStart(2, '0')}`;
+  };
 
   dash.calc('chg24', {
     title: 'Perubahan 24 jam',
@@ -331,7 +357,7 @@
       st.timer = setInterval(() => {
         if (!st.next || !st.cd) return;
         const ms = Math.max(0, st.next - Date.now());
-        st.cd.textContent = `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')}`;
+        st.cd.textContent = window.GR.cd(ms);
       }, 1000);
       return st;
     },
@@ -381,10 +407,9 @@
       const foot = G.el('div', 'gr-isl-foot');
       foot.append(G.el('span', null, `Candle terakhir ${G.t(sum.time)} MYT`));
       // the hourly scan runs at minute 3 of every UTC hour on weekdays
-      const now = new Date(), next = new Date(now); next.setUTCMinutes(3, 0, 0);
-      if (next <= now) next.setUTCHours(next.getUTCHours() + 1);
+      const next = G.nextRun(new Date());
       const cdWrap = G.el('span', null, `Scan seterusnya ${G.hm(next)} · `);
-      const cd = G.el('span', 'gr-num', '—'); cdWrap.append(cd);
+      const cd = G.el('span', 'gr-num', G.cd(next - Date.now())); cdWrap.append(cd);
       foot.append(cdWrap);
       inner.append(foot);
       more.append(inner);
@@ -713,5 +738,31 @@
         st.svg.call(st.zoom.transform, st.home);
       } else st.render();
     },
+  });
+</script>
+
+<script>
+  // "last refresh / next refresh" chip shown beside every section title
+  dash.draw('fresh', {
+    mount() { const st = {}; st.timer = setInterval(() => st.tick && st.tick(), 1000); return st; },
+    update(el, st) {
+      const G = window.GR;
+      const r = G.row('summary');
+      if (!r || !r.generated) { el.textContent = '—'; st.tick = null; return; }
+      const gen = new Date(r.generated);
+      const day = (d) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kuala_Lumpur', day: '2-digit', month: 'short' }).format(d);
+      const when = (d) => (day(d) === day(new Date()) ? G.hm(d) : G.t(d.toISOString()));
+      const dot = G.el('span', 'gr-fresh-dot'), last = G.el('span', null, `Dikemaskini ${when(gen)}`), nxt = G.el('span');
+      el.replaceChildren(dot, last, nxt);
+      const due = G.nextRun(gen);
+      st.tick = () => {
+        const now = new Date(), next = G.nextRun(now);
+        const late = now - due > 8 * 60000;
+        el.classList.toggle('late', late);
+        nxt.textContent = (late ? ' · Lambat, cuba ' : ' · Seterusnya ') + `${when(next)} (${G.cd(next - now)})`;
+      };
+      st.tick();
+    },
+    unmount(el, st) { clearInterval(st.timer); },
   });
 </script>

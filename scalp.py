@@ -116,7 +116,7 @@ def main() -> int:
                            "sl": r2(r["sl"]), "tp": r2(r["tp"]), "risk": r2(r.get("risk")),
                            "state": r["state"], "result_r": r2(r["result_r"])})
         summary = [{
-            "time": iso(last_t), "price": r2(price), "atr15": r2(a15), "session": res["session"],
+            "time": iso(last_t), "generated": iso(pd.Timestamp.now(tz="UTC")), "price": r2(price), "atr15": r2(a15), "session": res["session"],
             "trend15": res["trend15"], "trend1h": res["trend1h"], "fresh_entry": bool(fresh),
             "active": len(live), "bt_trades": st["trades"], "bt_win": r2(st["win_rate"], 0),
             "bt_r": r2(st["total_r"], 1), "bt_avg": r2(st["avg_r"]), "bt_dd": r2(st["max_dd_r"], 1),

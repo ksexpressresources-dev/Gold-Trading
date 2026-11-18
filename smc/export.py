@@ -62,6 +62,7 @@ def write(out: Path, *, symbol, tf, htf_tf, ltf, st, st_htf, signals, atr, price
     aplus = (bt_ltf.get("by_grade") or {}).get("A+", {})
     summary = [{
         "symbol": symbol, "tf": tf, "htf": htf_tf, "time": _iso(ltf.index[-1]),
+        "generated": _iso(pd.Timestamp.now(tz="UTC")),
         "price": _r(price), "atr": _r(atr),
         "prev_close": _r(ltf["close"].iloc[-25]) if n > 25 else None,
         "trend_ltf": st.trend, "trend_htf": st_htf.trend,

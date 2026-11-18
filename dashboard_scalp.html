@@ -132,6 +132,18 @@
   .gr .gr-flat, .gr .val.gr-flat { color: var(--gr-lilac); }
 </style>
 <style>
+  .gr-fresh { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 400; color: var(--gr-lilac);
+    padding: 3px 10px; border-radius: 999px; border: 1px solid var(--gr-line); background: rgba(255,255,255,.03); white-space: nowrap;
+    font-variant-numeric: tabular-nums; letter-spacing: 0; text-transform: none; }
+  .gr-fresh-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gr-up); flex: none; }
+  .gr-fresh.late { border-color: rgba(255,107,129,.5); color: var(--gr-dn); }
+  .gr-fresh.late .gr-fresh-dot { background: var(--gr-dn); }
+  .gr-fresh.static .gr-fresh-dot { background: var(--gr-lilac); }
+  .gr-head .gr-fresh { margin: 10px 0 0; }
+  @media (prefers-reduced-motion: no-preference) { .gr-fresh:not(.late):not(.static) .gr-fresh-dot { animation: grdot 2.4s ease-in-out infinite; } }
+  @media (max-width: 460px) { .gr h2 .gr-fresh { margin-left: 0; } }
+</style>
+<style>
   .gr-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
   .gr-step { position: relative; padding: 10px 10px 10px 12px; border-radius: var(--cds-radius); background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); font-size: 12px; color: var(--gr-lilac); min-width: 0; }
   .gr-step b { display: block; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--gr-lilac); opacity: .8; margin-bottom: 2px; }
@@ -153,6 +165,7 @@
 
   <header class="gr-head" id="top">
     <h1>Gold Scalp M15</h1>
+    <div><span class="gr-fresh" data-draw="fresh" data-source="summary" data-field="generated" data-row="0">—</span></div>
     <p class="gr-sub">XAU · Gold futures (GC=F) · Zone 1H + pengesahan 15m · Candle terakhir <span data-draw="last-time" data-source="summary" data-field="time" data-row="0">—</span> MYT</p>
     <p class="gr-take" id="takeaway">Harga <b class="gr-num" data-draw="tk-price" data-source="summary" data-field="price" data-row="0">—</b>, sesi <b data-draw="tk-session" data-source="summary" data-field="session" data-row="0">—</b>. Status scalp: <b data-draw="tk-status" data-source="signals">—</b>.</p>
   </header>
@@ -181,14 +194,14 @@
   </section>
 
   <section class="gr-panel" id="signal">
-    <h2>Signal scalp</h2>
+    <h2>Signal scalp <span class="gr-fresh" data-draw="fresh" data-source="summary" data-field="generated" data-row="0">—</span></h2>
     <p class="gr-note">Cara main: tunggu harga masuk zone Order Block 1H, kemudian tunggu candle 15m break structure (CHoCH/BOS) ke arah setup. Entry pada tutup candle itu, SL di luar high/low 15m dalam zone, TP separuh pada 1.5R dan baki pada 3R. Ambil hanya setup bertanda "Disyorkan" (sama arah dengan trend harian).</p>
     <p class="gr-empty" id="no-signal" hidden>Tiada zone 1H aktif sekarang. Jangan scalp membuta tuli, tunggu zone baru terbentuk.</p>
     <div class="gr-setups" data-draw="signals" data-source="signals"></div>
   </section>
 
   <section class="gr-panel" id="chart">
-    <h2>Chart 15m</h2>
+    <h2>Chart 15m <span class="gr-fresh" data-draw="fresh" data-source="summary" data-field="generated" data-row="0">—</span></h2>
     <div class="gr-tools">
       <button type="button" class="gr-btn" id="zoom-in" data-zoom="in">Zoom +</button>
       <button type="button" class="gr-btn" id="zoom-out" data-zoom="out">Zoom −</button>
@@ -208,7 +221,7 @@
 
   <div class="gr-two">
     <section class="gr-panel" id="log">
-      <h2>Log trade scalp</h2>
+      <h2>Log trade scalp <span class="gr-fresh" data-draw="fresh" data-source="summary" data-field="generated" data-row="0">—</span></h2>
       <p class="gr-note">Setiap entry yang model ini ambil dalam 60 hari lepas, terbaru di atas. R selepas tolak kos 0.4 point.</p>
       <div class="gr-tablewrap">
         <table data-source="trades" data-row-key="key" aria-label="Log trade scalp">
@@ -219,7 +232,7 @@
     </section>
 
     <section class="gr-panel" id="research">
-      <h2>Kenapa strategi ini</h2>
+      <h2>Kenapa strategi ini <span class="gr-fresh static"><span class="gr-fresh-dot"></span>Kajian tetap · 18 Nov 2026</span></h2>
       <p class="gr-note">Tujuh cara scalping M15 diuji atas data emas 60 hari. Setting dipilih guna separuh pertama, kemudian diuji atas separuh kedua yang tak pernah dilihat. Kos 0.4 point setiap trade.</p>
       <div class="gr-tablewrap">
         <table data-source="research" data-row-key="key" aria-label="Perbandingan strategi scalping">
@@ -254,6 +267,19 @@
       mark: (e, src, field, row) => { e.dataset.source = src; e.dataset.field = field; e.dataset.row = String(row); return e; },
     };
   })();
+
+  // the hourly scan fires at minute 3 of each UTC hour, Monday to Friday (UTC), and takes ~2 minutes
+  window.GR.nextRun = (from) => {
+    const t = new Date(from); t.setUTCSeconds(0, 0);
+    if (t.getUTCMinutes() >= 3) t.setUTCHours(t.getUTCHours() + 1);
+    t.setUTCMinutes(3);
+    while (t.getUTCDay() === 0 || t.getUTCDay() === 6) { t.setUTCDate(t.getUTCDate() + 1); t.setUTCHours(0, 3, 0, 0); }
+    return new Date(+t + 2 * 60000);
+  };
+  window.GR.cd = (ms) => {
+    const s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+    return h ? `${h}j ${m}m` : `${m}:${String(x).padStart(2, '0')}`;
+  };
 
 
   // island: tap / Enter / hover toggles the expanded state (class only)
@@ -312,7 +338,7 @@
       st.timer = setInterval(() => {
         if (!st.next || !st.cd) return;
         const ms = Math.max(0, st.next - Date.now());
-        st.cd.textContent = `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')}`;
+        st.cd.textContent = window.GR.cd(ms);
       }, 1000);
       return st;
     },
@@ -353,10 +379,9 @@
       } else inner.append(G.el('p', 'gr-isl-foot', 'Tiada zone 1H aktif. Tunggu.'));
       const foot = G.el('div', 'gr-isl-foot');
       foot.append(G.el('span', null, `Candle terakhir ${G.t(sum.time)} MYT`));
-      const now = new Date(), next = new Date(now); next.setUTCMinutes(3, 0, 0);
-      if (next <= now) next.setUTCHours(next.getUTCHours() + 1);
+      const next = G.nextRun(new Date());
       const cdWrap = G.el('span', null, `Kemas kini seterusnya ${G.hm(next)} · `);
-      const cd = G.el('span', 'gr-num', '—'); cdWrap.append(cd); foot.append(cdWrap);
+      const cd = G.el('span', 'gr-num', G.cd(next - Date.now())); cdWrap.append(cd); foot.append(cdWrap);
       inner.append(foot); more.append(inner); el.append(more);
       st.next = next; st.cd = cd;
     },
@@ -699,5 +724,30 @@
         st.svg.call(st.zoom.transform, st.home);
       } else st.render();
     },
+  });
+</script>
+<script>
+  // "last refresh / next refresh" chip shown beside every section title
+  dash.draw('fresh', {
+    mount() { const st = {}; st.timer = setInterval(() => st.tick && st.tick(), 1000); return st; },
+    update(el, st) {
+      const G = window.GR;
+      const r = G.row('summary');
+      if (!r || !r.generated) { el.textContent = '—'; st.tick = null; return; }
+      const gen = new Date(r.generated);
+      const day = (d) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kuala_Lumpur', day: '2-digit', month: 'short' }).format(d);
+      const when = (d) => (day(d) === day(new Date()) ? G.hm(d) : G.t(d.toISOString()));
+      const dot = G.el('span', 'gr-fresh-dot'), last = G.el('span', null, `Dikemaskini ${when(gen)}`), nxt = G.el('span');
+      el.replaceChildren(dot, last, nxt);
+      const due = G.nextRun(gen);
+      st.tick = () => {
+        const now = new Date(), next = G.nextRun(now);
+        const late = now - due > 8 * 60000;
+        el.classList.toggle('late', late);
+        nxt.textContent = (late ? ' · Lambat, cuba ' : ' · Seterusnya ') + `${when(next)} (${G.cd(next - now)})`;
+      };
+      st.tick();
+    },
+    unmount(el, st) { clearInterval(st.timer); },
   });
 </script>
