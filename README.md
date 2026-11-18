@@ -40,3 +40,24 @@ Penemuan:
 
 > Data: Yahoo Finance GC=F (gold futures), beza beberapa dollar dari spot XAUUSD broker. Ada risiko parameter
 > terlebih-suai (overfit) pada data lalu. Bukan nasihat kewangan.
+
+## Scalping M15 (`scalp.py`)
+Model: **zone Order Block 1H + pengesahan CHoCH/BOS 15m**. Entry pada tutup candle 15m yang break structure,
+SL di luar high/low 15m dalam zone, TP separuh 1.5R, baki 3R.
+
+Kajian walk-forward 7 strategi scalping M15 (60 hari data 15m, kos 0.4 point/trade), skrip dalam `research/`:
+
+| Strategi | Trade (ujian) | R ujian | Keputusan |
+|---|---|---|---|
+| Zone 1H + CHoCH 15m (sama arah harian) | 11 | +8.4R | Lulus, 24/24 setting untung |
+| Asian range sweep | 18 | +7.7R | Gagal atas 2 tahun 1H (3/36 setting untung) |
+| SMC 15m + bias 1H | 9 | +0.5R | Tiada edge |
+| EMA pullback | 52 | -0.5R | Gagal |
+| NY opening range breakout | 22 | -6.0R | Gagal |
+| Bollinger mean reversion | 58 | -5.0R | Gagal |
+| FVG continuation | 16 | -8.3R | Gagal |
+
+```bash
+python scalp.py --dash reports/scalp
+```
+Exit code `2` = ENTRY segar (CHoCH dalam 4 candle 15m terakhir, harga belum lari >0.5R).

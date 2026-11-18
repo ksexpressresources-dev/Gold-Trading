@@ -46,6 +46,9 @@ def fetch(symbol: str = "GC=F", interval: str = "15m", range_: str | None = None
 def drop_unclosed(df: pd.DataFrame, interval: str) -> pd.DataFrame:
     """Remove the last candle if it is still forming."""
     step = pd.Timedelta(interval.replace("m", "min"))
+    if step < pd.Timedelta("1D"):
+        # Yahoo appends a live tick with an off-grid timestamp (e.g. 15:42) - not a candle
+        df = df[(df.index - df.index.normalize()) % step == pd.Timedelta(0)]
     if len(df) and df.index[-1] + step > pd.Timestamp.now(tz="UTC"):
         return df.iloc[:-1]
     return df
