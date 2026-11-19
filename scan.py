@@ -100,30 +100,30 @@ def main() -> int:
     L = []
     w = L.append
     w(f"# Gold SMC Scan: {args.symbol} {args.tf} (bias {htf_tf})")
-    w(f"_Candle terakhir: {fmt_t(last_t)} (MYT) · Harga: **{price:.2f}** · ATR({args.tf}): {a:.2f}_\n")
+    w(f"_Last candle: {fmt_t(last_t)} (MYT) · Price: **{price:.2f}** · ATR({args.tf}): {a:.2f}_\n")
     w(f"**Trend {args.tf}:** {st.trend.upper()} · **Trend {htf_tf}:** {st_htf.trend.upper()}\n")
 
     triggers = [s for s in signals if s["trigger"]]
     if triggers:
         w("## 🚨 ENTRY TRIGGER")
     elif signals:
-        w("## 👀 Setup aktif (tunggu harga masuk zone)")
+        w("## 👀 Active setup (wait for price to reach the zone)")
     else:
-        w("## 😴 Tiada setup aktif. Jangan entry, tunggu.")
+        w("## 😴 No active setup. Do not enter, wait.")
     for s in signals:
         w(f"### {s['side']} · Grade {s['grade']} ({s['score']}/5) · {s['action']}")
         w(f"- **Zone (OB):** {s['zone'][0]} – {s['zone'][1]}")
         w(f"- **Entry (50% OB):** {s['entry']}  ·  **SL:** {s['sl']}")
         w(f"- **TP1 (2R):** {s['tp1']}  ·  **TP2:** {s['tp2']} (RR {s['rr_tp2']})")
-        w(f"- Risiko: {abs(s['entry'] - s['sl']):.2f} point = **${abs(s['entry'] - s['sl']):.2f} per 0.01 lot**"
-          f" (TP1 separuh posisi, SL ke BE)")
+        w(f"- Risk: {abs(s['entry'] - s['sl']):.2f} point = **${abs(s['entry'] - s['sl']):.2f} per 0.01 lot**"
+          f" (close half at TP1, move SL to BE)")
         w(f"- Liquidity sweep: {s['sweep']} · BOS: {s['bos']}")
-        w(f"- FVG confluence: {'✅' if s['fvg'] else '❌'} · HTF bias sama arah: "
-          f"{'✅' if s['htf_aligned'] else '❌'} · Luput dalam {s['expires_in_bars']} candle")
-        w(f"- Penapis: EMA200 harian {'✅' if s['ema200_d'] else '❌'} · ADX {s['adx']} {'✅' if (s['adx'] or 0) > ADX_MIN else '❌'}"
-          f" → **{'LEPAS PENAPIS' if s['filter_ok'] else 'TAK LEPAS PENAPIS (risiko lebih tinggi)'}**\n")
+        w(f"- FVG confluence: {'✅' if s['fvg'] else '❌'} · HTF bias aligned: "
+          f"{'✅' if s['htf_aligned'] else '❌'} · Expires in {s['expires_in_bars']} candles")
+        w(f"- Filter: daily EMA200 {'✅' if s['ema200_d'] else '❌'} · ADX {s['adx']} {'✅' if (s['adx'] or 0) > ADX_MIN else '❌'}"
+          f" → **{'PASSES FILTER' if s['filter_ok'] else 'FAILS FILTER (higher risk)'}**\n")
 
-    w("## Struktur terkini")
+    w("## Latest structure")
     for e in st.events[-8:]:
         w(f"- {fmt_t(ltf.index[e.idx])} · {e.kind} {e.side} @ {e.price:.2f}")
     w("")
@@ -131,27 +131,27 @@ def main() -> int:
     obs = [o for o in st.obs if not o.mitigated and near(o.top, o.bottom)][-4:]
     fvgs = [g for g in st.fvgs if not g.filled and near(g.top, g.bottom)][-4:]
     if obs or fvgs:
-        w("## Zone berdekatan (belum mitigated)")
+        w("## Nearby zones (unmitigated)")
         for o in obs:
             w(f"- OB {o.side}: {o.bottom:.2f} – {o.top:.2f} ({fmt_t(ltf.index[o.idx])})")
         for g in fvgs:
             w(f"- FVG {g.side}: {g.bottom:.2f} – {g.top:.2f} ({fmt_t(ltf.index[g.idx])})")
         w("")
 
-    w("## Banding dengan sejarah (pattern serupa)")
+    w("## Compared with history (similar patterns)")
     for label, an, sm, hz, tf in (("LTF", an_ltf, sum_ltf, 32, args.tf),
                                   ("HTF", an_htf, sum_htf, 24, htf_tf)):
         if not sm:
             continue
-        w(f"**{tf}:** {sm['n']} pattern paling serupa → {sm['pct_up']:.0f}% naik selepas {hz} candle, "
+        w(f"**{tf}:** {sm['n']} most similar patterns → {sm['pct_up']:.0f}% went up after {hz} candles, "
           f"median {sm['median_ret']:+.2f}% → bias **{sm['bias']}** (avg corr {sm['avg_corr']:.2f})")
         for x in an:
-            w(f"- {fmt_t(x.start)} → {fmt_t(x.end)} · corr {x.corr:.2f} · selepas itu {x.fwd_ret:+.2f}% "
+            w(f"- {fmt_t(x.start)} → {fmt_t(x.end)} · corr {x.corr:.2f} · afterwards {x.fwd_ret:+.2f}% "
               f"(max +{x.max_up:.2f}% / {x.max_down:.2f}%)")
         w("")
 
-    w("## Prestasi strategi ni dalam sejarah (backtest)")
-    span_of = {"5m": "60 hari", "15m": "60 hari", "30m": "60 hari", "1h": "2 tahun", "1d": "10 tahun"}
+    w("## Strategy performance in history (backtest)")
+    span_of = {"5m": "60 days", "15m": "60 days", "30m": "60 days", "1h": "2 years", "1d": "10 years"}
     for tf, bt, span in ((args.tf, bt_ltf, span_of[args.tf]), (htf_tf, bt_htf, span_of[htf_tf])):
         if bt.get("trades"):
             w(f"- **{tf} ({span}):** {bt['trades']} trade · win rate {bt['win_rate']:.0f}% · "
@@ -159,12 +159,12 @@ def main() -> int:
             for g, v in bt["by_grade"].items():
                 w(f"  - Grade {g}: {v['trades']} trade, win {v['win_rate']:.0f}%, {v['total_r']:+.1f}R")
         else:
-            w(f"- **{tf}:** tiada trade selesai")
+            w(f"- **{tf}:** no finished trades")
     if bt_f.get("trades"):
-        w(f"- **Dengan penapis EMA200 harian + ADX>{ADX_MIN:.0f}:** {bt_f['trades']} trade · win {bt_f['win_rate']:.0f}% · "
+        w(f"- **With the daily EMA200 + ADX>{ADX_MIN:.0f} filter:** {bt_f['trades']} trade · win {bt_f['win_rate']:.0f}% · "
           f"{bt_f['total_r']:+.1f}R · avg {bt_f['avg_r']:+.2f}R · max DD {bt_f['max_dd_r']:.1f}R")
-    w("\n_Data: Yahoo Finance GC=F (gold futures, beza sikit dari spot XAUUSD). "
-      "Bukan nasihat kewangan. Sentiasa guna SL & risk management._")
+    w("\n_Data: Yahoo Finance GC=F (gold futures, a few dollars off spot XAUUSD). "
+      "Not financial advice. Always use a stop loss and risk management._")
 
     report = "\n".join(L)
     out = Path(args.out)

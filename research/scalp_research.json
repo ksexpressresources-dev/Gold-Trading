@@ -1,0 +1,7 @@
+[{"key":"mtf","strategy":"1H zone + 15m CHoCH (chosen)","trades":11,"test_r":8.4,"win":45,"pf":2.6,"check":"24/24 settings profitable; 1H zone +61.5R over 2 years","verdict":"Passed"},
+{"key":"asian","strategy":"Asian range sweep","trades":18,"test_r":7.7,"win":39,"pf":1.72,"check":"Only 3/36 settings profitable on 2 years of 1H","verdict":"Failed (luck)"},
+{"key":"smc15","strategy":"SMC 15m + 1H bias","trades":9,"test_r":0.5,"win":33,"pf":1.09,"check":"4/12 settings profitable","verdict":"No edge"},
+{"key":"ema","strategy":"EMA 20/50 pullback","trades":52,"test_r":-0.5,"win":54,"pf":0.98,"check":"0/6 settings profitable","verdict":"Failed"},
+{"key":"orb","strategy":"NY opening range breakout","trades":22,"test_r":-6.0,"win":36,"pf":0.57,"check":"Profitable in training, lost in testing","verdict":"Failed"},
+{"key":"bb","strategy":"Bollinger mean reversion (Asia)","trades":58,"test_r":-5.0,"win":48,"pf":0.84,"check":"0/9 settings profitable","verdict":"Failed"},
+{"key":"fvg","strategy":"FVG trend continuation","trades":16,"test_r":-8.3,"win":19,"pf":0.35,"check":"4/24 settings profitable","verdict":"Failed"}]

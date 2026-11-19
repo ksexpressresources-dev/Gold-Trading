@@ -123,11 +123,11 @@
   /* status chips */
   .gr-st { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap; font-weight: 600; }
   .gr-st::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-  .gr-st.s-berjaya { color: var(--gr-up); background: color-mix(in srgb, var(--gr-up) 14%, transparent); }
-  .gr-st.s-gagal { color: var(--gr-dn); background: color-mix(in srgb, var(--gr-dn) 14%, transparent); }
-  .gr-st.s-berjalan { color: var(--gr-accent-ink); background: var(--gr-accent); }
-  .gr-st.s-menunggu { color: var(--gr-wait); background: color-mix(in srgb, var(--gr-wait) 16%, transparent); }
-  .gr-st.s-tak { color: var(--gr-off); background: color-mix(in srgb, var(--gr-off) 14%, transparent); }
+  .gr-st.s-success { color: var(--gr-up); background: color-mix(in srgb, var(--gr-up) 14%, transparent); }
+  .gr-st.s-fail { color: var(--gr-dn); background: color-mix(in srgb, var(--gr-dn) 14%, transparent); }
+  .gr-st.s-running { color: var(--gr-accent-ink); background: var(--gr-accent); }
+  .gr-st.s-waiting { color: var(--gr-wait); background: color-mix(in srgb, var(--gr-wait) 16%, transparent); }
+  .gr-st.s-notexec { color: var(--gr-off); background: color-mix(in srgb, var(--gr-off) 14%, transparent); }
   .gr-st.s-none { color: var(--gr-off); background: transparent; font-weight: 400; padding-left: 0; }
   .gr-st.s-none::before { display: none; }
 
@@ -240,7 +240,7 @@
   .gr-def { background: var(--gr-lav); color: var(--gr-lav-fg); border-radius: var(--gr-radius); padding: 18px 20px; display: grid; gap: 10px; }
   .gr-def p { margin: 0; line-height: 1.5; font-size: 14px; }
   .gr-def .chips { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; }
-  .gr-def .gr-st.s-berjalan { box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
+  .gr-def .gr-st.s-running { box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
   .gr-foot { color: var(--gr-muted); font-size: var(--cds-font-size-caption); margin: 0; max-width: 85ch; line-height: 1.5; }
 
   /* ---------- bottom nav (phone only, like the reference) ---------- */
@@ -271,11 +271,11 @@
   @media (pointer: coarse) { .gr-cursor { display: none; } }
 </style>
 
-<div class="gr" lang="ms" data-read>
+<div class="gr" lang="en" data-read>
   <div class="gr-cursor off" data-draw="cursor" aria-hidden="true"></div>
 
   <div class="gr-islandbar">
-    <div class="gr-island" id="island" role="button" tabindex="0" aria-expanded="false" aria-label="Status emas. Tekan untuk butiran" data-draw="island" data-source="summary setups s_signals s_summary"></div>
+    <div class="gr-island" id="island" role="button" tabindex="0" aria-expanded="false" aria-label="Gold status. Press for details" data-draw="island" data-source="summary setups s_signals s_summary"></div>
   </div>
 
   <header class="gr-top" id="top">
@@ -285,18 +285,18 @@
 
   <div>
     <p class="gr-date" data-draw="today">—</p>
-    <h1 class="gr-hello">Trade bijak,<br><b>Gold Radar!</b></h1>
+    <h1 class="gr-hello">Trade smart,<br><b>Gold Radar!</b></h1>
   </div>
 
-  <section class="gr-score" id="score" aria-label="Prestasi 7 hari">
-    <div class="gr-score-item"><span class="big" data-draw="sc-rate" data-source="t_summary" data-field="all_7d_rate" data-row="0">—</span><span class="lab">Berjaya +100 pip</span></div>
+  <section class="gr-score" id="score" aria-label="7-day performance">
+    <div class="gr-score-item"><span class="big" data-draw="sc-rate" data-source="t_summary" data-field="all_7d_rate" data-row="0">—</span><span class="lab">Hit +100 pips</span></div>
     <span class="gr-score-sep"></span>
-    <div class="gr-score-item"><span class="big" data-draw="sc-ent" data-source="t_summary" data-field="all_7d_entries" data-row="0">—</span><span class="lab">Entry 7 hari</span></div>
-    <button type="button" class="gr-cardbtn" data-goto="track" aria-label="Buka tracking"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    <div class="gr-score-item"><span class="big" data-draw="sc-ent" data-source="t_summary" data-field="all_7d_entries" data-row="0">—</span><span class="lab">Entries, 7 days</span></div>
+    <button type="button" class="gr-cardbtn" data-goto="track" aria-label="Open tracking"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
   </section>
 
-  <div class="gr-seg" role="tablist" aria-label="Bahagian">
-    <button type="button" role="tab" id="tab-btn-home" data-tab="home" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>Ringkasan</button>
+  <div class="gr-seg" role="tablist" aria-label="Sections">
+    <button type="button" role="tab" id="tab-btn-home" data-tab="home" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>Overview</button>
     <button type="button" role="tab" id="tab-btn-h1" data-tab="h1" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-6"/></svg>H1 Swing</button>
     <button type="button" role="tab" id="tab-btn-m15" data-tab="m15" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg>M15 Scalp</button>
     <button type="button" role="tab" id="tab-btn-track" data-tab="track" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>Tracking</button>
@@ -305,46 +305,46 @@
   <!-- ===================== RINGKASAN ===================== -->
   <section class="gr-tab" id="home" data-tabpanel="home">
     <div>
-      <div class="gr-h"><h2>Status jam lepas</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+      <div class="gr-h"><h2>Last hour</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
       <div class="gr-cards">
         <article class="gr-vital lav" id="card-h1">
           <div class="gr-vital-top">
             <span class="gr-tag"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-6"/></svg>H1 Swing</span>
-            <button type="button" class="gr-cardbtn" data-goto="h1" aria-label="Buka H1 Swing"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></button>
+            <button type="button" class="gr-cardbtn" data-goto="h1" aria-label="Open H1 Swing"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></button>
           </div>
           <div>
             <div class="gr-big" data-draw="h-price" data-source="summary" data-field="price" data-row="0">—</div>
-            <div class="gr-sub">Jam lepas: <span data-draw="h-last" data-source="t_summary" data-field="last_hour_h1" data-row="0">—</span></div>
+            <div class="gr-sub">Last hour: <span data-draw="h-last" data-source="t_summary" data-field="last_hour_h1" data-row="0">—</span></div>
           </div>
-          <div class="gr-bars" data-draw="hourbars" data-source="t_hourly" role="img" aria-label="Pergerakan harga setiap jam, 24 jam terakhir"></div>
-          <div class="gr-foot2"><span>Gerak harga 24 jam (pip)</span><span data-draw="h-status" data-source="setups">—</span></div>
+          <div class="gr-bars" data-draw="hourbars" data-source="t_hourly" role="img" aria-label="Price movement per hour, last 24 hours"></div>
+          <div class="gr-foot2"><span>24-hour price moves (pips)</span><span data-draw="h-status" data-source="setups">—</span></div>
         </article>
         <article class="gr-vital" id="card-m15">
           <div class="gr-vital-top">
             <span class="gr-tag"><svg viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg>M15 Scalp</span>
-            <button type="button" class="gr-cardbtn" data-goto="m15" aria-label="Buka M15 Scalp"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></button>
+            <button type="button" class="gr-cardbtn" data-goto="m15" aria-label="Open M15 Scalp"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></button>
           </div>
           <div>
             <div class="gr-big" style="font-size: clamp(1.9rem, 5vw, 2.4rem)" data-draw="m-word" data-source="s_signals">—</div>
             <div class="gr-sub" data-draw="m-sub" data-source="s_signals">—</div>
           </div>
-          <div class="gr-sub">Jam lepas: <span data-draw="m-last" data-source="t_summary" data-field="last_hour_m15" data-row="0">—</span></div>
-          <div class="gr-foot2"><span>Sesi <span data-draw="m-session" data-source="s_summary" data-field="session" data-row="0">—</span></span><span>ATR <span data-draw="m-atr" data-source="s_summary" data-field="atr15" data-row="0">—</span></span></div>
+          <div class="gr-sub">Last hour: <span data-draw="m-last" data-source="t_summary" data-field="last_hour_m15" data-row="0">—</span></div>
+          <div class="gr-foot2"><span>Session <span data-draw="m-session" data-source="s_summary" data-field="session" data-row="0">—</span></span><span>ATR <span data-draw="m-atr" data-source="s_summary" data-field="atr15" data-row="0">—</span></span></div>
         </article>
         <article class="gr-vital" id="card-rate">
-          <div class="gr-vital-top"><span class="gr-tag"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>Kadar berjaya</span>
-            <button type="button" class="gr-cardbtn" data-goto="track" aria-label="Buka tracking"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></button></div>
+          <div class="gr-vital-top"><span class="gr-tag"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>Success rate</span>
+            <button type="button" class="gr-cardbtn" data-goto="track" aria-label="Open tracking"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></button></div>
           <div class="gr-ratecol">
-            <div class="gr-rate"><div class="row"><span>H1 · 7 hari</span><b data-draw="r-h1" data-source="t_summary" data-field="h1_7d_rate" data-row="0">—</b></div><div class="gr-meter" data-draw="r-h1m" data-source="t_summary"></div></div>
-            <div class="gr-rate"><div class="row"><span>M15 · 7 hari</span><b data-draw="r-m15" data-source="t_summary" data-field="m15_7d_rate" data-row="0">—</b></div><div class="gr-meter" data-draw="r-m15m" data-source="t_summary"></div></div>
+            <div class="gr-rate"><div class="row"><span>H1 · 7 days</span><b data-draw="r-h1" data-source="t_summary" data-field="h1_7d_rate" data-row="0">—</b></div><div class="gr-meter" data-draw="r-h1m" data-source="t_summary"></div></div>
+            <div class="gr-rate"><div class="row"><span>M15 · 7 days</span><b data-draw="r-m15" data-source="t_summary" data-field="m15_7d_rate" data-row="0">—</b></div><div class="gr-meter" data-draw="r-m15m" data-source="t_summary"></div></div>
           </div>
-          <div class="gr-foot2"><span>Berjaya = +100 pip sebelum SL</span></div>
+          <div class="gr-foot2"><span>Success = +100 pips before SL</span></div>
         </article>
       </div>
     </div>
 
     <div class="gr-panel" id="home-hours">
-      <div class="gr-h"><h2>6 jam terakhir</h2><button type="button" class="gr-link" data-goto="track">Lihat semua</button></div>
+      <div class="gr-h"><h2>Last 6 hours</h2><button type="button" class="gr-link" data-goto="track">See all</button></div>
       <div class="gr-hours" data-draw="hours6" data-source="t_hourly"></div>
     </div>
   </section>
@@ -356,24 +356,24 @@
       <div class="gr-dial" data-draw="h1-dial" data-source="setups"></div>
       <div class="gr-glass-box">
         <div class="gr-meas">
-          <div class="gr-meas-top"><div><span class="name">Harga vs setup</span><span class="ok" data-draw="h1-pos-ok" data-source="setups summary">—</span></div><div class="v"><span data-draw="h1-pos-v" data-source="summary" data-field="price" data-row="0">—</span></div></div>
+          <div class="gr-meas-top"><div><span class="name">Price vs setup</span><span class="ok" data-draw="h1-pos-ok" data-source="setups summary">—</span></div><div class="v"><span data-draw="h1-pos-v" data-source="summary" data-field="price" data-row="0">—</span></div></div>
           <div class="gr-slider" data-draw="h1-pos" data-source="setups summary"></div>
         </div>
         <div class="gr-meas">
-          <div class="gr-meas-top"><div><span class="name">ADX 1H · kekuatan trend</span><span class="ok" data-draw="h1-adx-ok" data-source="setups">—</span></div><div class="v"><span data-draw="h1-adx-v" data-source="setups" data-field="adx" data-row="0">—</span></div></div>
+          <div class="gr-meas-top"><div><span class="name">ADX 1H · trend strength</span><span class="ok" data-draw="h1-adx-ok" data-source="setups">—</span></div><div class="v"><span data-draw="h1-adx-v" data-source="setups" data-field="adx" data-row="0">—</span></div></div>
           <div class="gr-slider" data-draw="h1-adx" data-source="setups"></div>
         </div>
       </div>
       <div class="gr-acts">
-        <button type="button" class="gr-act" data-scroll="h1-chart"><span class="ic"><span><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-6"/></svg></span><span><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></span></span><b>Lihat<br>chart</b></button>
-        <button type="button" class="gr-act" data-scroll="history"><span class="ic"><span><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg></span><span><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></span></span><b>Banding<br>sejarah</b></button>
+        <button type="button" class="gr-act" data-scroll="h1-chart"><span class="ic"><span><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-6"/></svg></span><span><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></span></span><b>View<br>chart</b></button>
+        <button type="button" class="gr-act" data-scroll="history"><span class="ic"><span><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg></span><span><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></span></span><b>Compare<br>history</b></button>
       </div>
     </div>
 
     <section class="gr-panel" id="signal">
       <div class="gr-h"><h2>Signal entry</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
-      <p class="gr-note">Model: liquidity sweep → BOS → retrace ke Order Block. Entry pada 50% OB, SL di luar titik sweep, TP1 = 2R (tutup separuh, SL ke BE), TP2 = liquidity seterusnya. "Lepas penapis" = sebelah betul EMA 200 harian dan ADX 1H &gt; 20.</p>
-      <p class="gr-empty" id="no-setup" hidden>Tiada setup H1 aktif sekarang. Tunggu sweep dan break structure.</p>
+      <p class="gr-note">Model: liquidity sweep → BOS → retrace into the Order Block. Entry at 50% of the OB, SL beyond the sweep, TP1 = 2R (close half, move SL to break-even), TP2 = next liquidity. "Passes filter" = on the right side of the daily EMA 200 and 1H ADX &gt; 20.</p>
+      <p class="gr-empty" id="no-setup" hidden>No active H1 setup right now. Wait for a sweep and a break of structure.</p>
       <div class="gr-setups" data-draw="setups" data-source="setups"></div>
     </section>
 
@@ -383,7 +383,7 @@
         <button type="button" class="gr-btn" data-zoom="in" data-chart="h1">Zoom +</button>
         <button type="button" class="gr-btn" data-zoom="out" data-chart="h1">Zoom −</button>
         <button type="button" class="gr-btn" data-zoom="reset" data-chart="h1">Reset</button>
-        <span class="gr-hint">Scroll / pinch untuk zoom di pointer · drag untuk geser</span>
+        <span class="gr-hint">Scroll / pinch to zoom at the pointer · drag to pan</span>
       </div>
       <div class="gr-chartbox" data-draw="chart-h1" data-source="candles levels setups"></div>
       <div class="gr-legend" aria-hidden="true">
@@ -396,22 +396,22 @@
 
     <div class="gr-two">
       <section class="gr-panel" id="history">
-        <div class="gr-h"><h2>Banding dengan sejarah</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
-        <p class="gr-note">1H: <b data-draw="h-ltf" data-source="summary" data-field="hist_ltf_bias" data-row="0">—</b> · <span class="gr-num" data-draw="h-ltf-pct" data-source="summary" data-field="hist_ltf_pct_up" data-row="0">—</span>% naik dalam 32 jam. Harian: <b data-draw="h-htf" data-source="summary" data-field="hist_htf_bias" data-row="0">—</b> · <span class="gr-num" data-draw="h-htf-pct" data-source="summary" data-field="hist_htf_pct_up" data-row="0">—</span>% naik dalam 24 hari.</p>
+        <div class="gr-h"><h2>Compared with history</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+        <p class="gr-note">1H: <b data-draw="h-ltf" data-source="summary" data-field="hist_ltf_bias" data-row="0">—</b> · <span class="gr-num" data-draw="h-ltf-pct" data-source="summary" data-field="hist_ltf_pct_up" data-row="0">—</span>% rose within 32 hours. Daily: <b data-draw="h-htf" data-source="summary" data-field="hist_htf_bias" data-row="0">—</b> · <span class="gr-num" data-draw="h-htf-pct" data-source="summary" data-field="hist_htf_pct_up" data-row="0">—</span>% rose within 24 days.</p>
         <div class="gr-tablewrap">
-          <table data-source="analogs" data-row-key="key" aria-label="Pattern sejarah paling serupa">
-            <thead><tr><th data-field="tf">TF</th><th data-field="end">Pattern tamat</th><th class="r" data-field="corr">Corr</th><th class="r" data-field="fwd_ret">Selepas</th></tr></thead>
+          <table data-source="analogs" data-row-key="key" aria-label="Most similar historical patterns">
+            <thead><tr><th data-field="tf">TF</th><th data-field="end">Pattern ended</th><th class="r" data-field="corr">Corr</th><th class="r" data-field="fwd_ret">After</th></tr></thead>
             <tbody data-draw="analogs"></tbody>
           </table>
         </div>
       </section>
       <section class="gr-panel" id="backtest">
-        <div class="gr-h"><h2>Backtest 2 tahun</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+        <div class="gr-h"><h2>2-year backtest</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
         <div class="gr-kpis">
-          <div class="gr-kpi"><span class="lab">Semua setup</span><span class="val" data-draw="b-r" data-source="summary" data-field="bt_total_r" data-row="0">—</span><span class="note"><span data-draw="b-n" data-source="summary" data-field="bt_trades" data-row="0">—</span> trade · DD <span data-draw="b-dd" data-source="summary" data-field="bt_max_dd_r" data-row="0">—</span>R</span></div>
-          <div class="gr-kpi"><span class="lab">Lepas penapis</span><span class="val" data-draw="f-r" data-source="summary" data-field="bt_f_r" data-row="0">—</span><span class="note"><span data-draw="f-n" data-source="summary" data-field="bt_f_trades" data-row="0">—</span> trade · DD <span data-draw="f-dd" data-source="summary" data-field="bt_f_dd" data-row="0">—</span>R</span></div>
+          <div class="gr-kpi"><span class="lab">All setups</span><span class="val" data-draw="b-r" data-source="summary" data-field="bt_total_r" data-row="0">—</span><span class="note"><span data-draw="b-n" data-source="summary" data-field="bt_trades" data-row="0">—</span> trade · DD <span data-draw="b-dd" data-source="summary" data-field="bt_max_dd_r" data-row="0">—</span>R</span></div>
+          <div class="gr-kpi"><span class="lab">Passes filter</span><span class="val" data-draw="f-r" data-source="summary" data-field="bt_f_r" data-row="0">—</span><span class="note"><span data-draw="f-n" data-source="summary" data-field="bt_f_trades" data-row="0">—</span> trade · DD <span data-draw="f-dd" data-source="summary" data-field="bt_f_dd" data-row="0">—</span>R</span></div>
         </div>
-        <p class="gr-note" style="margin: 12px 0 0">R = gandaan risiko (1R = jarak entry ke SL). Penapis EMA 200 harian + ADX &gt; 20 kurangkan trade tapi naikkan purata setiap trade dan kurangkan drawdown.</p>
+        <p class="gr-note" style="margin: 12px 0 0">R = multiples of risk (1R = distance from entry to SL). The daily EMA 200 + ADX &gt; 20 filter takes fewer trades but raises the average per trade and cuts drawdown.</p>
       </section>
     </div>
   </section>
@@ -423,20 +423,20 @@
       <div class="gr-dial" data-draw="m15-dial" data-source="s_signals"></div>
       <div class="gr-glass-box">
         <div class="gr-meas">
-          <div class="gr-meas-top"><div><span class="name">Harga vs zone 1H</span><span class="ok" data-draw="m15-pos-ok" data-source="s_signals s_summary">—</span></div><div class="v"><span data-draw="m15-pos-v" data-source="s_summary" data-field="price" data-row="0">—</span></div></div>
+          <div class="gr-meas-top"><div><span class="name">Price vs 1H zone</span><span class="ok" data-draw="m15-pos-ok" data-source="s_signals s_summary">—</span></div><div class="v"><span data-draw="m15-pos-v" data-source="s_summary" data-field="price" data-row="0">—</span></div></div>
           <div class="gr-slider" data-draw="m15-pos" data-source="s_signals s_summary"></div>
         </div>
       </div>
       <div class="gr-acts">
-        <button type="button" class="gr-act" data-scroll="m15-chart"><span class="ic"><span><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-6"/></svg></span><span><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></span></span><b>Lihat<br>chart 15m</b></button>
-        <button type="button" class="gr-act" data-goto="track"><span class="ic"><span><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg></span><span><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></span></span><b>Lihat<br>tracking</b></button>
+        <button type="button" class="gr-act" data-scroll="m15-chart"><span class="ic"><span><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-6"/></svg></span><span><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></span></span><b>View<br>15m chart</b></button>
+        <button type="button" class="gr-act" data-goto="track"><span class="ic"><span><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg></span><span><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></span></span><b>View<br>tracking</b></button>
       </div>
     </div>
 
     <section class="gr-panel" id="m15-signal">
       <div class="gr-h"><h2>Signal scalp</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
-      <p class="gr-note">Tunggu harga masuk zone Order Block 1H, kemudian candle 15m break structure (CHoCH/BOS) ke arah setup. Entry pada tutup candle itu, SL di luar high/low 15m dalam zone, TP separuh 1.5R dan baki 3R. Ambil yang bertanda "Disyorkan" (sebelah betul EMA 200 harian).</p>
-      <p class="gr-empty" id="no-signal" hidden>Tiada zone 1H aktif sekarang. Tunggu zone baru terbentuk.</p>
+      <p class="gr-note">Wait for price to enter the 1H Order Block zone, then for a 15m candle to break structure (CHoCH/BOS) in the setup's direction. Enter at that candle's close, SL beyond the 15m high/low inside the zone, take half at 1.5R and the rest at 3R. Take the ones marked "Recommended" (right side of the daily EMA 200).</p>
+      <p class="gr-empty" id="no-signal" hidden>No active 1H zone right now. Wait for a new zone to form.</p>
       <div class="gr-setups" data-draw="s-signals" data-source="s_signals"></div>
     </section>
 
@@ -446,11 +446,11 @@
         <button type="button" class="gr-btn" data-zoom="in" data-chart="m15">Zoom +</button>
         <button type="button" class="gr-btn" data-zoom="out" data-chart="m15">Zoom −</button>
         <button type="button" class="gr-btn" data-zoom="reset" data-chart="m15">Reset</button>
-        <span class="gr-hint">Scroll / pinch untuk zoom di pointer · drag untuk geser</span>
+        <span class="gr-hint">Scroll / pinch to zoom at the pointer · drag to pan</span>
       </div>
       <div class="gr-chartbox" data-draw="chart-m15" data-source="s_candles s_levels s_signals"></div>
       <div class="gr-legend" aria-hidden="true">
-        <span><i class="gr-sw" style="background: var(--gr-accent); opacity: .5"></i>Zone 1H</span>
+        <span><i class="gr-sw" style="background: var(--gr-accent); opacity: .5"></i>1H zone</span>
         <span><i class="gr-sw" style="background: var(--gr-up); opacity: .45"></i>OB 15m bullish</span>
         <span><i class="gr-sw" style="background: var(--gr-dn); opacity: .45"></i>OB 15m bearish</span>
         <span><i class="gr-sw" style="border: 1px dashed var(--gr-muted)"></i>FVG 15m</span>
@@ -459,19 +459,19 @@
 
     <div class="gr-two">
       <section class="gr-panel" id="m15-log">
-        <div class="gr-h"><h2>Trade scalp 60 hari</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+        <div class="gr-h"><h2>Scalp trades, 60 days</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
         <div class="gr-tablewrap">
-          <table data-source="s_trades" data-row-key="key" aria-label="Trade scalp">
-            <thead><tr><th data-field="time">Masa (MYT)</th><th data-field="side">Arah</th><th class="r" data-field="entry">Entry</th><th class="r" data-field="risk">SL (pt)</th><th class="r" data-field="result_r">R</th></tr></thead>
+          <table data-source="s_trades" data-row-key="key" aria-label="Scalp trades">
+            <thead><tr><th data-field="time">Time (MYT)</th><th data-field="side">Side</th><th class="r" data-field="entry">Entry</th><th class="r" data-field="risk">SL (pt)</th><th class="r" data-field="result_r">R</th></tr></thead>
             <tbody data-draw="s-trades"></tbody>
           </table>
         </div>
       </section>
       <section class="gr-panel" id="research">
-        <div class="gr-h"><h2>Kenapa strategi ini</h2><span class="gr-fresh static"><span class="gr-fresh-dot"></span>Kajian tetap · 18 Nov 2026</span></div>
+        <div class="gr-h"><h2>Why this strategy</h2><span class="gr-fresh static"><span class="gr-fresh-dot"></span>Fixed research · 18 Nov 2026</span></div>
         <div class="gr-tablewrap">
-          <table data-source="research" data-row-key="key" aria-label="Perbandingan strategi scalping">
-            <thead><tr><th data-field="strategy">Strategi</th><th class="r" data-field="test_r">R ujian</th><th data-field="verdict">Keputusan</th></tr></thead>
+          <table data-source="research" data-row-key="key" aria-label="Scalping strategy comparison">
+            <thead><tr><th data-field="strategy">Strategy</th><th class="r" data-field="test_r">Test R</th><th data-field="verdict">Verdict</th></tr></thead>
             <tbody data-draw="research"></tbody>
           </table>
         </div>
@@ -482,69 +482,69 @@
   <!-- ===================== TRACKING ===================== -->
   <section class="gr-tab" id="track" data-tabpanel="track" hidden>
     <div class="gr-def" id="definitions">
-      <p><b>Cara status dikira.</b> Setiap jam, semua signal H1 dan M15 dinilai semula dengan peraturan yang sama seperti scanner. Berjaya bermaksud entry kena dan harga bergerak <b>100 pip ($10)</b> ke arah trade sebelum SL kena.</p>
+      <p><b>How the status is worked out.</b> Every hour, every H1 and M15 signal is judged again with the same rules as the scanner. Success means the entry was hit and price then moved <b>100 pips ($10)</b> in the trade's favour before the stop loss.</p>
       <div class="chips">
-        <span><span class="gr-st s-berjaya">Berjaya</span> +100 pip dulu</span>
-        <span><span class="gr-st s-gagal">Gagal</span> SL dulu / tamat masa</span>
-        <span><span class="gr-st s-berjalan">Berjalan</span> dah entry, belum selesai</span>
-        <span><span class="gr-st s-menunggu">Menunggu</span> belum entry</span>
-        <span><span class="gr-st s-tak">Tak execute</span> batal tanpa entry</span>
+        <span><span class="gr-st s-success">Success</span> +100 pips first</span>
+        <span><span class="gr-st s-fail">Fail</span> SL first / out of time</span>
+        <span><span class="gr-st s-running">Running</span> entered, not finished</span>
+        <span><span class="gr-st s-waiting">Waiting</span> no entry yet</span>
+        <span><span class="gr-st s-notexec">Not executed</span> cancelled without entry</span>
       </div>
     </div>
 
     <section class="gr-panel" id="track-kpi">
-      <div class="gr-h"><h2>7 hari terakhir</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+      <div class="gr-h"><h2>Last 7 days</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
       <div class="gr-kpis">
-        <div class="gr-kpi"><span class="lab">H1 berjaya</span><span class="val" data-draw="t-h1r" data-source="t_summary" data-field="h1_7d_rate" data-row="0">—</span><span class="note"><span data-draw="t-h1s" data-source="t_summary" data-field="h1_7d_success" data-row="0">—</span> berjaya · <span data-draw="t-h1f" data-source="t_summary" data-field="h1_7d_fail" data-row="0">—</span> gagal</span></div>
-        <div class="gr-kpi"><span class="lab">M15 berjaya</span><span class="val" data-draw="t-m15r" data-source="t_summary" data-field="m15_7d_rate" data-row="0">—</span><span class="note"><span data-draw="t-m15s" data-source="t_summary" data-field="m15_7d_success" data-row="0">—</span> berjaya · <span data-draw="t-m15f" data-source="t_summary" data-field="m15_7d_fail" data-row="0">—</span> gagal</span></div>
-        <div class="gr-kpi"><span class="lab">Sedang berjalan</span><span class="val" data-draw="t-run" data-source="t_summary">—</span><span class="note">H1 + M15</span></div>
-        <div class="gr-kpi"><span class="lab">Menunggu entry</span><span class="val" data-draw="t-wait" data-source="t_summary">—</span><span class="note">H1 + M15</span></div>
+        <div class="gr-kpi"><span class="lab">H1 success</span><span class="val" data-draw="t-h1r" data-source="t_summary" data-field="h1_7d_rate" data-row="0">—</span><span class="note"><span data-draw="t-h1s" data-source="t_summary" data-field="h1_7d_success" data-row="0">—</span> success · <span data-draw="t-h1f" data-source="t_summary" data-field="h1_7d_fail" data-row="0">—</span> fail</span></div>
+        <div class="gr-kpi"><span class="lab">M15 success</span><span class="val" data-draw="t-m15r" data-source="t_summary" data-field="m15_7d_rate" data-row="0">—</span><span class="note"><span data-draw="t-m15s" data-source="t_summary" data-field="m15_7d_success" data-row="0">—</span> success · <span data-draw="t-m15f" data-source="t_summary" data-field="m15_7d_fail" data-row="0">—</span> fail</span></div>
+        <div class="gr-kpi"><span class="lab">Running now</span><span class="val" data-draw="t-run" data-source="t_summary">—</span><span class="note">H1 + M15</span></div>
+        <div class="gr-kpi"><span class="lab">Waiting for entry</span><span class="val" data-draw="t-wait" data-source="t_summary">—</span><span class="note">H1 + M15</span></div>
       </div>
     </section>
 
     <section class="gr-panel" id="daily">
-      <div class="gr-h"><h2>Rekod harian</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
-      <p class="gr-note">Satu baris setiap model setiap hari (waktu Malaysia). Hari yang belum habis ditanda "hari ini". Hari tanpa signal tidak ditunjuk.</p>
+      <div class="gr-h"><h2>Daily record</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+      <p class="gr-note">One row per model per day (Malaysia time). The day still in progress is marked "today". Days without signals are not shown.</p>
       <div class="gr-tablewrap">
-        <table data-source="t_daily" data-row-key="key" aria-label="Rekod harian">
-          <thead><tr><th data-field="date">Tarikh</th><th data-field="model">Model</th><th class="r" data-field="signals">Signal</th><th class="r" data-field="entries">Entry</th><th class="r" data-field="success">Berjaya</th><th class="r" data-field="fail">Gagal</th><th class="r" data-field="running">Berjalan</th><th class="r" data-field="not_executed">Tak execute</th><th class="r" data-field="success_rate">Kadar</th></tr></thead>
+        <table data-source="t_daily" data-row-key="key" aria-label="Daily record">
+          <thead><tr><th data-field="date">Date</th><th data-field="model">Model</th><th class="r" data-field="signals">Signals</th><th class="r" data-field="entries">Entries</th><th class="r" data-field="success">Success</th><th class="r" data-field="fail">Fail</th><th class="r" data-field="running">Running</th><th class="r" data-field="not_executed">Not executed</th><th class="r" data-field="success_rate">Rate</th></tr></thead>
           <tbody data-draw="t-daily"></tbody>
         </table>
       </div>
     </section>
 
     <section class="gr-panel" id="hourly">
-      <div class="gr-h"><h2>Status setiap jam · 24 jam</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
-      <p class="gr-note">Signal yang muncul dalam setiap jam dan status terkininya. Gerak = perubahan harga dalam jam itu.</p>
+      <div class="gr-h"><h2>Status per hour · 24 hours</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+      <p class="gr-note">Signals that appeared in each hour and their current status. Move = price change during that hour.</p>
       <div class="gr-tablewrap">
-        <table data-source="t_hourly" data-row-key="key" aria-label="Status setiap jam">
-          <thead><tr><th data-field="hour">Jam (MYT)</th><th class="r" data-field="close">Harga</th><th class="r" data-field="chg_pips">Gerak (pip)</th><th data-field="h1_status">H1</th><th data-field="m15_status">M15</th></tr></thead>
+        <table data-source="t_hourly" data-row-key="key" aria-label="Status per hour">
+          <thead><tr><th data-field="hour">Hour (MYT)</th><th class="r" data-field="close">Price</th><th class="r" data-field="chg_pips">Move (pips)</th><th data-field="h1_status">H1</th><th data-field="m15_status">M15</th></tr></thead>
           <tbody data-draw="t-hourly"></tbody>
         </table>
       </div>
     </section>
 
     <section class="gr-panel" id="log">
-      <div class="gr-h"><h2>Log signal</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+      <div class="gr-h"><h2>Signal log</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
       <div class="gr-tablewrap">
-        <table data-source="t_log" data-row-key="key" aria-label="Log signal">
-          <thead><tr><th data-field="time">Masa (MYT)</th><th data-field="model">Model</th><th data-field="side">Arah</th><th class="r" data-field="entry">Entry</th><th class="r" data-field="sl">SL</th><th data-field="status">Status</th><th class="r" data-field="best_pips">Pip terbaik</th></tr></thead>
+        <table data-source="t_log" data-row-key="key" aria-label="Signal log">
+          <thead><tr><th data-field="time">Time (MYT)</th><th data-field="model">Model</th><th data-field="side">Side</th><th class="r" data-field="entry">Entry</th><th class="r" data-field="sl">SL</th><th data-field="status">Status</th><th class="r" data-field="best_pips">Best pips</th></tr></thead>
           <tbody data-draw="t-log"></tbody>
         </table>
       </div>
     </section>
   </section>
 
-  <p class="gr-foot">Harga GC=F (gold futures) beza beberapa dollar dari XAUUSD broker. 1 pip = $0.10, jadi 100 pip = $10 pergerakan harga dan risiko $ untuk 0.01 lot = jarak SL dalam point. Dikemaskini setiap jam, bukan setiap tick. Bukan nasihat kewangan.</p>
+  <p class="gr-foot">GC=F (gold futures) prices differ by a few dollars from broker XAUUSD. 1 pip = $0.10, so 100 pips = $10 of price movement, and $ risk per 0.01 lot = stop distance in points. Updated every hour, not every tick. Not financial advice.</p>
 
   <div class="gr-navbar">
-    <nav class="gr-nav" role="tablist" aria-label="Navigasi">
-      <button type="button" role="tab" data-tab="home" aria-selected="true" aria-label="Ringkasan"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg></button>
+    <nav class="gr-nav" role="tablist" aria-label="Navigation">
+      <button type="button" role="tab" data-tab="home" aria-selected="true" aria-label="Overview"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg></button>
       <button type="button" role="tab" data-tab="h1" aria-selected="false" aria-label="H1 Swing"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-6"/></svg></button>
       <button type="button" role="tab" data-tab="m15" aria-selected="false" aria-label="M15 Scalp"><svg viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg></button>
       <button type="button" role="tab" data-tab="track" aria-selected="false" aria-label="Tracking"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg></button>
     </nav>
-    <button type="button" class="gr-navlime" id="nav-signal" aria-label="Buka signal terkini"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="5"/></svg></button>
+    <button type="button" class="gr-navlime" id="nav-signal" aria-label="Open the latest signal"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="5"/></svg></button>
   </div>
 </div>
 
@@ -555,7 +555,7 @@
     const tzFmt = new Intl.DateTimeFormat('en-GB', { timeZone: tz, day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
     const dayFmt = new Intl.DateTimeFormat('en-GB', { timeZone: tz, day: '2-digit', month: 'short', year: '2-digit' });
     const hmFmt = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false });
-    const dShort = new Intl.DateTimeFormat('ms-MY', { timeZone: tz, weekday: 'short', day: 'numeric', month: 'short' });
+    const dShort = new Intl.DateTimeFormat('en-GB', { timeZone: tz, weekday: 'short', day: 'numeric', month: 'short' });
     const f2 = d3.format(',.2f');
     const G = {
       f2,
@@ -570,19 +570,19 @@
       el: (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; },
       mark: (e, src, field, row) => { e.dataset.source = src; e.dataset.field = field; e.dataset.row = String(row); return e; },
       css: (el, name) => getComputedStyle(el.closest('.gr') || document.documentElement).getPropertyValue(name).trim(),
-      statusCls: (s) => ({ BERJAYA: 's-berjaya', GAGAL: 's-gagal', BERJALAN: 's-berjalan', MENUNGGU: 's-menunggu', 'TAK EXECUTE': 's-tak' })[s] || 's-none',
-      statusWord: (s) => ({ BERJAYA: 'Berjaya', GAGAL: 'Gagal', BERJALAN: 'Berjalan', MENUNGGU: 'Menunggu', 'TAK EXECUTE': 'Tak execute', 'TIADA SIGNAL': 'Tiada signal' })[s] || s,
-      // "SELL BERJAYA, BUY TAK EXECUTE" -> chips
+      statusCls: (s) => ({ SUCCESS: 's-success', FAIL: 's-fail', RUNNING: 's-running', WAITING: 's-waiting', 'NOT EXECUTED': 's-notexec' })[s] || 's-none',
+      statusWord: (s) => ({ SUCCESS: 'Success', FAIL: 'Fail', RUNNING: 'Running', WAITING: 'Waiting', 'NOT EXECUTED': 'Not executed', 'NO SIGNAL': 'No signal' })[s] || s,
+      // "SELL SUCCESS, BUY NOT EXECUTED" -> chips
       chips: (txt) => {
         const box = document.createDocumentFragment();
-        if (!txt || txt === 'TIADA SIGNAL') { box.append(G.el('span', 'gr-st s-none', 'Tiada signal')); return box; }
+        if (!txt || txt === 'NO SIGNAL') { box.append(G.el('span', 'gr-st s-none', 'No signal')); return box; }
         txt.split(', ').forEach((p) => {
           const sp = p.indexOf(' '), side = p.slice(0, sp), st = p.slice(sp + 1);
           box.append(G.el('span', 'gr-st ' + G.statusCls(st), `${side} · ${G.statusWord(st)}`));
         });
         return box;
       },
-      trendWord: (t) => ({ bull: 'BULLISH', bear: 'BEARISH' })[t] || 'TIADA',
+      trendWord: (t) => ({ bull: 'BULLISH', bear: 'BEARISH' })[t] || 'NONE',
       biasCls: (b) => ({ BULLISH: 'gr-up', BEARISH: 'gr-down' })[b] || 'gr-flat',
       // the hourly scan fires at minute 3 of each UTC hour, Monday-Friday (UTC), and takes a few minutes
       nextRun: (from) => {
@@ -598,7 +598,7 @@
       },
       pickScalp: (rows) => rows.find((r) => r.fresh) || rows.find((r) => r.state === 'IN TRADE')
         || rows.find((r) => r.state === 'IN ZONE' && r.reco) || rows.find((r) => r.state === 'IN ZONE') || rows.find((r) => r.reco) || rows[0],
-      scalpWord: (r) => (r.fresh ? 'MASUK SEKARANG' : r.state === 'IN TRADE' ? 'Sedang berjalan' : r.state === 'IN ZONE' ? 'Tunggu CHoCH 15m' : 'Tunggu harga ke zone'),
+      scalpWord: (r) => (r.fresh ? 'ENTER NOW' : r.state === 'IN TRADE' ? 'Running' : r.state === 'IN ZONE' ? 'Wait for 15m CHoCH' : 'Wait for price to reach the zone'),
       pickSwing: (rows) => rows.find((r) => r.status === 'TRIGGER') || rows.find((r) => r.status === 'IN TRADE') || rows[0],
     };
     return G;
@@ -607,9 +607,9 @@
   // every dashboard dataset except "research" is one key of the hourly bundle file
   ['candles', 'setups', 'levels', 'summary', 'analogs', 's_candles', 's_signals', 's_levels', 's_trades', 's_summary', 't_log', 't_hourly', 't_daily', 't_summary']
     .forEach((key) => dash.loader(key, {
-      description: `Ambil bahagian "${key}" daripada fail bundle yang scanner hasilkan setiap jam.`,
+      description: `Take the "${key}" part of the bundle file the scanner writes every hour.`,
       fn: ({ answer }) => {
-        if (!answer || !Array.isArray(answer[key])) throw new Error(`Bundle tiada bahagian ${key}`);
+        if (!answer || !Array.isArray(answer[key])) throw new Error(`The bundle has no "${key}" part`);
         return answer[key];
       },
     }));
@@ -659,7 +659,7 @@
     if (cls) { el.classList.remove('gr-up', 'gr-down', 'gr-flat'); el.classList.add(cls(r[field], r)); }
   });
   const pct0 = (v) => d3.format('.0f')(+v) + '%';
-  dash.draw('today', (el) => { el.textContent = new Intl.DateTimeFormat('ms-MY', { timeZone: 'Asia/Kuala_Lumpur', weekday: 'long', day: 'numeric', month: 'long' }).format(new Date()); });
+  dash.draw('today', (el) => { el.textContent = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kuala_Lumpur', weekday: 'long', day: 'numeric', month: 'long' }).format(new Date()); });
   simple('sc-rate', 't_summary', 'all_7d_rate', pct0);
   simple('sc-ent', 't_summary', 'all_7d_entries');
   simple('h-price', 'summary', 'price', (v) => G.f2(+v));
@@ -700,19 +700,19 @@
     const rows = G.rows('setups');
     if (!rows) { el.textContent = '—'; return; }
     const s = G.pickSwing(rows);
-    el.textContent = !s ? 'Tiada setup' : `${s.side} · ${s.status === 'TRIGGER' ? 'TRIGGER' : s.status === 'IN TRADE' ? 'berjalan' : 'tunggu'}`;
+    el.textContent = !s ? 'No setup' : `${s.side} · ${s.status === 'TRIGGER' ? 'TRIGGER' : s.status === 'IN TRADE' ? 'running' : 'waiting'}`;
   });
   dash.draw('m-word', (el) => {
     const rows = G.rows('s_signals');
     if (!rows) { el.textContent = '—'; return; }
     const s = rows.length ? G.pickScalp(rows) : null;
-    el.textContent = s ? G.scalpWord(s) : 'Tiada zone';
+    el.textContent = s ? G.scalpWord(s) : 'No zone';
   });
   dash.draw('m-sub', (el) => {
     const rows = G.rows('s_signals');
     if (!rows) { el.textContent = '—'; return; }
     const s = rows.length ? G.pickScalp(rows) : null;
-    el.textContent = s ? `${s.side} · zone ${G.f2(s.zone_bottom)}–${G.f2(s.zone_top)}${s.reco ? ' · disyorkan' : ''}` : 'Tunggu zone 1H baru';
+    el.textContent = s ? `${s.side} · zone ${G.f2(s.zone_bottom)}–${G.f2(s.zone_top)}${s.reco ? ' · recommended' : ''}` : 'Wait for a new 1H zone';
   });
 
   // last-24h price movement bars on the H1 card (like the vitals bars)
@@ -751,14 +751,14 @@
       const gen = new Date(r.generated);
       const day = (d) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kuala_Lumpur', day: '2-digit', month: 'short' }).format(d);
       const when = (d) => (day(d) === day(new Date()) ? G.hm(d) : G.t(d.toISOString()));
-      const last = G.el('span', null, `Dikemaskini ${when(gen)}`), nxt = G.el('span');
+      const last = G.el('span', null, `Updated ${when(gen)}`), nxt = G.el('span');
       el.replaceChildren(G.el('span', 'gr-fresh-dot'), last, nxt);
       const due = G.nextRun(gen);
       st.tick = () => {
         const now = new Date(), next = G.nextRun(now);
         const late = now - due > 8 * 60000;
         el.classList.toggle('late', late);
-        nxt.textContent = (late ? ' · Lambat, cuba ' : ' · Seterusnya ') + `${when(next)} (${G.cd(next - now)})`;
+        nxt.textContent = (late ? ' · Late, retry ' : ' · Next ') + `${when(next)} (${G.cd(next - now)})`;
       };
       st.tick();
     },
@@ -786,15 +786,15 @@
       const row = G.el('div', 'gr-isl-row');
       row.append(G.el('span', 'gr-isl-dot' + (hot ? ' trig' : (s && s.status === 'IN TRADE') || (q && q.state === 'IN TRADE') ? ' live' : '')),
         G.el('span', 'gr-isl-sym', 'XAU'), G.mark(G.el('span', 'gr-isl-px', G.f2(+sum.price)), 'summary', 'price', 0),
-        G.el('span', 'gr-isl-chip' + (s && s.status === 'TRIGGER' ? ' trig' : ''), s ? `H1 ${s.side} ${s.status === 'TRIGGER' ? 'TRIGGER' : s.status === 'IN TRADE' ? 'jalan' : 'tunggu'}` : 'H1 tiada'),
-        G.el('span', 'gr-isl-chip' + (q && q.fresh ? ' trig' : ''), q ? `M15 ${q.side} ${q.fresh ? 'MASUK' : q.state === 'IN TRADE' ? 'jalan' : 'tunggu'}` : 'M15 tiada'));
+        G.el('span', 'gr-isl-chip' + (s && s.status === 'TRIGGER' ? ' trig' : ''), s ? `H1 ${s.side} ${s.status === 'TRIGGER' ? 'TRIGGER' : s.status === 'IN TRADE' ? 'running' : 'waiting'}` : 'H1 none'),
+        G.el('span', 'gr-isl-chip' + (q && q.fresh ? ' trig' : ''), q ? `M15 ${q.side} ${q.fresh ? 'ENTER' : q.state === 'IN TRADE' ? 'running' : 'waiting'}` : 'M15 none'));
       el.append(row);
       const more = G.el('div', 'gr-isl-more'), inner = G.el('div'), grid = G.el('div', 'gr-isl-grid');
       const cell = (lab, txt, cls, mk) => { const d = G.el('div'); d.append(G.el('span', 'lab', lab)); const v = G.el('span', 'val ' + (cls || ''), txt); if (mk) G.mark(v, ...mk); d.append(v); return d; };
       if (s) {
         const i = sw.indexOf(s);
         grid.append(cell('H1 entry', G.f2(s.entry), '', ['setups', 'entry', i]), cell('H1 SL', G.f2(s.sl), 'gr-down', ['setups', 'sl', i]),
-          cell('H1 TP1', G.f2(s.tp1), 'gr-up', ['setups', 'tp1', i]), cell('Penapis', s.filter_ok ? 'Lepas' : 'Tak lepas', s.filter_ok ? 'gr-up' : 'gr-down'));
+          cell('H1 TP1', G.f2(s.tp1), 'gr-up', ['setups', 'tp1', i]), cell('Filter', s.filter_ok ? 'Passes' : 'Fails', s.filter_ok ? 'gr-up' : 'gr-down'));
       }
       if (q) {
         const i = sc.indexOf(q);
@@ -803,9 +803,9 @@
       }
       inner.append(grid);
       const foot = G.el('div', 'gr-isl-foot');
-      foot.append(G.el('span', null, `Candle terakhir ${G.t(sum.time)} MYT`));
+      foot.append(G.el('span', null, `Last candle ${G.t(sum.time)} MYT`));
       const next = G.nextRun(new Date());
-      const cdWrap = G.el('span', null, `Kemas kini seterusnya ${G.hm(next)} · `);
+      const cdWrap = G.el('span', null, `Next update ${G.hm(next)} · `);
       const cd = G.el('span', 'gr-num', G.cd(next - Date.now())); cdWrap.append(cd); foot.append(cdWrap);
       inner.append(foot); more.append(inner); el.append(more);
       st.next = next; st.cd = cd;
@@ -853,13 +853,13 @@
     const rows = window.GR.rows('setups');
     if (!rows) { el.textContent = '—'; return; }
     const s = window.GR.pickSwing(rows);
-    el.textContent = s ? `${s.side} · gred ${s.grade} · ${s.filter_ok ? 'lepas penapis' : 'tak lepas penapis'}` : 'Tiada setup aktif';
+    el.textContent = s ? `${s.side} · grade ${s.grade} · ${s.filter_ok ? 'passes filter' : 'fails filter'}` : 'No active setup';
   });
   dash.draw('h1-dial', (el) => {
     const rows = window.GR.rows('setups');
     if (!rows) { el.textContent = '—'; return; }
     const s = window.GR.pickSwing(rows);
-    dial(el, s ? s.score : 0, 5, s ? `${s.score}/5` : '0/5', s ? 'skor confluence SMC' : 'tiada setup');
+    dial(el, s ? s.score : 0, 5, s ? `${s.score}/5` : '0/5', s ? 'SMC confluence score' : 'no setup');
   });
   dash.draw('h1-pos', (el) => {
     const G = window.GR, rows = G.rows('setups'), sum = G.row('summary');
@@ -868,16 +868,16 @@
     if (!s) { el.textContent = ''; return; }
     const buy = s.side === 'BUY';
     slider(el, { min: buy ? s.sl : s.tp1, max: buy ? s.tp1 : s.sl, lo: s.zone_bottom, hi: s.zone_top, val: sum.price,
-      labels: buy ? ['SL', 'Zone OB', 'TP1'] : ['TP1', 'Zone OB', 'SL'], aria: `Harga ${G.f2(sum.price)} antara SL dan TP1` });
+      labels: buy ? ['SL', 'OB zone', 'TP1'] : ['TP1', 'OB zone', 'SL'], aria: `Price ${G.f2(sum.price)} between SL and TP1` });
   });
   dash.draw('h1-pos-ok', (el) => {
     const G = window.GR, rows = G.rows('setups'), sum = G.row('summary');
     if (!rows || !sum) { el.textContent = '—'; return; }
     const s = G.pickSwing(rows);
-    if (!s) { el.textContent = 'Tiada setup'; return; }
+    if (!s) { el.textContent = 'No setup'; return; }
     const inZone = sum.price >= s.zone_bottom && sum.price <= s.zone_top;
     const prog = ((sum.price - s.entry) * (s.side === 'BUY' ? 1 : -1)) / 0.1;
-    el.textContent = s.status === 'IN TRADE' ? `Berjalan · ${G.sgn(prog, '.0f')} pip dari entry` : inZone ? 'Dalam zone' : 'Luar zone';
+    el.textContent = s.status === 'IN TRADE' ? `Running · ${G.sgn(prog, '.0f')} pips from entry` : inZone ? 'Inside the zone' : 'Outside the zone';
     el.classList.toggle('bad', s.status === 'IN TRADE' && prog < 0);
   });
   dash.draw('h1-adx', (el) => {
@@ -885,7 +885,7 @@
     if (!rows) { el.textContent = '—'; return; }
     const s = window.GR.pickSwing(rows);
     if (!s || s.adx == null) { el.textContent = ''; return; }
-    slider(el, { min: 0, max: 60, lo: 20, hi: 60, val: s.adx, labels: ['Lemah', 'Trending (> 20)', 'Kuat'], aria: `ADX ${s.adx}` });
+    slider(el, { min: 0, max: 60, lo: 20, hi: 60, val: s.adx, labels: ['Weak', 'Trending (> 20)', 'Strong'], aria: `ADX ${s.adx}` });
   });
   dash.draw('h1-adx-v', (el) => {
     const rows = window.GR.rows('setups'); const s = rows && window.GR.pickSwing(rows);
@@ -894,7 +894,7 @@
   dash.draw('h1-adx-ok', (el) => {
     const rows = window.GR.rows('setups'); const s = rows && window.GR.pickSwing(rows);
     if (!s) { el.textContent = '—'; return; }
-    el.textContent = `${s.adx > 20 ? 'Trending' : 'Lemah'} · EMA200 harian ${s.ema200_d ? 'searah' : 'lawan'}`;
+    el.textContent = `${s.adx > 20 ? 'Trending' : 'Weak'} · daily EMA200 ${s.ema200_d ? 'aligned' : 'against'}`;
     el.classList.toggle('bad', !s.filter_ok);
   });
 
@@ -902,14 +902,14 @@
     const G = window.GR, rows = G.rows('s_signals');
     if (!rows) { el.textContent = '—'; return; }
     const s = rows.length ? G.pickScalp(rows) : null;
-    el.textContent = s ? `${s.side} · zone 1H gred ${s.grade}${s.reco ? ' · disyorkan' : ''}` : 'Tiada zone aktif';
+    el.textContent = s ? `${s.side} · 1H zone grade ${s.grade}${s.reco ? ' · recommended' : ''}` : 'No active zone';
   });
   dash.draw('m15-dial', (el) => {
     const G = window.GR, rows = G.rows('s_signals');
     if (!rows) { el.textContent = '—'; return; }
     const s = rows.length ? G.pickScalp(rows) : null;
     const step = !s ? 0 : s.state === 'WATCH' ? 1 : s.state === 'IN ZONE' ? 2 : 4;
-    dial(el, step, 4, `${step}/4`, s ? G.scalpWord(s).toLowerCase() : 'tiada zone');
+    dial(el, step, 4, `${step}/4`, s ? G.scalpWord(s).toLowerCase() : 'no zone');
   });
   dash.draw('m15-pos', (el) => {
     const G = window.GR, rows = G.rows('s_signals'), sum = G.row('s_summary');
@@ -920,22 +920,22 @@
     if (s.entry != null) {
       const buy = s.side === 'BUY';
       slider(el, { min: buy ? s.sl : s.tp, max: buy ? s.tp : s.sl, lo: s.entry, hi: s.tp_half, val: sum.price,
-        labels: buy ? ['SL', 'Entry → TP1', 'TP 3R'] : ['TP 3R', 'TP1 ← Entry', 'SL'], aria: `Harga ${G.f2(sum.price)} antara SL dan TP` });
+        labels: buy ? ['SL', 'Entry → TP1', 'TP 3R'] : ['TP 3R', 'TP1 ← Entry', 'SL'], aria: `Price ${G.f2(sum.price)} between SL and TP` });
     } else {
       slider(el, { min: Math.min(sum.price, s.zone_bottom) - 2 * a, max: Math.max(sum.price, s.zone_top) + 2 * a, lo: s.zone_bottom, hi: s.zone_top, val: sum.price,
-        labels: ['Bawah', 'Zone 1H', 'Atas'], aria: `Harga ${G.f2(sum.price)} berbanding zone 1H` });
+        labels: ['Below', '1H zone', 'Above'], aria: `Price ${G.f2(sum.price)} against the 1H zone` });
     }
   });
   dash.draw('m15-pos-ok', (el) => {
     const G = window.GR, rows = G.rows('s_signals'), sum = G.row('s_summary');
     if (!rows || !sum) { el.textContent = '—'; return; }
     const s = rows.length ? G.pickScalp(rows) : null;
-    if (!s) { el.textContent = 'Tiada zone'; return; }
+    if (!s) { el.textContent = 'No zone'; return; }
     if (s.entry != null) {
       const prog = ((sum.price - s.entry) * (s.side === 'BUY' ? 1 : -1)) / 0.1;
-      el.textContent = `${G.scalpWord(s)} · ${G.sgn(prog, '.0f')} pip`;
+      el.textContent = `${G.scalpWord(s)} · ${G.sgn(prog, '.0f')} pips`;
       el.classList.toggle('bad', prog < 0);
-    } else { el.textContent = `${G.scalpWord(s)} · jarak ${G.f2(Math.max(0, s.dist))} pt`; }
+    } else { el.textContent = `${G.scalpWord(s)} · ${G.f2(Math.max(0, s.dist))} pt away`; }
   });
 </script>
 
@@ -944,24 +944,24 @@
   dash.draw('setups', (el) => {
     const G = window.GR, s = dash.data('setups');
     document.querySelectorAll('#no-setup').forEach((p) => { p.hidden = !(s.status === 'ok' && s.data.length === 0); });
-    if (s.status !== 'ok') { el.textContent = s.status === 'error' ? 'Gagal load data setup' : '—'; return; }
+    if (s.status !== 'ok') { el.textContent = s.status === 'error' ? 'Setup data failed to load' : '—'; return; }
     el.replaceChildren();
     s.data.forEach((r, i) => {
       const card = G.el('article', 'gr-setup'); card.dataset.side = r.side; card.id = `setup-${i}`;
       const top = G.el('div', 'gr-setup-top');
-      top.append(G.el('span', 'gr-side ' + (r.side === 'BUY' ? 'gr-up' : 'gr-down'), r.side), G.el('span', 'gr-pill', `Gred ${r.grade} · ${r.score}/5`),
-        G.el('span', 'gr-st ' + (r.status === 'TRIGGER' ? 's-berjalan' : r.status === 'IN TRADE' ? 's-berjaya' : 's-menunggu'), r.status === 'TRIGGER' ? 'ENTRY TRIGGER' : r.status === 'IN TRADE' ? 'Entry sudah kena' : 'Tunggu retrace'),
-        r.filter_ok ? G.el('span', 'gr-reco', 'Lepas penapis') : G.el('span', 'gr-pill', 'Tak lepas penapis'));
+      top.append(G.el('span', 'gr-side ' + (r.side === 'BUY' ? 'gr-up' : 'gr-down'), r.side), G.el('span', 'gr-pill', `Grade ${r.grade} · ${r.score}/5`),
+        G.el('span', 'gr-st ' + (r.status === 'TRIGGER' ? 's-running' : r.status === 'IN TRADE' ? 's-success' : 's-waiting'), r.status === 'TRIGGER' ? 'ENTRY TRIGGER' : r.status === 'IN TRADE' ? 'Entry already hit' : 'Wait for retrace'),
+        r.filter_ok ? G.el('span', 'gr-reco', 'Passes filter') : G.el('span', 'gr-pill', 'Fails filter'));
       const lv = G.el('div', 'gr-levels');
       const item = (lab, field, txt, cls, extra) => { const d = G.el('div', 'gr-lv ' + (extra || '')); d.append(G.el('span', 'lab', lab), G.mark(G.el('span', 'val ' + (cls || ''), txt), 'setups', field, i)); return d; };
-      const zone = G.el('div', 'gr-lv'); zone.append(G.el('span', 'lab', 'Zone OB'));
+      const zone = G.el('div', 'gr-lv'); zone.append(G.el('span', 'lab', 'OB zone'));
       const zv = G.el('span', 'val'); zv.append(G.mark(G.el('span', null, G.f2(r.zone_bottom)), 'setups', 'zone_bottom', i), ' – ', G.mark(G.el('span', null, G.f2(r.zone_top)), 'setups', 'zone_top', i));
       zone.append(zv);
       lv.append(zone, item('Entry (50% OB)', 'entry', G.f2(r.entry), '', 'entry'), item('Stop loss', 'sl', G.f2(r.sl), 'gr-down'),
-        item('TP1 (2R)', 'tp1', G.f2(r.tp1), 'gr-up'), item('TP2', 'tp2', G.f2(r.tp2), 'gr-up'), item('Risiko / 0.01 lot', 'risk_usd_001', '$' + G.f2(r.risk_usd_001)));
+        item('TP1 (2R)', 'tp1', G.f2(r.tp1), 'gr-up'), item('TP2', 'tp2', G.f2(r.tp2), 'gr-up'), item('Risk / 0.01 lot', 'risk_usd_001', '$' + G.f2(r.risk_usd_001)));
       const meta = G.el('div', 'gr-meta');
-      [`Sweep: ${r.sweep} MYT`, `BOS: ${r.bos} MYT`, `FVG: ${r.fvg ? 'ada ✓' : 'tiada'}`, `EMA200 harian: ${r.ema200_d ? 'searah ✓' : 'lawan ✗'}`,
-        `ADX: ${r.adx == null ? '—' : d3.format('.0f')(r.adx)}`, `Luput dalam ${r.expires_in_bars} candle`].forEach((t) => meta.append(G.el('span', null, t)));
+      [`Sweep: ${r.sweep} MYT`, `BOS: ${r.bos} MYT`, `FVG: ${r.fvg ? 'yes ✓' : 'none'}`, `Daily EMA200: ${r.ema200_d ? 'aligned ✓' : 'against ✗'}`,
+        `ADX: ${r.adx == null ? '—' : d3.format('.0f')(r.adx)}`, `Expires in ${r.expires_in_bars} candles`].forEach((t) => meta.append(G.el('span', null, t)));
       card.append(top, lv, meta); el.append(card);
     });
   });
@@ -969,31 +969,31 @@
   dash.draw('s-signals', (el) => {
     const G = window.GR, s = dash.data('s_signals');
     document.querySelectorAll('#no-signal').forEach((p) => { p.hidden = !(s.status === 'ok' && s.data.length === 0); });
-    if (s.status !== 'ok') { el.textContent = s.status === 'error' ? 'Gagal load signal' : '—'; return; }
+    if (s.status !== 'ok') { el.textContent = s.status === 'error' ? 'Signals failed to load' : '—'; return; }
     el.replaceChildren();
     [...s.data].sort((a, b) => (b.fresh - a.fresh) || (b.reco - a.reco)).forEach((r) => {
       const i = s.data.indexOf(r);
       const card = G.el('article', 'gr-setup'); card.dataset.side = r.side; card.id = `scalp-${i}`;
       const top = G.el('div', 'gr-setup-top');
-      top.append(G.el('span', 'gr-side ' + (r.side === 'BUY' ? 'gr-up' : 'gr-down'), r.side), G.el('span', 'gr-pill', `Zone 1H gred ${r.grade}`),
-        G.el('span', 'gr-st ' + (r.fresh ? 's-berjalan' : r.state === 'IN TRADE' ? 's-berjaya' : 's-menunggu'), G.scalpWord(r)),
-        r.reco ? G.el('span', 'gr-reco', 'Disyorkan') : G.el('span', 'gr-pill', 'Lawan EMA200 harian'));
+      top.append(G.el('span', 'gr-side ' + (r.side === 'BUY' ? 'gr-up' : 'gr-down'), r.side), G.el('span', 'gr-pill', `1H zone grade ${r.grade}`),
+        G.el('span', 'gr-st ' + (r.fresh ? 's-running' : r.state === 'IN TRADE' ? 's-success' : 's-waiting'), G.scalpWord(r)),
+        r.reco ? G.el('span', 'gr-reco', 'Recommended') : G.el('span', 'gr-pill', 'Against daily EMA200'));
       const steps = G.el('div', 'gr-steps');
       const level = r.state === 'WATCH' ? 1 : r.state === 'IN ZONE' ? 2 : 4;
-      [['1', 'Zone 1H terbentuk'], ['2', 'Harga sentuh zone'], ['3', 'CHoCH / BOS 15m'], ['4', r.fresh ? 'ENTRY sekarang' : 'Entry']].forEach(([k, t], j) => {
+      [['1', '1H zone formed'], ['2', 'Price touched zone'], ['3', '15m CHoCH / BOS'], ['4', r.fresh ? 'ENTER now' : 'Entry']].forEach(([k, t], j) => {
         const st = G.el('div', 'gr-step' + (j + 1 < level || (level === 4 && j < 3) ? ' done' : j + 1 === level || (level === 4 && j === 3) ? ' now' : ''));
-        st.append(G.el('b', null, `Langkah ${k}`), t); steps.append(st);
+        st.append(G.el('b', null, `Step ${k}`), t); steps.append(st);
       });
       const lv = G.el('div', 'gr-levels');
       const item = (lab, field, txt, cls, extra) => { const d = G.el('div', 'gr-lv ' + (extra || '')); d.append(G.el('span', 'lab', lab), G.mark(G.el('span', 'val ' + (cls || ''), txt), 's_signals', field, i)); return d; };
-      const zone = G.el('div', 'gr-lv'); zone.append(G.el('span', 'lab', 'Zone 1H'));
+      const zone = G.el('div', 'gr-lv'); zone.append(G.el('span', 'lab', '1H zone'));
       const zv = G.el('span', 'val'); zv.append(G.mark(G.el('span', null, G.f2(r.zone_bottom)), 's_signals', 'zone_bottom', i), ' – ', G.mark(G.el('span', null, G.f2(r.zone_top)), 's_signals', 'zone_top', i));
       zone.append(zv); lv.append(zone);
       if (r.entry != null) lv.append(item('Entry', 'entry', G.f2(r.entry), '', 'entry'), item('Stop loss', 'sl', G.f2(r.sl), 'gr-down'),
-        item('TP1 (1.5R)', 'tp_half', G.f2(r.tp_half), 'gr-up'), item('TP2 (3R)', 'tp', G.f2(r.tp), 'gr-up'), item('Risiko / 0.01 lot', 'risk', '$' + G.f2(r.risk)));
-      else lv.append(item('Jarak ke zone', 'dist', r.dist > 0 ? `${G.f2(r.dist)} pt` : 'Dalam zone'), item('Batal jika lepas', 'h1_sl', G.f2(r.h1_sl), 'gr-down'));
+        item('TP1 (1.5R)', 'tp_half', G.f2(r.tp_half), 'gr-up'), item('TP2 (3R)', 'tp', G.f2(r.tp), 'gr-up'), item('Risk / 0.01 lot', 'risk', '$' + G.f2(r.risk)));
+      else lv.append(item('Distance to zone', 'dist', r.dist > 0 ? `${G.f2(r.dist)} pt` : 'In the zone'), item('Cancelled beyond', 'h1_sl', G.f2(r.h1_sl), 'gr-down'));
       const meta = G.el('div', 'gr-meta');
-      [r.action, `EMA200 harian: ${r.ema200_d ? 'searah ✓' : 'lawan ✗'}`, `Zone sejak ${G.t(r.created)} MYT`, r.entry_time ? `CHoCH pada ${G.t(r.entry_time)} MYT` : null]
+      [r.action, `Daily EMA200: ${r.ema200_d ? 'aligned ✓' : 'against ✗'}`, `Zone since ${G.t(r.created)} MYT`, r.entry_time ? `CHoCH at ${G.t(r.entry_time)} MYT` : null]
         .filter(Boolean).forEach((t) => meta.append(G.el('span', null, t)));
       card.append(top, steps, lv, meta); el.append(card);
     });
@@ -1020,11 +1020,11 @@
   table('research', 'research', (tb, rows) => rows.forEach((r) => {
     const G = window.GR, tr = G.el('tr'); tr.dataset.key = r.key;
     td(tr, r.strategy); td(tr, G.sgn(r.test_r), 'r ' + (r.test_r > 0 ? 'gr-up' : 'gr-down'));
-    td(tr, r.verdict, r.verdict.startsWith('Lulus') ? 'gr-up' : 'gr-down'); tb.append(tr);
+    td(tr, r.verdict, r.verdict.startsWith('Passed') ? 'gr-up' : 'gr-down'); tb.append(tr);
   }));
   table('t-daily', 't_daily', (tb, rows) => rows.filter((r) => r.signals > 0).forEach((r) => {
     const G = window.GR, tr = G.el('tr', r.complete ? null : 'today'); tr.dataset.key = r.key;
-    td(tr, G.dshort(r.date + 'T04:00:00Z') + (r.complete ? '' : ' · hari ini')); td(tr, r.model);
+    td(tr, G.dshort(r.date + 'T04:00:00Z') + (r.complete ? '' : ' · today')); td(tr, r.model);
     td(tr, String(r.signals), 'r'); td(tr, String(r.entries), 'r');
     td(tr, String(r.success), 'r gr-up'); td(tr, String(r.fail), 'r gr-down'); td(tr, String(r.running), 'r'); td(tr, String(r.not_executed), 'r');
     td(tr, r.success_rate == null ? '—' : d3.format('.0f')(r.success_rate) + '%', 'r'); tb.append(tr);
@@ -1032,7 +1032,7 @@
   table('t-hourly', 't_hourly', (tb, rows) => rows.forEach((r) => {
     const G = window.GR, tr = G.el('tr'); tr.dataset.key = r.key;
     td(tr, G.dshort(r.hour) + ' · ' + G.hm(new Date(r.hour)));
-    td(tr, r.close == null ? 'Pasaran tutup' : G.f2(r.close), 'r');
+    td(tr, r.close == null ? 'Market closed' : G.f2(r.close), 'r');
     td(tr, r.chg_pips == null ? '—' : G.sgn(r.chg_pips, '.0f'), 'r ' + (r.chg_pips > 0 ? 'gr-up' : r.chg_pips < 0 ? 'gr-down' : ''));
     td(tr, '').append(G.chips(r.h1_status)); td(tr, '').append(G.chips(r.m15_status)); tb.append(tr);
   }));
@@ -1112,7 +1112,7 @@
         muted: G.css(el, '--gr-muted'), bg: G.css(el, '--gr-card-solid'), tip: G.css(el, '--gr-tip'), tipfg: G.css(el, '--gr-tip-fg') };
       if (c.status !== 'ok' || !c.data.length) {
         st.render = null; st.plot.selectAll('*').remove(); st.svg.attr('viewBox', '0 0 300 60');
-        st.plot.append('text').attr('x', 12).attr('y', 30).style('fill', C.muted).text(c.status === 'error' ? 'Gagal load chart' : '—');
+        st.plot.append('text').attr('x', 12).attr('y', 30).style('fill', C.muted).text(c.status === 'error' ? 'Chart failed to load' : '—');
         return;
       }
       const rows = c.data.map((d) => ({ t: d.time, o: +d.open, h: +d.high, l: +d.low, c: +d.close }));
@@ -1121,7 +1121,7 @@
       const m = { t: 14, r: 70, b: 28, l: 10 }, iw = W - m.l - m.r, ih = H - m.t - m.b;
       const times = rows.map((d) => +new Date(d.t));
       const idxOf = (iso) => Math.min(n - 1, Math.max(0, d3.bisectLeft(times, +new Date(iso))));
-      st.svg.attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%').attr('aria-label', `Chart candlestick emas ${opt.tf}, ${n} candle, dengan zone dan setup. Boleh zoom dan geser.`);
+      st.svg.attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%').attr('aria-label', `Gold ${opt.tf} candlestick chart, ${n} candles, with zones and setups. Zoom and pan supported.`);
       st.svg.select(`#${st.clip} rect`).attr('x', m.l).attr('y', m.t).attr('width', iw).attr('height', ih);
       const x0 = d3.scaleLinear().domain([-0.5, n - 0.5]).range([m.l, m.l + iw]);
       st.zoom.extent([[m.l, m.t], [m.l + iw, m.t + ih]]).translateExtent([[m.l, -Infinity], [m.l + iw, Infinity]]);
@@ -1253,7 +1253,7 @@
     lines: (s, C) => [['Entry', s.entry, C.em], ['SL', s.sl, C.dn], ['TP1', s.tp1, C.up], ['TP2', s.tp2, C.up]],
   });
   window.GR.chart('chart-m15', 'm15', ['s_candles', 's_levels', 's_signals'], {
-    tf: '15m', show: 64, zoneLabel: (s) => `Zone 1H ${s.side}`,
+    tf: '15m', show: 64, zoneLabel: (s) => `1H zone ${s.side}`,
     lines: (s, C) => [['Entry', s.entry, C.em], ['SL', s.sl, C.dn], ['TP 1.5R', s.tp_half, C.up], ['TP 3R', s.tp, C.up]],
   });
 </script>

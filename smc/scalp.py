@@ -46,7 +46,7 @@ def _sessions(ts: pd.Timestamp) -> str:
         return "London"
     if h >= 22 or h < 7:
         return "Asia"
-    return "Tutup"
+    return "Closed"
 
 
 def run(m15: pd.DataFrame, h1: pd.DataFrame, d1: pd.DataFrame,

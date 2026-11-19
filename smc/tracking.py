@@ -3,13 +3,13 @@
 Every signal both models produced is rebuilt from the candle history with the
 same rules the live scanner uses (sequential, no look-ahead), then judged:
 
-  BERJAYA      entry was hit and price then moved SUCCESS_PIPS in our favour
+  SUCCESS       entry was hit and price then moved SUCCESS_PIPS in our favour
                before the stop loss
-  GAGAL        entry was hit and the stop loss came first, or the target was not
+  FAIL          entry was hit and the stop loss came first, or the target was not
                reached within the holding window
-  BERJALAN     entry hit, neither target nor stop reached yet
-  MENUNGGU     signal still waiting for its entry
-  TAK EXECUTE  signal expired / was cancelled without an entry
+  RUNNING       entry hit, neither target nor stop reached yet
+  WAITING       signal still waiting for its entry
+  NOT EXECUTED  signal expired / was cancelled without an entry
 
 Gold pip convention: 1 pip = $0.10, so 100 pips = $10.00 of price movement.
 """
@@ -23,7 +23,7 @@ SUCCESS_PIPS = 100
 TZ = "Asia/Kuala_Lumpur"
 HOLD = {"H1": 72, "M15": 96}           # bars a trade is given to reach the target
 
-STATUS_ORDER = ["BERJAYA", "GAGAL", "BERJALAN", "MENUNGGU", "TAK EXECUTE"]
+STATUS_ORDER = ["SUCCESS", "FAIL", "RUNNING", "WAITING", "NOT EXECUTED"]
 
 
 def _judge(df, start, sd, entry, sl, hold, same_bar_sl=None):
@@ -34,17 +34,17 @@ def _judge(df, start, sd, entry, sl, hold, same_bar_sl=None):
     best = 0.0
     if same_bar_sl is not None:  # the fill candle: only the stop counts (we cannot know the order)
         if (sd > 0 and l[same_bar_sl] <= sl) or (sd < 0 and h[same_bar_sl] >= sl):
-            return "GAGAL", same_bar_sl, 0.0
+            return "FAIL", same_bar_sl, 0.0
     for k in range(start, min(n, start + hold)):
         if (sd > 0 and l[k] <= sl) or (sd < 0 and h[k] >= sl):
-            return "GAGAL", k, best
+            return "FAIL", k, best
         fav = ((h[k] - entry) if sd > 0 else (entry - l[k])) / PIP
         best = max(best, fav)
         if (sd > 0 and h[k] >= target) or (sd < 0 and l[k] <= target):
-            return "BERJAYA", k, SUCCESS_PIPS
+            return "SUCCESS", k, SUCCESS_PIPS
     if start + hold <= n:
-        return "GAGAL", start + hold - 1, best        # ran out of time
-    return "BERJALAN", None, best
+        return "FAIL", start + hold - 1, best        # ran out of time
+    return "RUNNING", None, best
 
 
 def swing_signals(h1, st, filt, since):
@@ -64,9 +64,9 @@ def swing_signals(h1, st, filt, since):
             row.update(status=status, exec_time=h1.index[s.fill_idx],
                        done_time=None if k is None else h1.index[k] + step, best_pips=best)
         elif s.status == "PENDING":
-            row["status"] = "MENUNGGU"
+            row["status"] = "WAITING"
         else:
-            row["status"] = "TAK EXECUTE"
+            row["status"] = "NOT EXECUTED"
         out.append(row)
     return out
 
@@ -89,9 +89,9 @@ def scalp_signals(m15, rows, since):
             status, k, best = _judge(m15, j + 1, sd, r["entry"], r["sl"], HOLD["M15"])
             row.update(status=status, done_time=None if k is None else idx[k] + step, best_pips=best)
         elif r["state"] in ("WATCH", "IN ZONE"):
-            row["status"] = "MENUNGGU"
+            row["status"] = "WAITING"
         else:
-            row["status"] = "TAK EXECUTE"
+            row["status"] = "NOT EXECUTED"
         out.append(row)
     return out
 
@@ -132,7 +132,7 @@ def build(h1, m15, swing, scalp, now=None, days=14):
         for m in ("H1", "M15"):
             here = [r for r in sig if r["model"] == m and a <= r["time"] < b]
             row[f"{m.lower()}_n"] = len(here)
-            row[f"{m.lower()}_status"] = ", ".join(f"{r['side']} {r['status']}" for r in here) if here else "TIADA SIGNAL"
+            row[f"{m.lower()}_status"] = ", ".join(f"{r['side']} {r['status']}" for r in here) if here else "NO SIGNAL"
         hourly.append(row)
 
     # one row per MYT day per model
@@ -143,11 +143,11 @@ def build(h1, m15, swing, scalp, now=None, days=14):
         for m in ("H1", "M15"):
             here = [r for r in sig if r["model"] == m and r["time"].tz_convert(TZ).normalize() == day]
             c = {s: sum(r["status"] == s for r in here) for s in STATUS_ORDER}
-            ent = c["BERJAYA"] + c["GAGAL"] + c["BERJALAN"]
-            done = c["BERJAYA"] + c["GAGAL"]
+            ent = c["SUCCESS"] + c["FAIL"] + c["RUNNING"]
+            done = c["SUCCESS"] + c["FAIL"]
             daily.append({"key": f"{day.strftime('%Y-%m-%d')}-{m}", "date": day.strftime("%Y-%m-%d"),
                           "model": m, "complete": d > 0, "signals": len(here), "entries": ent,
-                          "success": c["BERJAYA"], "fail": c["GAGAL"], "running": c["BERJALAN"],
-                          "waiting": c["MENUNGGU"], "not_executed": c["TAK EXECUTE"],
-                          "success_rate": round(100 * c["BERJAYA"] / done, 0) if done else None})
+                          "success": c["SUCCESS"], "fail": c["FAIL"], "running": c["RUNNING"],
+                          "waiting": c["WAITING"], "not_executed": c["NOT EXECUTED"],
+                          "success_rate": round(100 * c["SUCCESS"] / done, 0) if done else None})
     return log, hourly, daily

@@ -66,30 +66,30 @@ def main() -> int:
             moved_r = (price - r["entry"]) * sd / r["risk"]
             row["moved_r"] = r2(moved_r)
             row["fresh"] = bars_ago <= 3 and -0.5 < moved_r < 0.5
-            row["action"] = ("MASUK SEKARANG" if row["fresh"] else
-                             "Sedang berjalan (jangan kejar)")
+            row["action"] = ("ENTER NOW" if row["fresh"] else
+                             "Running (do not chase)")
         elif r["state"] == "IN ZONE":
             inside = r["zone_bottom"] <= price <= r["zone_top"]
-            row["action"] = ("Harga dalam zone 1H, tunggu CHoCH 15m" if inside else
-                             f"Zone 1H dah disentuh, tunggu CHoCH 15m ke arah {r['side']}")
+            row["action"] = ("Price is in the 1H zone, wait for a 15m CHoCH" if inside else
+                             f"1H zone touched, wait for a 15m CHoCH toward {r['side']}")
         else:
-            row["action"] = "Tunggu harga sampai zone 1H"
+            row["action"] = "Wait for price to reach the 1H zone"
         live.append(row)
     fresh = [x for x in live if x["fresh"]]
 
     # report
     fmt = lambda ts: pd.Timestamp(ts).tz_convert(TZ).strftime("%d %b %H:%M")
-    print(f"# Gold Scalp M15 · {args.symbol} · {fmt(last_t)} MYT · harga {price:.2f} · sesi {res['session']}")
+    print(f"# Gold Scalp M15 · {args.symbol} · {fmt(last_t)} MYT · price {price:.2f} · session {res['session']}")
     print(f"Trend 15m {res['trend15'].upper()} · 1H {res['trend1h'].upper()} · ATR15 {a15:.2f}")
     for x in live:
-        print(f"- {x['side']} {x['grade']}{' (Disyorkan: EMA200 harian ✓)' if x['reco'] else ' (lawan EMA200 harian)'} · {x['state']} · "
+        print(f"- {x['side']} {x['grade']}{' (Recommended: daily EMA200 ✓)' if x['reco'] else ' (against daily EMA200)'} · {x['state']} · "
               f"zone {x['zone_bottom']}–{x['zone_top']} · {x['action']}"
               + (f" · entry {x['entry']} SL {x['sl']} TP {x['tp']} (risk {x['risk']})" if x['entry'] else ""))
     if not live:
-        print("- Tiada zone 1H aktif. Tunggu.")
+        print("- No active 1H zone. Wait.")
     if st["trades"]:
-        print(f"Backtest 60 hari: {st['trades']} trade · win {st['win_rate']:.0f}% · {st['total_r']:+.1f}R · "
-              f"disyorkan (EMA200 harian): {st['aligned_trades']} trade, {st['aligned_r']:+.1f}R")
+        print(f"Backtest 60 days: {st['trades']} trade · win {st['win_rate']:.0f}% · {st['total_r']:+.1f}R · "
+              f"recommended (daily EMA200): {st['aligned_trades']} trade, {st['aligned_r']:+.1f}R")
 
     if args.dash:
         out = Path(args.dash); out.mkdir(parents=True, exist_ok=True)

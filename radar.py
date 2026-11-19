@@ -67,17 +67,17 @@ def main() -> int:
             "pip": tracking.PIP}
     for m, rows in (("h1", sw), ("m15", sc)):
         w = [r for r in rows if r["time"] >= week]
-        s_, f_ = sum(r["status"] == "BERJAYA" for r in w), sum(r["status"] == "GAGAL" for r in w)
-        summ[f"{m}_7d_entries"] = sum(r["status"] in ("BERJAYA", "GAGAL", "BERJALAN") for r in w)
+        s_, f_ = sum(r["status"] == "SUCCESS" for r in w), sum(r["status"] == "FAIL" for r in w)
+        summ[f"{m}_7d_entries"] = sum(r["status"] in ("SUCCESS", "FAIL", "RUNNING") for r in w)
         summ[f"{m}_7d_success"] = s_
         summ[f"{m}_7d_fail"] = f_
         summ[f"{m}_7d_rate"] = round(100 * s_ / (s_ + f_), 0) if s_ + f_ else None
-        summ[f"{m}_running"] = sum(r["status"] == "BERJALAN" for r in rows)
-        summ[f"{m}_waiting"] = sum(r["status"] == "MENUNGGU" for r in rows)
+        summ[f"{m}_running"] = sum(r["status"] == "RUNNING" for r in rows)
+        summ[f"{m}_waiting"] = sum(r["status"] == "WAITING" for r in rows)
     all_w = [r for r in sw + sc if r["time"] >= week]
-    s_, f_ = sum(r["status"] == "BERJAYA" for r in all_w), sum(r["status"] == "GAGAL" for r in all_w)
+    s_, f_ = sum(r["status"] == "SUCCESS" for r in all_w), sum(r["status"] == "FAIL" for r in all_w)
     summ["all_7d_rate"] = round(100 * s_ / (s_ + f_), 0) if s_ + f_ else None
-    summ["all_7d_entries"] = sum(r["status"] in ("BERJAYA", "GAGAL", "BERJALAN") for r in all_w)
+    summ["all_7d_entries"] = sum(r["status"] in ("SUCCESS", "FAIL", "RUNNING") for r in all_w)
     summ["active"] = summ["h1_running"] + summ["h1_waiting"] + summ["m15_running"] + summ["m15_waiting"]
     last = hourly[0] if hourly else {}
     summ["last_hour"] = last.get("hour")

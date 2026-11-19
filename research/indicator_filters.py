@@ -121,11 +121,11 @@ def judge(df, split, label):
     res = []
     # ADX threshold chosen on year 1
     best = max((t for t in (15, 20, 25, 30)), key=lambda t: a[a.adx > t].r.mean() if (a.adx > t).sum() >= 10 else -9)
-    filt = {f"ADX > {best} (dipilih di tahun 1)": df.adx > best,
-            "EMA200 1H searah": df.ema200_1h, "Sesi London/NY": df.session,
+    filt = {f"ADX > {best} (chosen on year 1)": df.adx > best,
+            "EMA200 1H aligned": df.ema200_1h, "London/NY session": df.session,
             "RSI divergence": df.rsi_div}
     if "ema200_d" in df:
-        filt["EMA200 harian searah"] = df.ema200_d
+        filt["Daily EMA200 aligned"] = df.ema200_d
     for name, m in filt.items():
         ka, kb = df[m & (df.time < split)], df[m & (df.time >= split)]
         da = ka.r.mean() - base[0] if len(ka) else np.nan
@@ -135,7 +135,7 @@ def judge(df, split, label):
                     len(kb), kb.r.sum(), kb.r.mean() if len(kb) else np.nan, helps))
         print(f"  {name:32s} Y1 kept {len(ka):3d} R {ka.r.sum():+6.1f} avg {ka.r.mean() if len(ka) else 0:+.2f} | "
               f"Y2 kept {len(kb):3d} R {kb.r.sum():+6.1f} avg {kb.r.mean() if len(kb) else 0:+.2f} | "
-              f"{'MEMBANTU' if helps else 'tidak'}")
+              f"{'HELPS' if helps else 'no'}")
     return res, best
 
 
@@ -148,11 +148,11 @@ if __name__ == "__main__":
     sw = features_swing(h1, d1, st)
     split = sw.time.iloc[len(sw) // 2]
     print("split", split)
-    judge(sw, split, "SWING 1H (2 tahun)")
+    judge(sw, split, "SWING 1H (2 years)")
 
     res = scalp.run(m15, h1, d1)
     sc = features_scalp(m15, h1, res["rows"])
-    judge(sc, sc.time.iloc[len(sc) // 2], "SCALP M15 (60 hari) - sampel kecil")
+    judge(sc, sc.time.iloc[len(sc) // 2], "SCALP M15 (60 days) - small sample")
     print("\nscalp per filter (all trades):")
     for col in ("session", "ema200_1h", "rsi_div", "aligned"):
         for v in (True, False):
