@@ -2,7 +2,7 @@
 """Gold SMC scanner.
 
 Usage:
-    python scan.py                 # scan GC=F on 1h with daily bias (best backtest)
+    python scan.py                 # scan spot XAU/USD on 1h with daily bias (best backtest)
     python scan.py --tf 15m        # faster entries, 1h bias (weaker in backtest)
     python scan.py --aplus         # only setups with all 4 concepts (FVG required)
 
@@ -32,7 +32,7 @@ def fmt_t(ts: pd.Timestamp) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--symbol", default="GC=F")
+    ap.add_argument("--symbol", default=data.SPOT)
     ap.add_argument("--tf", default="1h")
     ap.add_argument("--htf", default=None)
     ap.add_argument("--aplus", action="store_true", help="require FVG confluence")
@@ -163,7 +163,7 @@ def main() -> int:
     if bt_f.get("trades"):
         w(f"- **With the daily EMA200 + ADX>{ADX_MIN:.0f} filter:** {bt_f['trades']} trade · win {bt_f['win_rate']:.0f}% · "
           f"{bt_f['total_r']:+.1f}R · avg {bt_f['avg_r']:+.2f}R · max DD {bt_f['max_dd_r']:.1f}R")
-    w("\n_Data: Yahoo Finance GC=F (gold futures, a few dollars off spot XAUUSD). "
+    w(f"\n_Data: {data.source()}. "
       "Not financial advice. Always use a stop loss and risk management._")
 
     report = "\n".join(L)
@@ -181,7 +181,7 @@ def main() -> int:
         export.write(Path(args.dash), symbol=args.symbol, tf=args.tf, htf_tf=htf_tf, ltf=ltf,
                      st=st, st_htf=st_htf, signals=signals, atr=float(a), price=price,
                      an_ltf=an_ltf, sum_ltf=sum_ltf, an_htf=an_htf, sum_htf=sum_htf,
-                     bt_ltf=bt_ltf, bt_htf=bt_htf, bt_f=bt_f)
+                     bt_ltf=bt_ltf, bt_htf=bt_htf, bt_f=bt_f, data_source=data.source())
     print(report)
     return 2 if triggers else 0
 

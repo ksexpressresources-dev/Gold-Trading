@@ -220,6 +220,12 @@
   .gr-chartbox .gr-ax text { fill: var(--gr-muted); font-size: 11px; font-family: var(--font-anthropic-sans); }
   .gr-chartbox .gr-ax line { stroke: var(--gr-grid); }
   .gr-chartbox .gr-ax .domain { display: none; }
+  .gr-chartbox .gr-tv { position: absolute; inset: 0; }
+  .gr-chartbox .gr-tv-zones { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 2; }
+  .gr-chartbox .gr-tv-legend { position: absolute; left: 10px; top: 8px; z-index: 3; pointer-events: none; font-size: 12px; font-variant-numeric: tabular-nums;
+    color: #d1d4dc; white-space: nowrap; overflow: hidden; max-width: calc(100% - 90px); }
+  .gr-chartbox { overflow: hidden; }
+  @media (max-width: 640px) { .gr-chartbox .gr-tv-legend { color: #131722; } }
   .gr-tip { position: absolute; pointer-events: none; background: var(--gr-tip); color: var(--gr-tip-fg); border-radius: 12px; padding: 8px 10px; font-size: 12px; font-variant-numeric: tabular-nums; line-height: 1.55; white-space: nowrap; z-index: 2; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
   .gr-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--cds-font-size-caption); color: var(--gr-muted); margin-top: 10px; }
   .gr-legend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -383,14 +389,14 @@
         <button type="button" class="gr-btn" data-zoom="in" data-chart="h1">Zoom +</button>
         <button type="button" class="gr-btn" data-zoom="out" data-chart="h1">Zoom −</button>
         <button type="button" class="gr-btn" data-zoom="reset" data-chart="h1">Reset</button>
-        <span class="gr-hint">Scroll / pinch to zoom at the pointer · drag to pan</span>
+        <span class="gr-hint">Scroll / pinch to zoom · drag to pan · TradingView chart</span>
       </div>
       <div class="gr-chartbox" data-draw="chart-h1" data-source="candles levels setups"></div>
       <div class="gr-legend" aria-hidden="true">
         <span><i class="gr-sw" style="background: var(--gr-up); opacity: .45"></i>OB bullish</span>
         <span><i class="gr-sw" style="background: var(--gr-dn); opacity: .45"></i>OB bearish</span>
         <span><i class="gr-sw" style="border: 1px dashed var(--gr-muted)"></i>FVG</span>
-        <span>▲▼ Sweep · BOS / CHoCH</span>
+        <span>▲▼ Sweep · ● BOS / CHoCH</span>
       </div>
     </section>
 
@@ -446,7 +452,7 @@
         <button type="button" class="gr-btn" data-zoom="in" data-chart="m15">Zoom +</button>
         <button type="button" class="gr-btn" data-zoom="out" data-chart="m15">Zoom −</button>
         <button type="button" class="gr-btn" data-zoom="reset" data-chart="m15">Reset</button>
-        <span class="gr-hint">Scroll / pinch to zoom at the pointer · drag to pan</span>
+        <span class="gr-hint">Scroll / pinch to zoom · drag to pan · TradingView chart</span>
       </div>
       <div class="gr-chartbox" data-draw="chart-m15" data-source="s_candles s_levels s_signals"></div>
       <div class="gr-legend" aria-hidden="true">
@@ -535,7 +541,7 @@
     </section>
   </section>
 
-  <p class="gr-foot">GC=F (gold futures) prices differ by a few dollars from broker XAUUSD. 1 pip = $0.10, so 100 pips = $10 of price movement, and $ risk per 0.01 lot = stop distance in points. Updated every hour, not every tick. Not financial advice.</p>
+  <p class="gr-foot">Data: <span data-draw="src" data-source="t_summary" data-field="source" data-row="0">—</span>. 1 pip = $0.10, so 100 pips = $10 of price movement, and $ risk per 0.01 lot = stop distance in points. Updated every hour, not every tick. Not financial advice.</p>
 
   <div class="gr-navbar">
     <nav class="gr-nav" role="tablist" aria-label="Navigation">
@@ -666,6 +672,7 @@
   simple('h-last', 't_summary', 'last_hour_h1', (v) => G.statusWord(v).toLowerCase());
   simple('m-last', 't_summary', 'last_hour_m15', (v) => G.statusWord(v).toLowerCase());
   simple('m-session', 's_summary', 'session');
+  simple('src', 't_summary', 'source');
   simple('m-atr', 's_summary', 'atr15', (v) => G.f2(+v));
   simple('r-h1', 't_summary', 'h1_7d_rate', pct0);
   simple('r-m15', 't_summary', 'm15_7d_rate', pct0);
@@ -1080,180 +1087,151 @@
   });
 </script>
 
+<script src="lwc.js"></script>
 <script>
-  // ---------- candlestick chart factory: zoom at pointer, drag to pan, crosshair ----------
+  // ---------- TradingView Lightweight Charts: candles, price lines, markers, zone boxes ----------
+  const MYT = 8 * 3600;  // chart times are shifted to Malaysia time so the axes read MYT
   window.GR.chart = (name, chartId, ids, opt) => dash.draw(name, {
     mount(el) {
       const G = window.GR;
-      const svg = d3.select(el).append('svg').attr('role', 'img');
-      const clip = 'grclip-' + chartId;
-      svg.append('defs').append('clipPath').attr('id', clip).append('rect');
-      const plot = svg.append('g'), cur = svg.append('g').style('pointer-events', 'none').style('display', 'none');
-      const tip = G.el('div', 'gr-tip'); tip.hidden = true; el.append(tip);
-      const st = { svg, plot, cur, tip, clip, t: d3.zoomIdentity, init: false };
-      st.zoom = d3.zoom().scaleExtent([1, 12]).filter((ev) => (ev.type === 'wheel' || !ev.button) && ev.type !== 'dblclick')
-        .on('zoom', (ev) => { st.t = ev.transform; if (st.render) st.render(); if (st.lastEv) st.hover(st.lastEv); });
-      svg.call(st.zoom).on('dblclick.zoom', null).on('dblclick', () => svg.transition().duration(350).call(st.zoom.transform, st.home || d3.zoomIdentity));
-      svg.on('pointermove', (ev) => { st.lastEv = ev; if (st.hover) st.hover(ev); })
-        .on('pointerleave', () => { st.lastEv = null; cur.style('display', 'none'); tip.hidden = true; plot.selectAll('.gr-ax text').style('opacity', null); });
-      st.btn = (e) => {
-        const k = e.currentTarget.dataset.zoom;
-        if (k === 'reset') svg.transition().duration(350).call(st.zoom.transform, st.home || d3.zoomIdentity);
-        else svg.transition().duration(250).call(st.zoom.scaleBy, k === 'in' ? 1.6 : 1 / 1.6, [st.right || 0, 0]);
+      el.style.height = (el.clientWidth < 520 ? 360 : 460) + 'px';
+      const box = G.el('div', 'gr-tv'); el.append(box);
+      const legend = G.el('div', 'gr-tv-legend'); el.append(legend);
+      const cv = G.el('canvas', 'gr-tv-zones'); el.append(cv);
+      if (!window.LightweightCharts) { box.textContent = 'Chart library failed to load'; return { dead: true }; }
+      const dark = !matchMedia('(max-width: 640px)').matches;
+      const tv = dark ? { bg: '#131722', fg: '#d1d4dc', grid: '#232632', line: '#2a2e39' } : { bg: '#ffffff', fg: '#131722', grid: '#f0f3fa', line: '#e0e3eb' };
+      const chart = LightweightCharts.createChart(box, {
+        autoSize: true,
+        layout: { background: { type: 'solid', color: tv.bg }, textColor: tv.fg, fontFamily: getComputedStyle(el).fontFamily, fontSize: 11 },
+        grid: { vertLines: { color: tv.grid }, horzLines: { color: tv.grid } },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        rightPriceScale: { borderColor: tv.line, scaleMargins: { top: 0.08, bottom: 0.08 } },
+        timeScale: { borderColor: tv.line, timeVisible: true, secondsVisible: false, rightOffset: 4 },
+        localization: { timeFormatter: (t) => G.t(new Date((t - MYT) * 1000).toISOString()), priceFormatter: (p) => d3.format(',.2f')(p) },
+      });
+      const st = { chart, box, legend, cv, tv, lines: [], zoneSpec: [], autoscale: [] };
+      st.series = chart.addCandlestickSeries({
+        upColor: '#26a69a', downColor: '#ef5350', wickUpColor: '#26a69a', wickDownColor: '#ef5350', borderVisible: false,
+        priceLineColor: '#2962ff',
+        autoscaleInfoProvider: (orig) => {
+          const r = orig();
+          if (r && st.autoscale.length) {
+            r.priceRange.minValue = Math.min(r.priceRange.minValue, ...st.autoscale);
+            r.priceRange.maxValue = Math.max(r.priceRange.maxValue, ...st.autoscale);
+          }
+          return r;
+        },
+      });
+      st.paint = () => {
+        const w = el.clientWidth, h = el.clientHeight, dpr = window.devicePixelRatio || 1;
+        cv.width = w * dpr; cv.height = h * dpr; cv.style.width = w + 'px'; cv.style.height = h + 'px';
+        const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+        const right = w - chart.priceScale('right').width(), bottom = h - chart.timeScale().height();
+        ctx.save(); ctx.beginPath(); ctx.rect(0, 0, right, bottom); ctx.clip();
+        ctx.font = '600 10px ' + getComputedStyle(el).fontFamily;
+        st.zoneSpec.forEach((z) => {
+          const y1 = st.series.priceToCoordinate(z.top), y2 = st.series.priceToCoordinate(z.bottom);
+          if (y1 == null || y2 == null) return;
+          let x = z.time == null ? 0 : chart.timeScale().timeToCoordinate(z.time);
+          if (x == null) x = 0;
+          x = Math.max(0, x);
+          ctx.fillStyle = z.fill; ctx.fillRect(x, Math.min(y1, y2), right - x, Math.max(1, Math.abs(y2 - y1)));
+          ctx.strokeStyle = z.stroke; ctx.setLineDash(z.dash ? [3, 3] : []); ctx.lineWidth = 1;
+          ctx.strokeRect(x + 0.5, Math.min(y1, y2) + 0.5, right - x - 1, Math.max(1, Math.abs(y2 - y1)) - 1);
+          if (z.label && x < right - 60) { ctx.fillStyle = z.text; ctx.fillText(z.label, x + 4, Math.min(y1, y2) + 11); }
+        });
+        ctx.restore();
       };
+      const repaint = () => requestAnimationFrame(st.paint);
+      chart.timeScale().subscribeVisibleLogicalRangeChange(repaint);
+      st.ro = new ResizeObserver(repaint); st.ro.observe(el);
+      chart.subscribeCrosshairMove((p) => st.showLegend(p && p.seriesData ? p.seriesData.get(st.series) : null));
+      st.zoom = (k) => {
+        const ts = chart.timeScale(), r = ts.getVisibleLogicalRange();
+        if (!r) return;
+        if (k === 'reset') { ts.setVisibleLogicalRange(st.home); return; }
+        const span = (r.to - r.from) * (k === 'in' ? 0.6 : 1.6), to = r.to;
+        ts.setVisibleLogicalRange({ from: to - span, to });
+      };
+      st.btn = (e) => st.zoom(e.currentTarget.dataset.zoom);
       document.querySelectorAll(`[data-zoom][data-chart="${chartId}"]`).forEach((b) => b.addEventListener('click', st.btn));
       return st;
     },
-    unmount(el, st) { document.querySelectorAll(`[data-zoom][data-chart="${chartId}"]`).forEach((b) => b.removeEventListener('click', st.btn)); },
+    unmount(el, st) {
+      if (st.dead) return;
+      document.querySelectorAll(`[data-zoom][data-chart="${chartId}"]`).forEach((b) => b.removeEventListener('click', st.btn));
+      st.ro.disconnect(); st.chart.remove();
+    },
     update(el, st) {
+      if (st.dead) return;
       const G = window.GR;
       const c = dash.data(ids[0]), L = dash.data(ids[1]), S = dash.data(ids[2]);
-      const C = { up: G.css(el, '--gr-up'), dn: G.css(el, '--gr-dn'), acc: G.css(el, '--gr-accent'), em: G.css(el, '--gr-em'), fg: G.css(el, '--gr-fg'),
-        muted: G.css(el, '--gr-muted'), bg: G.css(el, '--gr-card-solid'), tip: G.css(el, '--gr-tip'), tipfg: G.css(el, '--gr-tip-fg') };
-      if (c.status !== 'ok' || !c.data.length) {
-        st.render = null; st.plot.selectAll('*').remove(); st.svg.attr('viewBox', '0 0 300 60');
-        st.plot.append('text').attr('x', 12).attr('y', 30).style('fill', C.muted).text(c.status === 'error' ? 'Chart failed to load' : '—');
-        return;
-      }
-      const rows = c.data.map((d) => ({ t: d.time, o: +d.open, h: +d.high, l: +d.low, c: +d.close }));
+      if (c.status !== 'ok' || !c.data.length) { st.legend.textContent = c.status === 'error' ? 'Chart failed to load' : '—'; return; }
+      const tt = (iso) => Math.floor(new Date(iso).getTime() / 1000) + MYT;
+      const rows = c.data.map((d) => ({ time: tt(d.time), open: +d.open, high: +d.high, low: +d.low, close: +d.close }));
+      const times = rows.map((r) => r.time);
+      const snap = (iso) => times[Math.min(times.length - 1, Math.max(0, d3.bisectLeft(times, tt(iso))))];
+      st.series.setData(rows);
       const levels = L.status === 'ok' ? L.data : [], setups = S.status === 'ok' ? S.data : [];
-      const n = rows.length, W = Math.max(300, el.clientWidth), H = W < 520 ? 340 : 440;
-      const m = { t: 14, r: 70, b: 28, l: 10 }, iw = W - m.l - m.r, ih = H - m.t - m.b;
-      const times = rows.map((d) => +new Date(d.t));
-      const idxOf = (iso) => Math.min(n - 1, Math.max(0, d3.bisectLeft(times, +new Date(iso))));
-      st.svg.attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%').attr('aria-label', `Gold ${opt.tf} candlestick chart, ${n} candles, with zones and setups. Zoom and pan supported.`);
-      st.svg.select(`#${st.clip} rect`).attr('x', m.l).attr('y', m.t).attr('width', iw).attr('height', ih);
-      const x0 = d3.scaleLinear().domain([-0.5, n - 0.5]).range([m.l, m.l + iw]);
-      st.zoom.extent([[m.l, m.t], [m.l + iw, m.t + ih]]).translateExtent([[m.l, -Infinity], [m.l + iw, Infinity]]);
-      st.right = m.l + iw;
+      const up = '#26a69a', dn = '#ef5350', acc = G.css(el, '--gr-accent');
+      const rgba = (hex, a) => { const c2 = d3.color(hex); if (!c2) return hex; c2.opacity = a; return c2.formatRgb(); };
 
-      st.render = () => {
-        const xz = st.t.rescaleX(x0), [a, b] = xz.domain();
-        const i0 = Math.max(0, Math.floor(a)), i1 = Math.min(n - 1, Math.ceil(b));
-        const vis = rows.slice(i0, i1 + 1);
-        let ymin = d3.min(vis, (d) => d.l), ymax = d3.max(vis, (d) => d.h);
-        setups.forEach((s) => { ymin = Math.min(ymin, s.zone_bottom, s.entry ?? s.zone_bottom); ymax = Math.max(ymax, s.zone_top, s.entry ?? s.zone_top); });
-        const pad = (ymax - ymin) * 0.07;
-        const y = d3.scaleLinear().domain([ymin - pad, ymax + pad]).range([m.t + ih, m.t]);
-        const step = xz(1) - xz(0), bw = Math.max(1, step * 0.66);
-        st.geo = { xz, y, m, iw, ih, rows, W };
-        const P = st.plot; P.selectAll('*').remove();
-        P.append('g').attr('class', 'gr-ax').attr('transform', `translate(${m.l + iw},0)`)
-          .call(d3.axisRight(y).ticks(Math.max(3, ih / 55)).tickSize(-iw).tickPadding(8).tickFormat(d3.format(',.0f')));
-        const ax = P.append('g').attr('class', 'gr-ax').attr('transform', `translate(0,${m.t + ih})`);
-        const hourly = step > 14, ticks = []; let lastKey = '';
-        for (let i = i0; i <= i1; i++) {
-          const key = hourly ? G.t(rows[i].t) : G.day(rows[i].t);
-          if (key !== lastKey && xz(i) >= m.l + 34 && xz(i) <= m.l + iw - 34 && (!ticks.length || xz(i) - xz(ticks[ticks.length - 1]) >= (hourly ? 90 : 56))) ticks.push(i);
-          lastKey = key;
-        }
-        ticks.forEach((i) => {
-          const g = ax.append('g').attr('transform', `translate(${xz(i)},0)`);
-          g.append('line').attr('y2', 4).style('stroke', C.muted).style('stroke-opacity', 0.4);
-          g.append('text').attr('y', 17).attr('text-anchor', 'middle').text(hourly ? G.t(rows[i].t) : G.day(rows[i].t).slice(0, 6));
+      // structure markers (TradingView style)
+      const marks = levels.filter((e) => e.price != null && tt(e.time) >= times[0]).map((e) => {
+        const bull = e.side === 'bull';
+        return e.kind === 'SWEEP'
+          ? { time: snap(e.time), position: bull ? 'belowBar' : 'aboveBar', color: '#f7a600', shape: bull ? 'arrowUp' : 'arrowDown', text: '' }
+          : { time: snap(e.time), position: bull ? 'belowBar' : 'aboveBar', color: bull ? up : dn, shape: 'circle', text: e.kind };
+      }).sort((a, b) => a.time - b.time);
+      st.series.setMarkers(marks);
+
+      // zone boxes drawn on the overlay canvas
+      st.zoneSpec = levels.filter((z) => z.kind === 'OB' || z.kind === 'FVG').map((z) => {
+        const col = z.side === 'bull' ? up : dn;
+        return { time: snap(z.time), top: z.top, bottom: z.bottom, label: z.kind, dash: z.kind === 'FVG',
+          fill: rgba(col, z.kind === 'OB' ? 0.14 : 0.05), stroke: rgba(col, 0.5), text: col };
+      });
+      st.autoscale = [];
+      setups.forEach((s) => {
+        st.zoneSpec.push({ time: null, top: s.zone_top, bottom: s.zone_bottom, label: opt.zoneLabel ? opt.zoneLabel(s) : 'Zone',
+          fill: rgba(acc, 0.13), stroke: rgba(acc, 0.7), text: st.tv.fg });
+        st.autoscale.push(s.zone_top, s.zone_bottom);
+        if (s.entry != null) st.autoscale.push(s.entry);
+      });
+
+      // entry / SL / TP as price lines with labels on the price axis
+      st.lines.forEach((l) => st.series.removePriceLine(l)); st.lines = [];
+      setups.forEach((s) => opt.lines(s).filter((x) => x[1] != null).forEach(([title, price, color, w]) => {
+        st.lines.push(st.series.createPriceLine({ price, color, lineWidth: w || 1, lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title }));
+      }));
+
+      // OHLC legend like TradingView's top-left readout
+      const last = rows[rows.length - 1];
+      st.showLegend = (b) => {
+        b = b || last;
+        const chg = b.close - b.open, col = chg >= 0 ? up : dn;
+        st.legend.replaceChildren(G.el('b', null, `XAUUSD · ${opt.tf}  `));
+        [['O', b.open], ['H', b.high], ['L', b.low], ['C', b.close]].forEach(([k, v]) => {
+          st.legend.append(G.el('span', null, ` ${k} `));
+          const s = G.el('span', null, d3.format(',.2f')(v)); s.style.color = col; st.legend.append(s);
         });
-        const body = P.append('g').attr('clip-path', `url(#${st.clip})`), labels = P.append('g'), placed = [];
-        const label = (tx, ty, txt, col, size = 10, anchor = 'start') => {
-          const t = labels.append('text').attr('x', tx).attr('y', ty).attr('text-anchor', anchor).text(txt).style('fill', col).style('font-size', size + 'px').style('font-weight', 600)
-            .style('paint-order', 'stroke').style('stroke', C.bg).style('stroke-width', 3);
-          const bb = t.node().getBBox(), r = { x: bb.x - 3, y: bb.y - 2, w: bb.width + 6, h: bb.height + 4 };
-          const out = r.x < m.l || r.x + r.w > m.l + iw || r.y < m.t || r.y + r.h > m.t + ih;
-          if (out || placed.some((q) => r.x < q.x + q.w && r.x + r.w > q.x && r.y < q.y + q.h && r.y + r.h > q.y)) { t.remove(); return false; }
-          placed.push(r); return true;
-        };
-        const zones = levels.filter((z) => z.kind === 'OB' || z.kind === 'FVG');
-        zones.forEach((z) => {
-          const col = z.side === 'bull' ? C.up : C.dn, zx = xz(idxOf(z.time) - 0.5);
-          body.append('rect').attr('x', zx).attr('width', Math.max(0, m.l + iw - zx)).attr('y', y(z.top)).attr('height', Math.max(1, y(z.bottom) - y(z.top)))
-            .style('fill', col).style('fill-opacity', z.kind === 'OB' ? 0.14 : 0.05).style('stroke', col).style('stroke-opacity', z.kind === 'OB' ? 0.5 : 0.35)
-            .style('stroke-dasharray', z.kind === 'FVG' ? '3 3' : null);
-        });
-        const cg = body.append('g');
-        for (let i = i0; i <= i1; i++) {
-          const d = rows[i], col = d.c >= d.o ? C.up : C.dn, cx = xz(i);
-          cg.append('line').attr('x1', cx).attr('x2', cx).attr('y1', y(d.h)).attr('y2', y(d.l)).style('stroke', col);
-          cg.append('rect').attr('x', cx - bw / 2).attr('width', bw).attr('y', y(Math.max(d.o, d.c))).attr('height', Math.max(1, Math.abs(y(d.o) - y(d.c)))).style('fill', col);
-        }
-        const [d0, d1] = y.domain();
-        setups.forEach((s) => {
-          if (s.zone_top >= d0 && s.zone_bottom <= d1) {
-            body.append('rect').attr('x', m.l).attr('width', iw).attr('y', y(s.zone_top)).attr('height', Math.max(1, y(s.zone_bottom) - y(s.zone_top)))
-              .style('fill', C.acc).style('fill-opacity', 0.14).style('stroke', C.acc).style('stroke-opacity', 0.6);
-            if (opt.zoneLabel) label(m.l + 6, y(s.zone_top) + 13, opt.zoneLabel(s), C.fg, 11);
-          }
-          opt.lines(s, C).filter((x) => x[1] != null).forEach(([lab, v, col], k) => {
-            const inside = v >= d0 && v <= d1;
-            if (inside) body.append('line').attr('x1', m.l).attr('x2', m.l + iw).attr('y1', y(v)).attr('y2', y(v)).style('stroke', col).style('stroke-dasharray', '6 4').style('stroke-width', lab === 'Entry' ? 1.6 : 1.1);
-            const yy = inside ? y(v) - 5 : v > d1 ? m.t + 16 + k * 15 : m.t + ih - 6 - (3 - k) * 15;
-            label(m.l + iw - 6, yy, `${lab} ${G.f2(v)}${inside ? '' : v > d1 ? ' ↑' : ' ↓'}`, col, 11, 'end');
-          });
-        });
-        zones.forEach((z) => label(Math.max(m.l + 4, xz(idxOf(z.time) - 0.5) + 4), y(z.top) + 12, z.kind, z.side === 'bull' ? C.up : C.dn));
-        levels.filter((e) => e.price != null).forEach((e) => {
-          const i = idxOf(e.time);
-          if (i < i0 - 8 || i > i1) return;
-          const col = e.side === 'bull' ? C.up : C.dn;
-          if (e.kind === 'SWEEP') {
-            const d = rows[i], bull = e.side === 'bull';
-            body.append('path').attr('d', d3.symbol(d3.symbolTriangle, Math.max(20, Math.min(60, step * 4)))())
-              .attr('transform', `translate(${xz(i)},${bull ? y(d.l) + 10 : y(d.h) - 10}) rotate(${bull ? 0 : 180})`).style('fill', C.acc).style('stroke', C.fg).style('stroke-opacity', 0.3);
-          } else {
-            const xa = xz(Math.max(0, i - 8));
-            body.append('line').attr('x1', xa).attr('x2', xz(i)).attr('y1', y(e.price)).attr('y2', y(e.price)).style('stroke', col).style('stroke-dasharray', '2 2');
-            label(Math.max(m.l + 4, xa), y(e.price) + (e.side === 'bull' ? -4 : 12), e.kind, col);
-          }
-        });
-        const last = rows[n - 1], py = Math.max(m.t + 10, Math.min(m.t + ih - 10, y(last.c)));
-        P.selectAll('.gr-ax .tick').filter((v) => typeof v === 'number' && v > 1000 && Math.abs(y(v) - py) < 16).select('text').remove();
-        P.append('rect').attr('x', m.l + iw + 3).attr('y', py - 10).attr('width', m.r - 6).attr('height', 20).attr('rx', 10).style('fill', C.acc);
-        P.append('text').attr('x', m.l + iw + 3 + (m.r - 6) / 2).attr('y', py + 4).attr('text-anchor', 'middle').text(d3.format(',.1f')(last.c))
-          .style('fill', G.css(el, '--gr-accent-ink')).style('font-size', '11px').style('font-weight', 700);
+        const s2 = G.el('span', null, `  ${chg >= 0 ? '+' : ''}${d3.format(',.2f')(chg)}`); s2.style.color = col; st.legend.append(s2);
       };
+      st.showLegend(null);
 
-      st.hover = (ev) => {
-        const g = st.geo; if (!g) return;
-        const [px, py] = d3.pointer(ev, st.svg.node());
-        if (px < g.m.l || px > g.m.l + g.iw || py < g.m.t || py > g.m.t + g.ih) {
-          st.cur.style('display', 'none'); st.tip.hidden = true; st.plot.selectAll('.gr-ax text').style('opacity', null); return;
-        }
-        const i = Math.max(0, Math.min(g.rows.length - 1, Math.round(g.xz.invert(px)))), d = g.rows[i], cx = g.xz(i);
-        const K = st.cur.style('display', null); K.selectAll('*').remove();
-        const line = (x1, x2, y1, y2) => K.append('line').attr('x1', x1).attr('x2', x2).attr('y1', y1).attr('y2', y2).style('stroke', C.fg).style('stroke-opacity', 0.45).style('stroke-dasharray', '3 3');
-        line(cx, cx, g.m.t, g.m.t + g.ih); line(g.m.l, g.m.l + g.iw, py, py);
-        K.append('circle').attr('cx', px).attr('cy', py).attr('r', 9).style('fill', 'none').style('stroke', C.fg).style('stroke-width', 1.5);
-        K.append('circle').attr('cx', px).attr('cy', py).attr('r', 2).style('fill', C.fg);
-        const tl = G.t(d.t), tw = tl.length * 6.4 + 14, tx = Math.max(g.m.l, Math.min(g.m.l + g.iw - tw, cx - tw / 2));
-        st.plot.selectAll('.gr-ax .tick text, .gr-ax g > text').style('opacity', function () {
-          const b = this.getBBox(), ctm = this.getCTM(), bx = b.x + ctm.e, by = b.y + ctm.f;
-          return (by > g.m.t + g.ih && bx < tx + tw + 4 && bx + b.width > tx - 4) || (bx > g.m.l + g.iw && Math.abs(by + b.height / 2 - py) < 16) ? 0 : null;
-        });
-        K.append('rect').attr('x', g.m.l + g.iw + 3).attr('y', py - 10).attr('width', g.m.r - 6).attr('height', 20).attr('rx', 4).style('fill', C.tip);
-        K.append('text').attr('x', g.m.l + g.iw + 3 + (g.m.r - 6) / 2).attr('y', py + 4).attr('text-anchor', 'middle').text(d3.format(',.1f')(g.y.invert(py))).style('fill', C.tipfg).style('font-size', '11px');
-        K.append('rect').attr('x', tx).attr('y', g.m.t + g.ih + 4).attr('width', tw).attr('height', 19).attr('rx', 4).style('fill', C.tip);
-        K.append('text').attr('x', tx + tw / 2).attr('y', g.m.t + g.ih + 17).attr('text-anchor', 'middle').text(tl).style('fill', C.tipfg).style('font-size', '11px');
-        const tip = st.tip; tip.replaceChildren();
-        const chg = (d.c / d.o - 1) * 100;
-        tip.append(G.el('div', null, tl + ' MYT'), G.el('div', null, `O ${G.f2(d.o)}   H ${G.f2(d.h)}`), G.el('div', null, `L ${G.f2(d.l)}   C ${G.f2(d.c)}`), G.el('div', null, G.pct(chg)));
-        tip.hidden = false;
-        const bw2 = el.clientWidth, s = bw2 / g.W, left = px * s + 18 + 170 > bw2 ? px * s - 18 - 160 : px * s + 18;
-        tip.style.left = Math.max(4, left) + 'px'; tip.style.top = Math.max(4, Math.min(el.clientHeight - 100, py * s - 40)) + 'px';
-      };
-
-      if (!st.init) {
-        st.init = true;
-        const k = Math.max(1, n / opt.show), right = m.l + iw;
-        st.home = d3.zoomIdentity.translate(right - right * k, 0).scale(k);
-        st.svg.call(st.zoom.transform, st.home);
-      } else st.render();
+      st.home = { from: rows.length - opt.show, to: rows.length + 3 };
+      if (!st.init) { st.init = true; st.chart.timeScale().setVisibleLogicalRange(st.home); }
+      requestAnimationFrame(st.paint);
     },
   });
 
   window.GR.chart('chart-h1', 'h1', ['candles', 'levels', 'setups'], {
-    tf: '1H', show: 60,
-    lines: (s, C) => [['Entry', s.entry, C.em], ['SL', s.sl, C.dn], ['TP1', s.tp1, C.up], ['TP2', s.tp2, C.up]],
+    tf: '1H', show: 70,
+    lines: (s) => [['Entry', s.entry, '#2962ff', 2], ['SL', s.sl, '#ef5350'], ['TP1', s.tp1, '#26a69a'], ['TP2', s.tp2, '#26a69a']],
   });
   window.GR.chart('chart-m15', 'm15', ['s_candles', 's_levels', 's_signals'], {
-    tf: '15m', show: 64, zoneLabel: (s) => `1H zone ${s.side}`,
-    lines: (s, C) => [['Entry', s.entry, C.em], ['SL', s.sl, C.dn], ['TP 1.5R', s.tp_half, C.up], ['TP 3R', s.tp, C.up]],
+    tf: '15m', show: 70, zoneLabel: (s) => `1H zone ${s.side}`,
+    lines: (s) => [['Entry', s.entry, '#2962ff', 2], ['SL', s.sl, '#ef5350'], ['TP 1.5R', s.tp_half, '#26a69a'], ['TP 3R', s.tp, '#26a69a']],
   });
 </script>

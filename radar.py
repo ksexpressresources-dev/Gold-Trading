@@ -49,9 +49,9 @@ def main() -> int:
         bundle["s_" + k] = json.loads((tmp / "scalp" / f"scalp_{k}.json").read_text())
 
     # tracking: rebuild every signal of both models and judge it
-    h1 = data.drop_unclosed(data.fetch("GC=F", "1h"), "1h")
-    d1 = data.drop_unclosed(data.fetch("GC=F", "1d"), "1d")
-    m15 = data.drop_unclosed(data.fetch("GC=F", "15m"), "15m")
+    h1 = data.drop_unclosed(data.fetch(data.SPOT, "1h"), "1h")
+    d1 = data.drop_unclosed(data.fetch(data.SPOT, "1d"), "1d")
+    m15 = data.drop_unclosed(data.fetch(data.SPOT, "15m"), "15m")
     cfg = engine.Config()
     st = engine.run(h1, cfg, engine.trend_series(d1, cfg))
     filt = Filters(d1, h1)
@@ -63,7 +63,7 @@ def main() -> int:
     bundle["t_log"], bundle["t_hourly"], bundle["t_daily"] = log, hourly, daily
 
     week = now - pd.Timedelta(days=7)
-    summ = {"generated": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "success_pips": tracking.SUCCESS_PIPS,
+    summ = {"generated": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "source": data.source(), "success_pips": tracking.SUCCESS_PIPS,
             "pip": tracking.PIP}
     for m, rows in (("h1", sw), ("m15", sc)):
         w = [r for r in rows if r["time"] >= week]

@@ -17,7 +17,7 @@ def _r(x, n=2):
 
 
 def write(out: Path, *, symbol, tf, htf_tf, ltf, st, st_htf, signals, atr, price,
-          an_ltf, sum_ltf, an_htf, sum_htf, bt_ltf, bt_htf, bt_f=None, bars: int = 120) -> list[Path]:
+          an_ltf, sum_ltf, an_htf, sum_htf, bt_ltf, bt_htf, bt_f=None, data_source: str = "", bars: int = 120) -> list[Path]:
     out.mkdir(parents=True, exist_ok=True)
     n = len(ltf)
     lo_i = max(0, n - bars)
@@ -62,7 +62,7 @@ def write(out: Path, *, symbol, tf, htf_tf, ltf, st, st_htf, signals, atr, price
     bt = lambda b, k: _r(b.get(k)) if b.get("trades") else None
     aplus = (bt_ltf.get("by_grade") or {}).get("A+", {})
     summary = [{
-        "symbol": symbol, "tf": tf, "htf": htf_tf, "time": _iso(ltf.index[-1]),
+        "symbol": symbol, "source": data_source, "tf": tf, "htf": htf_tf, "time": _iso(ltf.index[-1]),
         "generated": _iso(pd.Timestamp.now(tz="UTC")),
         "price": _r(price), "atr": _r(atr),
         "prev_close": _r(ltf["close"].iloc[-25]) if n > 25 else None,
