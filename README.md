@@ -72,3 +72,12 @@ Diuji walk-forward (pilih setting tahun 1, nilai tahun 2):
 | EMA200 harian sahaja | 124 trade, +61.5R, avg +0.50, DD 14R | Dipakai (scalp: 10 trade, +9.4R) |
 | RSI divergence | tidak membantu (scalp: -4.1R) | Ditolak |
 | Sesi London/NY | tidak membantu | Ditolak |
+
+## Dashboard gabungan (`radar.py`, `smc/tracking.py`)
+`python radar.py` jalankan scan H1 + scalp M15 + tracking, dan tulis **satu** fail `reports/bundle.json`
+yang dashboard baca (setiap bahagian = satu dataset). `dashboard.html` = salinan page.
+
+Tracking: setiap signal dibina semula dengan peraturan scanner dan dinilai:
+**Berjaya** = entry kena dan harga bergerak **100 pip ($10, 1 pip = $0.10)** sebelum SL ·
+**Gagal** = SL dulu atau tamat masa (H1 72 jam, M15 24 jam) · **Berjalan** · **Menunggu** · **Tak execute**.
+Jadual: status setiap jam (24 jam), rekod harian (tarikh, signal, entry, berjaya, gagal), log signal.

@@ -1,434 +1,813 @@
 <meta name="dash-one-writer">
 <style>
-  /* Layout: a deep-violet trading desk; gold marks money and attention, a sticky "dynamic island" carries live status. */
+  /* Layout: one trading app in four tabs. Desktop = deep violet desk with gold; phone (<=640px) = light
+     "health app" look from the reference: soft grey ground, white and lavender cards, lime actions, black pills. */
   .gr {
-    --gr-ink: #120a22; --gr-ink-2: #1b1131; --gr-ink-3: #261843; --gr-line: #3a2963;
-    --gr-violet: #8b5cf6; --gr-lilac: #b9a8e8; --gr-fg: #f4effd;
-    --gr-gold: #e3bb55; --gr-gold-2: #f6dc92; --gr-up: #3ddc97; --gr-dn: #ff6b81;
+    --gr-bg: #120a22;
+    --gr-bg-img: radial-gradient(1200px 500px at 85% -10%, #3b1f6e 0%, transparent 60%), radial-gradient(900px 400px at -10% 110%, #2a1450 0%, transparent 55%);
+    --gr-card: rgba(139, 92, 246, .08); --gr-card-solid: #1b1131; --gr-line: #3a2963;
+    --gr-fg: #f4effd; --gr-muted: #b9a8e8; --gr-em: #f6dc92;
+    --gr-accent: #e3bb55; --gr-accent-ink: #1a1000;
+    --gr-lav: linear-gradient(160deg, #5b40b5 0%, #3a2a70 100%); --gr-lav-fg: #f4effd; --gr-lav-muted: #cfc3f7; --gr-lav-bar: rgba(255,255,255,.35); --gr-lav-bar-hi: #f6dc92;
+    --gr-glass: linear-gradient(180deg, #4b3b7d 0%, #2a1f4d 55%, #160f2a 100%); --gr-glass-card: rgba(255,255,255,.06); --gr-glass-line: rgba(255,255,255,.14);
+    --gr-glass-fg: #f4effd; --gr-glass-muted: rgba(244,239,253,.6); --gr-glass-ok: #e3bb55;
+    --gr-up: #3ddc97; --gr-dn: #ff6b81; --gr-wait: #b9a8e8; --gr-off: #6f6390;
+    --gr-chart-bg: rgba(5, 3, 8, .35); --gr-grid: rgba(185, 168, 232, .12); --gr-tip: rgba(8, 4, 16, .94); --gr-tip-fg: #f4effd;
+    --gr-seg: rgba(255,255,255,.05); --gr-seg-on: #e3bb55; --gr-seg-on-fg: #1a1000;
+    --gr-cursor: #e3bb55; --gr-radius: 22px;
     position: relative; display: grid; gap: var(--cds-gap-lg);
     font-family: var(--font-anthropic-sans); color: var(--gr-fg);
-    background: radial-gradient(1200px 500px at 85% -10%, #3b1f6e 0%, transparent 60%), radial-gradient(900px 400px at -10% 110%, #2a1450 0%, transparent 55%), var(--gr-ink);
+    background: var(--gr-bg-img), var(--gr-bg);
     border-radius: calc(var(--cds-radius) * 2); padding: var(--cds-pad-lg); overflow: hidden;
   }
+  @media (max-width: 640px) {
+    .gr {
+      --gr-bg: #eeeef1; --gr-bg-img: none;
+      --gr-card: #ffffff; --gr-card-solid: #ffffff; --gr-line: rgba(17, 17, 20, .06);
+      --gr-fg: #141317; --gr-muted: #8b8a95; --gr-em: #4a39b8;
+      --gr-accent: #dcf24b; --gr-accent-ink: #141317;
+      --gr-lav: linear-gradient(160deg, #d8d1fa 0%, #b9aef1 100%); --gr-lav-fg: #141317; --gr-lav-muted: #5d587a; --gr-lav-bar: rgba(20,19,23,.25); --gr-lav-bar-hi: #141317;
+      --gr-glass: linear-gradient(180deg, #b3b2d0 0%, #8e8cb7 38%, #4a4a68 78%, #34354b 100%); --gr-glass-card: rgba(255,255,255,.10); --gr-glass-line: rgba(255,255,255,.28);
+      --gr-glass-fg: #ffffff; --gr-glass-muted: rgba(255,255,255,.7); --gr-glass-ok: #dcf24b;
+      --gr-up: #17935f; --gr-dn: #e0464f; --gr-wait: #7d6fd6; --gr-off: #a3a2ad;
+      --gr-chart-bg: #f7f7fa; --gr-grid: rgba(20, 19, 23, .07); --gr-tip: #141317; --gr-tip-fg: #ffffff;
+      --gr-seg: #ffffff; --gr-seg-on: #141317; --gr-seg-on-fg: #ffffff;
+      --gr-cursor: #141317; --gr-radius: 30px;
+      border-radius: 34px; padding: 18px 14px 14px; gap: 22px;
+    }
+  }
   @media (pointer: fine) { .gr, .gr * { cursor: none; } }
+  .gr button { font: inherit; color: inherit; }
+  .gr [hidden] { display: none !important; }
+  .gr { grid-template-columns: minmax(0, 1fr); }
+  .gr > *, .gr-tab > *, .gr-vital > * { min-width: 0; }
+  .gr-fresh { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
   .gr-num { font-variant-numeric: tabular-nums; }
-  .gr-up { color: var(--gr-up); } .gr-down { color: var(--gr-dn); } .gr-flat { color: var(--gr-lilac); }
+  .gr-up { color: var(--gr-up); } .gr-down { color: var(--gr-dn); } .gr-flat { color: var(--gr-muted); }
+  .gr .val.gr-up { color: var(--gr-up); } .gr .val.gr-down { color: var(--gr-dn); }
 
-  /* dynamic island */
+  /* ---------- dynamic island ---------- */
   .gr-islandbar { position: sticky; top: 8px; z-index: 6; display: flex; justify-content: center; pointer-events: none; }
-  .gr-island { pointer-events: auto; background: #050308; color: var(--gr-fg); border-radius: 26px; border: 1px solid #2c1d4d;
-    box-shadow: 0 10px 30px rgba(10, 4, 24, .55), 0 0 0 1px rgba(227, 187, 85, .08) inset;
-    padding: 8px 16px; max-width: min(100%, 360px); overflow: hidden; outline: none;
+  .gr-island { pointer-events: auto; background: #050308; color: #f4effd; border-radius: 26px; border: 1px solid #2c1d4d;
+    box-shadow: 0 10px 30px rgba(10, 4, 24, .35); padding: 8px 16px; max-width: min(100%, 380px); overflow: hidden; outline: none;
     transition: max-width .45s cubic-bezier(.2, .9, .2, 1.1), border-radius .45s, padding .45s, box-shadow .3s; }
-  .gr-island:focus-visible { box-shadow: 0 0 0 2px var(--gr-gold); }
+  .gr-island:focus-visible { box-shadow: 0 0 0 2px var(--gr-accent); }
   .gr-island.open { max-width: min(100%, 560px); border-radius: 28px; padding: 14px 20px 16px; }
-  .gr-island.hot { box-shadow: 0 0 0 1px var(--gr-gold), 0 0 28px rgba(227, 187, 85, .45); }
+  .gr-island.hot { box-shadow: 0 0 0 1px var(--gr-accent), 0 0 28px rgba(227, 187, 85, .45); }
   .gr-isl-row { display: flex; align-items: center; gap: 10px; white-space: nowrap; font-size: 13px; }
-  .gr-isl-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--gr-lilac); flex: none; }
-  .gr-isl-dot.trig { background: var(--gr-gold); box-shadow: 0 0 10px var(--gr-gold); }
-  .gr-isl-dot.live { background: var(--gr-up); }
-  .gr-isl-sym { color: var(--gr-gold); font-weight: 700; letter-spacing: .06em; }
+  .gr-isl-dot { width: 9px; height: 9px; border-radius: 50%; background: #b9a8e8; flex: none; }
+  .gr-isl-dot.trig { background: var(--gr-accent); box-shadow: 0 0 10px var(--gr-accent); }
+  .gr-isl-dot.live { background: #3ddc97; }
+  .gr-isl-sym { color: var(--gr-accent); font-weight: 700; letter-spacing: .06em; }
   .gr-isl-px { font-weight: 600; font-variant-numeric: tabular-nums; }
-  .gr-isl-chip { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--gr-ink-3); color: var(--gr-lilac); }
-  .gr-isl-chip.trig { background: var(--gr-gold); color: #1a1000; font-weight: 700; }
+  .gr-isl-chip { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #261843; color: #cfc3f7; }
+  .gr-isl-chip.trig { background: var(--gr-accent); color: var(--gr-accent-ink); font-weight: 700; }
   .gr-isl-more { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .45s cubic-bezier(.2, .9, .2, 1), opacity .3s; }
   .gr-island.open .gr-isl-more { grid-template-rows: 1fr; opacity: 1; }
   .gr-isl-more > div { overflow: hidden; }
   .gr-isl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 10px 14px; padding-top: 12px; }
-  .gr-isl-grid .lab { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--gr-lilac); display: block; }
+  .gr-isl-grid .lab { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #b9a8e8; display: block; }
   .gr-isl-grid .val { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
-  .gr-isl-foot { margin: 10px 0 0; font-size: 11px; color: var(--gr-lilac); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .gr-isl-grid .val.gr-up { color: #3ddc97; } .gr-isl-grid .val.gr-down { color: #ff6b81; }
+  .gr-isl-foot { margin: 10px 0 0; font-size: 11px; color: #b9a8e8; display: flex; flex-wrap: wrap; gap: 4px 14px; }
   @media (prefers-reduced-motion: reduce) { .gr-island, .gr-isl-more { transition: none; } }
   @media (prefers-reduced-motion: no-preference) {
     .gr-island.hot { animation: grglow 2s ease-in-out infinite; }
     .gr-isl-dot.trig, .gr-isl-dot.live { animation: grdot 1.6s ease-in-out infinite; }
   }
-  @keyframes grglow { 50% { box-shadow: 0 0 0 1px var(--gr-gold), 0 0 44px rgba(227, 187, 85, .7); } }
+  @keyframes grglow { 50% { box-shadow: 0 0 0 1px var(--gr-accent), 0 0 44px rgba(227, 187, 85, .7); } }
   @keyframes grdot { 50% { opacity: .35; } }
 
-  /* header */
-  .gr-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: clamp(1.8rem, 4vw, 2.6rem); margin: 0; letter-spacing: -.01em; text-wrap: balance;
-    background: linear-gradient(92deg, var(--gr-gold-2), var(--gr-gold) 45%, #c99a2e); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .gr-sub { color: var(--gr-lilac); font-size: var(--cds-font-size-caption); margin: 6px 0 0; letter-spacing: .02em; }
-  .gr-take { font-size: var(--cds-font-size-body); line-height: 1.6; margin: 10px 0 0; max-width: 72ch; color: var(--gr-fg); }
-  .gr-take b { color: var(--gr-gold-2); font-weight: 600; }
+  /* ---------- header ---------- */
+  .gr-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .gr-avatar { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; letter-spacing: .06em;
+    background: var(--gr-lav); color: var(--gr-lav-fg); flex: none; }
+  .gr-iconbtn { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; background: var(--gr-card-solid); border: 1px solid var(--gr-line); color: var(--gr-fg); flex: none; }
+  .gr-iconbtn svg, .gr-nav svg, .gr-seg svg, .gr-cardbtn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .gr-date { margin: 0 0 4px; color: var(--gr-muted); font-size: 14px; }
+  .gr-hello { margin: 0; font-weight: 300; font-size: clamp(2.2rem, 7vw, 3.1rem); line-height: 1.05; letter-spacing: -.03em; color: var(--gr-fg); text-wrap: balance; }
+  .gr-hello b { font-weight: 300; color: var(--gr-em); }
+  .gr-fresh { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--gr-muted); padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--gr-line); background: var(--gr-card); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .gr-fresh-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gr-up); flex: none; }
+  .gr-fresh.late { color: var(--gr-dn); border-color: var(--gr-dn); } .gr-fresh.late .gr-fresh-dot { background: var(--gr-dn); }
+  .gr-fresh.static .gr-fresh-dot { background: var(--gr-muted); }
 
-  /* cards */
-  .gr-panel { background: linear-gradient(180deg, rgba(139, 92, 246, .10), rgba(139, 92, 246, .03)); border: 1px solid var(--gr-line); border-radius: calc(var(--cds-radius) * 1.5); padding: var(--cds-pad-lg); min-width: 0; transition: border-color .25s; }
-  .gr-panel:hover { border-color: rgba(227, 187, 85, .45); }
-  .gr h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0 0 6px; color: var(--gr-fg); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .gr h2::before { content: ""; width: 6px; height: 6px; border-radius: 2px; background: var(--gr-gold); transform: rotate(45deg); flex: none; }
-  .gr-note { color: var(--gr-lilac); font-size: var(--cds-font-size-caption); margin: 0 0 var(--cds-gap-md); max-width: 78ch; line-height: 1.5; }
+  /* ---------- score card (like "86 Health score | 3 Care plans | +") ---------- */
+  .gr-score { display: flex; align-items: center; gap: 18px; background: var(--gr-card-solid); border: 1px solid var(--gr-line); border-radius: 999px; padding: 12px 12px 12px 30px; }
+  .gr-score-item { display: grid; gap: 2px; min-width: 0; }
+  .gr-score-item .big { font-weight: 300; font-size: 2.4rem; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .gr-score-item .lab { font-size: 13px; color: var(--gr-muted); }
+  .gr-score-sep { width: 1px; align-self: stretch; background: var(--gr-line); margin: 6px 0; }
+  .gr-score .gr-cardbtn { margin-left: auto; width: 76px; height: 76px; background: var(--gr-lav); color: var(--gr-lav-fg); border: 0; }
 
-  .gr-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--cds-gap-md); }
-  .gr-kpi { display: grid; gap: 6px; }
-  .gr-kpi .lab { font-size: 10.5px; color: var(--gr-lilac); letter-spacing: .1em; text-transform: uppercase; }
-  .gr-kpi .val { font-family: var(--font-anthropic-serif); font-size: 1.75rem; font-variant-numeric: tabular-nums; line-height: 1.1; color: var(--gr-fg); }
-  .gr-kpi .val.gold { color: var(--gr-gold-2); }
-  .gr-kpi .note { font-size: var(--cds-font-size-caption); color: var(--gr-lilac); }
+  /* ---------- segmented tabs ---------- */
+  .gr-seg { display: flex; gap: 4px; padding: 6px; border-radius: 999px; background: var(--gr-seg); border: 1px solid var(--gr-line); overflow-x: auto; scrollbar-width: none; }
+  .gr-seg::-webkit-scrollbar { display: none; }
+  .gr-seg button { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; background: transparent; padding: 11px 16px; border-radius: 999px; color: var(--gr-fg); font-size: 14px; white-space: nowrap; transition: background .25s, color .25s; }
+  .gr-seg button[aria-selected="true"] { background: var(--gr-seg-on); color: var(--gr-seg-on-fg); }
+  .gr-seg button:focus-visible, .gr-nav button:focus-visible, .gr-cardbtn:focus-visible, .gr-btn:focus-visible { outline: 2px solid var(--gr-accent); outline-offset: 2px; }
 
+  /* ---------- generic ---------- */
+  .gr-tab { display: grid; gap: var(--cds-gap-lg); min-width: 0; }
+  .gr h2 { font-size: 1.25rem; font-weight: 400; margin: 0; color: var(--gr-fg); letter-spacing: -.01em; }
+  .gr-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .gr-link { border: 0; background: none; color: var(--gr-muted); font-size: 13px; padding: 4px 0; }
+  .gr-note { color: var(--gr-muted); font-size: var(--cds-font-size-caption); margin: 0 0 var(--cds-gap-md); max-width: 78ch; line-height: 1.5; }
+  .gr-panel { background: var(--gr-card); border: 1px solid var(--gr-line); border-radius: var(--gr-radius); padding: var(--cds-pad-lg); min-width: 0; }
+  .gr-cardbtn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--gr-line); background: var(--gr-card-solid); color: var(--gr-fg); flex: none; }
+  .gr-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: var(--cds-gap-lg); }
+  .gr-pill { font-size: 11.5px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--gr-line); color: var(--gr-muted); white-space: nowrap; }
+  .gr-reco { font-size: 11.5px; padding: 3px 10px; border-radius: 999px; background: var(--gr-accent); color: var(--gr-accent-ink); white-space: nowrap; font-weight: 600; }
+
+  /* status chips */
+  .gr-st { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap; font-weight: 600; }
+  .gr-st::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .gr-st.s-berjaya { color: var(--gr-up); background: color-mix(in srgb, var(--gr-up) 14%, transparent); }
+  .gr-st.s-gagal { color: var(--gr-dn); background: color-mix(in srgb, var(--gr-dn) 14%, transparent); }
+  .gr-st.s-berjalan { color: var(--gr-accent-ink); background: var(--gr-accent); }
+  .gr-st.s-menunggu { color: var(--gr-wait); background: color-mix(in srgb, var(--gr-wait) 16%, transparent); }
+  .gr-st.s-tak { color: var(--gr-off); background: color-mix(in srgb, var(--gr-off) 14%, transparent); }
+  .gr-st.s-none { color: var(--gr-off); background: transparent; font-weight: 400; padding-left: 0; }
+  .gr-st.s-none::before { display: none; }
+
+  /* ---------- home cards (like "Today's vitals") ---------- */
+  .gr-cards { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: var(--cds-gap-md); }
+  .gr-vital { position: relative; border-radius: var(--gr-radius); padding: 18px; display: grid; gap: 12px; align-content: start; min-width: 0; min-height: 280px;
+    background: var(--gr-card); border: 1px solid var(--gr-line); }
+  .gr-vital.lav { background: var(--gr-lav); color: var(--gr-lav-fg); border: 0; }
+  .gr-vital-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .gr-tag { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: var(--gr-card-solid); color: var(--gr-fg); font-size: 13.5px; border: 1px solid var(--gr-line); }
+  .gr-vital.lav .gr-tag { background: rgba(255,255,255,.75); color: #141317; border: 0; }
+  .gr-vital.lav .gr-cardbtn { background: rgba(255,255,255,.75); color: #141317; border: 0; }
+  .gr-tag svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .gr-big { font-weight: 300; font-size: clamp(2.4rem, 7vw, 3.4rem); line-height: 1; letter-spacing: -.04em; font-variant-numeric: tabular-nums; margin-top: 18px; }
+  .gr-sub { font-size: 14px; color: var(--gr-muted); }
+  .gr-vital.lav .gr-sub, .gr-vital.lav .gr-foot2 { color: var(--gr-lav-muted); }
+  .gr-bars { height: 66px; display: flex; align-items: flex-end; gap: 3px; }
+  .gr-bars span { flex: 1; border-radius: 3px; background: var(--gr-lav-bar); min-height: 4px; }
+  .gr-bars span.hi { background: var(--gr-lav-bar-hi); }
+  .gr-foot2 { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--gr-muted); }
+  .gr-ratecol { display: grid; gap: 10px; margin-top: 8px; }
+  .gr-rate { display: grid; gap: 6px; }
+  .gr-rate .row { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--gr-muted); }
+  .gr-rate .row b { font-weight: 300; font-size: 1.9rem; color: var(--gr-fg); letter-spacing: -.03em; }
+  .gr-meter { height: 8px; border-radius: 99px; background: var(--gr-line); overflow: hidden; }
+  .gr-meter i { display: block; height: 100%; border-radius: 99px; background: var(--gr-accent); }
+
+  .gr-hours { display: grid; gap: 0; }
+  .gr-hr { display: grid; grid-template-columns: 74px 1fr 1fr; gap: 10px; align-items: center; padding: 10px 2px; border-bottom: 1px solid var(--gr-line); font-size: 13px; }
+  .gr-hr:last-child { border-bottom: 0; }
+  .gr-hr .t { color: var(--gr-muted); font-variant-numeric: tabular-nums; }
+  .gr-hr .cell { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-width: 0; }
+  .gr-hr .m { font-size: 10.5px; color: var(--gr-muted); letter-spacing: .06em; margin-right: 2px; }
+
+  /* ---------- glass hero (like the "Blood panel" screen) ---------- */
+  .gr-glass { position: relative; border-radius: calc(var(--gr-radius) + 6px); padding: 20px; background: var(--gr-glass); color: var(--gr-glass-fg); display: grid; gap: 16px; overflow: hidden; }
+  .gr-glass::after { content: ""; position: absolute; width: 300px; height: 300px; left: -120px; top: 180px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--gr-glass-ok) 35%, transparent), transparent 70%); pointer-events: none; }
+  .gr-glass > * { position: relative; z-index: 1; }
+  .gr-glass-head { display: flex; justify-content: center; }
+  .gr-glass-title { text-align: center; padding: 8px 22px; border-radius: 999px; border: 1px solid var(--gr-glass-line); background: var(--gr-glass-card); }
+  .gr-glass-title b { display: block; font-weight: 400; font-size: 17px; }
+  .gr-glass-title span { font-size: 12px; color: var(--gr-glass-muted); }
+  .gr-dial { display: grid; place-items: center; }
+  .gr-dial svg { width: min(250px, 70%); height: auto; overflow: visible; }
+  .gr-glass-box { border-radius: calc(var(--gr-radius) + 2px); border: 1px solid var(--gr-glass-line); background: var(--gr-glass-card); padding: 16px 18px; display: grid; gap: 4px; }
+  .gr-meas { display: grid; gap: 8px; padding: 6px 0 12px; border-bottom: 1px solid var(--gr-glass-line); }
+  .gr-meas:last-child { border-bottom: 0; padding-bottom: 2px; }
+  .gr-meas-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .gr-meas-top .name { font-size: 15px; }
+  .gr-meas-top .ok { display: block; font-size: 12.5px; color: var(--gr-glass-ok); }
+  .gr-meas-top .ok.bad { color: #ffb1bb; }
+  .gr-meas-top .v { font-weight: 300; font-size: 2rem; letter-spacing: -.03em; font-variant-numeric: tabular-nums; line-height: 1; }
+  .gr-meas-top .v small { font-size: 12px; color: var(--gr-glass-muted); margin-left: 4px; letter-spacing: 0; }
+  .gr-slider svg { display: block; width: 100%; overflow: visible; }
+  .gr-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .gr-act { text-align: left; border-radius: 22px; border: 1px solid var(--gr-glass-line); background: var(--gr-glass-card); color: var(--gr-glass-fg); padding: 14px; display: grid; gap: 22px; }
+  .gr-act .ic { display: flex; justify-content: space-between; }
+  .gr-act .ic span { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--gr-glass-line); }
+  .gr-act svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .gr-act b { font-weight: 400; font-size: 15px; line-height: 1.25; }
+
+  /* ---------- setup cards ---------- */
   .gr-setups { display: grid; gap: var(--cds-gap-md); }
-  .gr-setup { position: relative; border-radius: calc(var(--cds-radius) * 1.5); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-md); background: var(--gr-ink-2); border: 1px solid var(--gr-line); overflow: hidden; }
-  .gr-setup::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--gr-dn); }
+  .gr-setup { position: relative; border-radius: var(--gr-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-md); background: var(--gr-card-solid); border: 1px solid var(--gr-line); overflow: hidden; }
+  .gr-setup::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--gr-dn); }
   .gr-setup[data-side="BUY"]::after { background: var(--gr-up); }
   .gr-setup-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .gr-side { font-weight: 800; font-size: 1.2rem; letter-spacing: .08em; }
-  .gr-pill { font-size: 11.5px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--gr-line); color: var(--gr-lilac); white-space: nowrap; }
-  .gr-pill.gold { border-color: rgba(227, 187, 85, .6); color: var(--gr-gold-2); }
-  .gr-pill.trig { background: var(--gr-gold); color: #1a1000; border-color: transparent; font-weight: 700; }
-  .gr-pill.live { background: rgba(61, 220, 151, .15); color: var(--gr-up); border-color: rgba(61, 220, 151, .4); }
-  .gr-levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 12px; }
-  .gr-lv { display: grid; gap: 2px; padding: 10px 12px; border-radius: var(--cds-radius); background: rgba(255, 255, 255, .03); border: 1px solid rgba(255, 255, 255, .05); transition: background .2s, border-color .2s; }
-  .gr-lv:hover { background: rgba(227, 187, 85, .08); border-color: rgba(227, 187, 85, .35); }
-  .gr-lv .lab { font-size: 10.5px; color: var(--gr-lilac); text-transform: uppercase; letter-spacing: .08em; }
-  .gr-lv .val { font-size: 1.12rem; font-variant-numeric: tabular-nums; font-weight: 600; }
-  .gr-lv.entry .val { color: var(--gr-gold-2); }
-  .gr-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: var(--cds-font-size-caption); color: var(--gr-lilac); }
-  .gr-empty { margin: 0; color: var(--gr-lilac); padding: 14px 16px; border: 1px dashed var(--gr-line); border-radius: var(--cds-radius); }
+  .gr-levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; }
+  .gr-lv { display: grid; gap: 2px; padding: 10px 12px; border-radius: 16px; background: color-mix(in srgb, var(--gr-fg) 4%, transparent); }
+  .gr-lv .lab { font-size: 10.5px; color: var(--gr-muted); text-transform: uppercase; letter-spacing: .08em; }
+  .gr-lv .val { font-size: 1.1rem; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .gr-lv.entry .val { color: var(--gr-em); }
+  .gr-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: var(--cds-font-size-caption); color: var(--gr-muted); }
+  .gr-empty { margin: 0; color: var(--gr-muted); padding: 14px 16px; border: 1px dashed var(--gr-line); border-radius: 16px; }
+  .gr-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .gr-step { padding: 10px; border-radius: 14px; background: color-mix(in srgb, var(--gr-fg) 4%, transparent); font-size: 12px; color: var(--gr-muted); min-width: 0; }
+  .gr-step b { display: block; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 2px; }
+  .gr-step.done { color: var(--gr-fg); }
+  .gr-step.now { background: var(--gr-accent); color: var(--gr-accent-ink); font-weight: 600; }
+  @media (max-width: 520px) { .gr-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
+  /* ---------- chart ---------- */
   .gr-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
-  .gr-btn { font: inherit; font-size: 12px; color: var(--gr-gold-2); background: rgba(227, 187, 85, .08); border: 1px solid rgba(227, 187, 85, .4); padding: 5px 12px; border-radius: 999px; transition: background .2s, transform .15s; }
-  .gr-btn:hover { background: rgba(227, 187, 85, .18); }
+  .gr-btn { font-size: 12px; color: var(--gr-fg); background: var(--gr-card-solid); border: 1px solid var(--gr-line); padding: 6px 14px; border-radius: 999px; transition: transform .15s; }
   .gr-btn:active { transform: scale(.96); }
-  .gr-btn:focus-visible { outline: 2px solid var(--gr-gold); outline-offset: 2px; }
-  .gr-hint { font-size: 11.5px; color: var(--gr-lilac); }
-  .gr-chartbox { position: relative; min-height: 340px; border-radius: var(--cds-radius); background: rgba(5, 3, 8, .35); touch-action: none; user-select: none; }
+  .gr-hint { font-size: 11.5px; color: var(--gr-muted); }
+  .gr-chartbox { position: relative; min-height: 340px; border-radius: 16px; background: var(--gr-chart-bg); touch-action: none; user-select: none; }
   .gr-chartbox svg { display: block; width: 100%; }
-  .gr-chartbox .gr-ax text { fill: var(--gr-lilac); font-size: 11px; font-family: var(--font-anthropic-sans); }
-  .gr-chartbox .gr-ax line { stroke: rgba(185, 168, 232, .12); }
+  .gr-chartbox .gr-ax text { fill: var(--gr-muted); font-size: 11px; font-family: var(--font-anthropic-sans); }
+  .gr-chartbox .gr-ax line { stroke: var(--gr-grid); }
   .gr-chartbox .gr-ax .domain { display: none; }
-  .gr-tip { position: absolute; pointer-events: none; background: rgba(8, 4, 16, .92); border: 1px solid rgba(227, 187, 85, .45); box-shadow: 0 8px 24px rgba(0, 0, 0, .45); border-radius: 10px; padding: 8px 10px; font-size: 12px; font-variant-numeric: tabular-nums; line-height: 1.55; white-space: nowrap; z-index: 2; color: var(--gr-fg); }
-  .gr-tip .t { color: var(--gr-gold-2); }
-  .gr-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--cds-font-size-caption); color: var(--gr-lilac); margin-top: 10px; }
+  .gr-tip { position: absolute; pointer-events: none; background: var(--gr-tip); color: var(--gr-tip-fg); border-radius: 12px; padding: 8px 10px; font-size: 12px; font-variant-numeric: tabular-nums; line-height: 1.55; white-space: nowrap; z-index: 2; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+  .gr-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--cds-font-size-caption); color: var(--gr-muted); margin-top: 10px; }
   .gr-legend span { display: inline-flex; align-items: center; gap: 6px; }
   .gr-sw { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
 
-  .gr-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: var(--cds-gap-lg); }
+  /* ---------- tables ---------- */
   .gr-tablewrap { overflow-x: auto; }
   .gr table { border-collapse: collapse; width: 100%; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
-  .gr th, .gr td { text-align: left; padding: 7px 8px; border-bottom: 1px solid rgba(185, 168, 232, .12); white-space: nowrap; }
-  .gr th { color: var(--gr-lilac); font-weight: var(--cds-font-weight-medium); font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; }
-  .gr tbody tr { transition: background .15s; }
-  .gr tbody tr:hover { background: rgba(227, 187, 85, .07); }
+  .gr th, .gr td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--gr-line); white-space: nowrap; }
+  .gr th { color: var(--gr-muted); font-weight: 400; font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; }
   .gr td.r, .gr th.r { text-align: right; }
-  .gr-bias { display: grid; gap: 6px; margin-bottom: var(--cds-gap-md); }
-  .gr-bias p { margin: 0; }
-  .gr-bias b { color: var(--gr-gold-2); }
-  .gr-bt { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--cds-gap-md); }
-  .gr-bt .gr-kpi { padding: 12px; border-radius: var(--cds-radius); background: rgba(255, 255, 255, .03); border: 1px solid rgba(255, 255, 255, .05); }
-  .gr-filterbt { margin-top: var(--cds-gap-md); padding: 12px 14px; border-radius: var(--cds-radius); border: 1px solid rgba(227,187,85,.4); background: rgba(227,187,85,.06); display: grid; gap: 6px; justify-items: start; }
-  .gr-filterbt p { margin: 0; }
-  .gr-reco { font-size: 11.5px; padding: 3px 10px; border-radius: 999px; background: rgba(227,187,85,.15); color: var(--gr-gold-2); border: 1px solid rgba(227,187,85,.5); white-space: nowrap; }
-  .gr-foot { color: var(--gr-lilac); font-size: var(--cds-font-size-caption); margin: 0; max-width: 85ch; line-height: 1.5; }
+  .gr tr.today td { background: color-mix(in srgb, var(--gr-accent) 10%, transparent); }
+  .gr-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--cds-gap-md); }
+  .gr-kpi { display: grid; gap: 6px; }
+  .gr-kpi .lab { font-size: 11px; color: var(--gr-muted); letter-spacing: .08em; text-transform: uppercase; }
+  .gr-kpi .val { font-weight: 300; font-size: 2.1rem; letter-spacing: -.03em; font-variant-numeric: tabular-nums; line-height: 1.05; }
+  .gr-kpi .note { font-size: 12px; color: var(--gr-muted); }
+  .gr-def { background: var(--gr-lav); color: var(--gr-lav-fg); border-radius: var(--gr-radius); padding: 18px 20px; display: grid; gap: 10px; }
+  .gr-def p { margin: 0; line-height: 1.5; font-size: 14px; }
+  .gr-def .chips { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; }
+  .gr-def .gr-st.s-berjalan { box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
+  .gr-foot { color: var(--gr-muted); font-size: var(--cds-font-size-caption); margin: 0; max-width: 85ch; line-height: 1.5; }
 
-  /* custom cursor */
+  /* ---------- bottom nav (phone only, like the reference) ---------- */
+  .gr-navbar { display: none; }
+  @media (max-width: 640px) {
+    .gr-navbar { display: flex; position: sticky; bottom: 10px; z-index: 5; gap: 10px; align-items: center; }
+    .gr-nav { flex: 1; display: flex; justify-content: space-between; align-items: center; padding: 7px; border-radius: 999px; background: #ffffff; box-shadow: 0 10px 30px rgba(20,19,23,.12); }
+    .gr-nav button { width: 54px; height: 54px; border-radius: 50%; border: 0; background: transparent; color: #141317; display: grid; place-items: center; }
+    .gr-nav button[aria-selected="true"] { background: #141317; color: #ffffff; }
+    .gr-navlime { width: 68px; height: 68px; border-radius: 50%; border: 0; background: #dcf24b; color: #141317; display: grid; place-items: center; box-shadow: 0 10px 30px rgba(20,19,23,.15); flex: none; }
+    .gr-navlime svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .gr-cards { grid-template-columns: 82% 70% 70%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 -14px; padding: 0 14px; }
+    .gr-cards::-webkit-scrollbar { display: none; }
+    .gr-vital { scroll-snap-align: start; }
+    .gr-score { padding-left: 24px; }
+    .gr-score-item .big { font-size: 2.1rem; }
+    .gr-panel { padding: 16px; }
+    .gr-seg button { padding: 12px 14px; }
+  }
+
+  /* ---------- custom cursor (mouse only) ---------- */
   .gr-cursor { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; z-index: 20; transition: opacity .2s; }
-  .gr-cursor .ring { position: absolute; left: 0; top: 0; width: 26px; height: 26px; margin: -13px 0 0 -13px; border: 1.5px solid var(--gr-gold); border-radius: 50%; transition: width .2s, height .2s, margin .2s, background .2s; }
-  .gr-cursor .dot { position: absolute; left: 0; top: 0; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: var(--gr-gold-2); }
-  .gr-cursor.big .ring { width: 46px; height: 46px; margin: -23px 0 0 -23px; background: rgba(227, 187, 85, .12); }
+  .gr-cursor .ring { position: absolute; left: 0; top: 0; width: 26px; height: 26px; margin: -13px 0 0 -13px; border: 1.5px solid var(--gr-cursor); border-radius: 50%; transition: width .2s, height .2s, margin .2s, background .2s; }
+  .gr-cursor .dot { position: absolute; left: 0; top: 0; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: var(--gr-cursor); }
+  .gr-cursor.big .ring { width: 46px; height: 46px; margin: -23px 0 0 -23px; background: color-mix(in srgb, var(--gr-cursor) 12%, transparent); }
   .gr-cursor.down .ring { width: 18px; height: 18px; margin: -9px 0 0 -9px; }
   .gr-cursor.off { opacity: 0; }
   @media (pointer: coarse) { .gr-cursor { display: none; } }
-  #kpi-trend .val { font-size: 1.3rem; }
-  .gr .gr-up, .gr .val.gr-up { color: var(--gr-up); }
-  .gr .gr-down, .gr .val.gr-down { color: var(--gr-dn); }
-  .gr .gr-flat, .gr .val.gr-flat { color: var(--gr-lilac); }
-</style>
-<style>
-  .gr-fresh { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 400; color: var(--gr-lilac);
-    padding: 3px 10px; border-radius: 999px; border: 1px solid var(--gr-line); background: rgba(255,255,255,.03); white-space: nowrap;
-    font-variant-numeric: tabular-nums; letter-spacing: 0; text-transform: none; }
-  .gr-fresh-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gr-up); flex: none; }
-  .gr-fresh.late { border-color: rgba(255,107,129,.5); color: var(--gr-dn); }
-  .gr-fresh.late .gr-fresh-dot { background: var(--gr-dn); }
-  .gr-fresh.static .gr-fresh-dot { background: var(--gr-lilac); }
-  .gr-head .gr-fresh { margin: 10px 0 0; }
-  @media (prefers-reduced-motion: no-preference) { .gr-fresh:not(.late):not(.static) .gr-fresh-dot { animation: grdot 2.4s ease-in-out infinite; } }
-  @media (max-width: 460px) { .gr h2 .gr-fresh { margin-left: 0; } }
 </style>
 
 <div class="gr" lang="ms" data-read>
   <div class="gr-cursor off" data-draw="cursor" aria-hidden="true"></div>
 
   <div class="gr-islandbar">
-    <div class="gr-island" id="island" role="button" tabindex="0" aria-expanded="false" aria-label="Status emas. Tekan untuk butiran" data-draw="island" data-source="summary setups chg24"></div>
+    <div class="gr-island" id="island" role="button" tabindex="0" aria-expanded="false" aria-label="Status emas. Tekan untuk butiran" data-draw="island" data-source="summary setups s_signals s_summary"></div>
   </div>
 
-  <header class="gr-head" id="top">
-    <h1>Gold SMC Radar</h1>
-    <div><span class="gr-fresh" data-draw="fresh" data-source="summary" data-field="generated" data-row="0">—</span></div>
-    <p class="gr-sub">XAU · Gold futures (GC=F) · Entry 1H, bias harian · Candle terakhir <span data-draw="last-time" data-source="summary" data-field="time" data-row="0">—</span> MYT · Dikemaskini setiap jam</p>
-    <p class="gr-take" id="takeaway">Harga emas <b class="gr-num" data-draw="tk-price" data-source="summary" data-field="price" data-row="0">—</b>, trend 1H <b data-draw="tk-trend" data-source="summary" data-field="trend_ltf" data-row="0">—</b> dan trend harian <b data-draw="tk-htrend" data-source="summary" data-field="trend_htf" data-row="0">—</b>. Status: <b data-draw="tk-status" data-source="setups">—</b>.</p>
+  <header class="gr-top" id="top">
+    <div class="gr-avatar" aria-hidden="true">XAU</div>
+    <span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span>
   </header>
 
-  <section class="gr-kpis" id="kpis" aria-label="Ringkasan">
-    <div class="gr-panel gr-kpi" id="kpi-price">
-      <span class="lab">Harga</span>
-      <span class="val gold" data-draw="k-price" data-source="summary" data-field="price" data-row="0">—</span>
-      <span class="note">24 jam: <span data-draw="k-chg" data-source="chg24">—</span></span>
-    </div>
-    <div class="gr-panel gr-kpi" id="kpi-trend">
-      <span class="lab">Struktur 1H / 1D</span>
-      <span class="val"><span data-draw="k-trend" data-source="summary" data-field="trend_ltf" data-row="0">—</span> / <span data-draw="k-htrend" data-source="summary" data-field="trend_htf" data-row="0">—</span></span>
-      <span class="note">Ikut BOS / CHoCH terakhir</span>
-    </div>
-    <div class="gr-panel gr-kpi" id="kpi-atr">
-      <span class="lab">ATR 1H</span>
-      <span class="val" data-draw="k-atr" data-source="summary" data-field="atr" data-row="0">—</span>
-      <span class="note">Purata julat satu candle (point)</span>
-    </div>
-    <div class="gr-panel gr-kpi" id="kpi-hist">
-      <span class="lab">Pattern sejarah 1H</span>
-      <span class="val" data-draw="k-hist" data-source="summary" data-field="hist_ltf_bias" data-row="0">—</span>
-      <span class="note"><span data-draw="k-histpct" data-source="summary" data-field="hist_ltf_pct_up" data-row="0">—</span>% naik selepas 32 candle</span>
-    </div>
+  <div>
+    <p class="gr-date" data-draw="today">—</p>
+    <h1 class="gr-hello">Trade bijak,<br><b>Gold Radar!</b></h1>
+  </div>
+
+  <section class="gr-score" id="score" aria-label="Prestasi 7 hari">
+    <div class="gr-score-item"><span class="big" data-draw="sc-rate" data-source="t_summary" data-field="all_7d_rate" data-row="0">—</span><span class="lab">Berjaya +100 pip</span></div>
+    <span class="gr-score-sep"></span>
+    <div class="gr-score-item"><span class="big" data-draw="sc-ent" data-source="t_summary" data-field="all_7d_entries" data-row="0">—</span><span class="lab">Entry 7 hari</span></div>
+    <button type="button" class="gr-cardbtn" data-goto="track" aria-label="Buka tracking"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
   </section>
 
-  <section class="gr-panel" id="signal">
-    <h2>Signal entry <span class="gr-fresh" data-draw="fresh" data-source="summary" data-field="generated" data-row="0">—</span></h2>
-    <p class="gr-note">Model: liquidity sweep → BOS → retrace ke Order Block. Entry pada 50% OB, SL di luar titik sweep, TP1 = 2R (tutup separuh, alih SL ke BE), TP2 = sasaran liquidity seterusnya. Gred: B = sweep + BOS + OB, +1 jika ada FVG, +1 jika sama arah dengan trend harian.</p>
-    <p class="gr-empty" id="no-setup" hidden>Tiada setup aktif sekarang. Jangan entry, tunggu harga sweep liquidity dan break structure dulu.</p>
-    <div class="gr-setups" data-draw="setups" data-source="setups"></div>
-  </section>
+  <div class="gr-seg" role="tablist" aria-label="Bahagian">
+    <button type="button" role="tab" id="tab-btn-home" data-tab="home" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>Ringkasan</button>
+    <button type="button" role="tab" id="tab-btn-h1" data-tab="h1" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-6"/></svg>H1 Swing</button>
+    <button type="button" role="tab" id="tab-btn-m15" data-tab="m15" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg>M15 Scalp</button>
+    <button type="button" role="tab" id="tab-btn-track" data-tab="track" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>Tracking</button>
+  </div>
 
-  <section class="gr-panel" id="chart">
-    <h2>Chart 1H dengan zone SMC <span class="gr-fresh" data-draw="fresh" data-source="summary" data-field="generated" data-row="0">—</span></h2>
-    <div class="gr-tools">
-      <button type="button" class="gr-btn" id="zoom-in" data-zoom="in">Zoom +</button>
-      <button type="button" class="gr-btn" id="zoom-out" data-zoom="out">Zoom −</button>
-      <button type="button" class="gr-btn" id="zoom-reset" data-zoom="reset">Reset</button>
-      <span class="gr-hint">Scroll atau pinch untuk zoom di posisi pointer · drag untuk geser · double-click untuk reset</span>
-    </div>
-    <div class="gr-chartbox" data-draw="chart" data-source="candles levels setups"></div>
-    <div class="gr-legend" aria-hidden="true">
-      <span><i class="gr-sw" style="background: #3ddc97; opacity: .45"></i>OB bullish</span>
-      <span><i class="gr-sw" style="background: #ff6b81; opacity: .45"></i>OB bearish</span>
-      <span><i class="gr-sw" style="border: 1px dashed #b9a8e8"></i>FVG</span>
-      <span><i class="gr-sw" style="border-top: 2px dashed #e3bb55; height: 0"></i>Entry</span>
-      <span>▲▼ Liquidity sweep</span>
-      <span>BOS / CHoCH = break structure</span>
-    </div>
-  </section>
-
-  <div class="gr-two">
-    <section class="gr-panel" id="history">
-      <h2>Banding dengan sejarah <span class="gr-fresh" data-draw="fresh" data-source="summary" data-field="generated" data-row="0">—</span></h2>
-      <p class="gr-note">Bentuk pergerakan harga terkini dibanding dengan semua tempoh lalu (korelasi bentuk + saiz pergerakan). "Selepas" ialah apa yang berlaku selepas pattern itu.</p>
-      <div class="gr-bias">
-        <p>1H: <b data-draw="h-ltf" data-source="summary" data-field="hist_ltf_bias" data-row="0">—</b> · <span class="gr-num" data-draw="h-ltf-pct" data-source="summary" data-field="hist_ltf_pct_up" data-row="0">—</span>% naik, median <span class="gr-num" data-draw="h-ltf-med" data-source="summary" data-field="hist_ltf_median" data-row="0">—</span>% dalam 32 jam</p>
-        <p>Harian: <b data-draw="h-htf" data-source="summary" data-field="hist_htf_bias" data-row="0">—</b> · <span class="gr-num" data-draw="h-htf-pct" data-source="summary" data-field="hist_htf_pct_up" data-row="0">—</span>% naik, median <span class="gr-num" data-draw="h-htf-med" data-source="summary" data-field="hist_htf_median" data-row="0">—</span>% dalam 24 hari</p>
+  <!-- ===================== RINGKASAN ===================== -->
+  <section class="gr-tab" id="home" data-tabpanel="home">
+    <div>
+      <div class="gr-h"><h2>Status jam lepas</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+      <div class="gr-cards">
+        <article class="gr-vital lav" id="card-h1">
+          <div class="gr-vital-top">
+            <span class="gr-tag"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-6"/></svg>H1 Swing</span>
+            <button type="button" class="gr-cardbtn" data-goto="h1" aria-label="Buka H1 Swing"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></button>
+          </div>
+          <div>
+            <div class="gr-big" data-draw="h-price" data-source="summary" data-field="price" data-row="0">—</div>
+            <div class="gr-sub">Jam lepas: <span data-draw="h-last" data-source="t_summary" data-field="last_hour_h1" data-row="0">—</span></div>
+          </div>
+          <div class="gr-bars" data-draw="hourbars" data-source="t_hourly" role="img" aria-label="Pergerakan harga setiap jam, 24 jam terakhir"></div>
+          <div class="gr-foot2"><span>Gerak harga 24 jam (pip)</span><span data-draw="h-status" data-source="setups">—</span></div>
+        </article>
+        <article class="gr-vital" id="card-m15">
+          <div class="gr-vital-top">
+            <span class="gr-tag"><svg viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg>M15 Scalp</span>
+            <button type="button" class="gr-cardbtn" data-goto="m15" aria-label="Buka M15 Scalp"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></button>
+          </div>
+          <div>
+            <div class="gr-big" style="font-size: clamp(1.9rem, 5vw, 2.4rem)" data-draw="m-word" data-source="s_signals">—</div>
+            <div class="gr-sub" data-draw="m-sub" data-source="s_signals">—</div>
+          </div>
+          <div class="gr-sub">Jam lepas: <span data-draw="m-last" data-source="t_summary" data-field="last_hour_m15" data-row="0">—</span></div>
+          <div class="gr-foot2"><span>Sesi <span data-draw="m-session" data-source="s_summary" data-field="session" data-row="0">—</span></span><span>ATR <span data-draw="m-atr" data-source="s_summary" data-field="atr15" data-row="0">—</span></span></div>
+        </article>
+        <article class="gr-vital" id="card-rate">
+          <div class="gr-vital-top"><span class="gr-tag"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>Kadar berjaya</span>
+            <button type="button" class="gr-cardbtn" data-goto="track" aria-label="Buka tracking"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></button></div>
+          <div class="gr-ratecol">
+            <div class="gr-rate"><div class="row"><span>H1 · 7 hari</span><b data-draw="r-h1" data-source="t_summary" data-field="h1_7d_rate" data-row="0">—</b></div><div class="gr-meter" data-draw="r-h1m" data-source="t_summary"></div></div>
+            <div class="gr-rate"><div class="row"><span>M15 · 7 hari</span><b data-draw="r-m15" data-source="t_summary" data-field="m15_7d_rate" data-row="0">—</b></div><div class="gr-meter" data-draw="r-m15m" data-source="t_summary"></div></div>
+          </div>
+          <div class="gr-foot2"><span>Berjaya = +100 pip sebelum SL</span></div>
+        </article>
       </div>
+    </div>
+
+    <div class="gr-panel" id="home-hours">
+      <div class="gr-h"><h2>6 jam terakhir</h2><button type="button" class="gr-link" data-goto="track">Lihat semua</button></div>
+      <div class="gr-hours" data-draw="hours6" data-source="t_hourly"></div>
+    </div>
+  </section>
+
+  <!-- ===================== H1 SWING ===================== -->
+  <section class="gr-tab" id="h1" data-tabpanel="h1" hidden>
+    <div class="gr-glass" id="h1-hero">
+      <div class="gr-glass-head"><div class="gr-glass-title"><b>Setup H1</b><span data-draw="h1-title" data-source="setups">—</span></div></div>
+      <div class="gr-dial" data-draw="h1-dial" data-source="setups"></div>
+      <div class="gr-glass-box">
+        <div class="gr-meas">
+          <div class="gr-meas-top"><div><span class="name">Harga vs setup</span><span class="ok" data-draw="h1-pos-ok" data-source="setups summary">—</span></div><div class="v"><span data-draw="h1-pos-v" data-source="summary" data-field="price" data-row="0">—</span></div></div>
+          <div class="gr-slider" data-draw="h1-pos" data-source="setups summary"></div>
+        </div>
+        <div class="gr-meas">
+          <div class="gr-meas-top"><div><span class="name">ADX 1H · kekuatan trend</span><span class="ok" data-draw="h1-adx-ok" data-source="setups">—</span></div><div class="v"><span data-draw="h1-adx-v" data-source="setups" data-field="adx" data-row="0">—</span></div></div>
+          <div class="gr-slider" data-draw="h1-adx" data-source="setups"></div>
+        </div>
+      </div>
+      <div class="gr-acts">
+        <button type="button" class="gr-act" data-scroll="h1-chart"><span class="ic"><span><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-6"/></svg></span><span><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></span></span><b>Lihat<br>chart</b></button>
+        <button type="button" class="gr-act" data-scroll="history"><span class="ic"><span><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg></span><span><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></span></span><b>Banding<br>sejarah</b></button>
+      </div>
+    </div>
+
+    <section class="gr-panel" id="signal">
+      <div class="gr-h"><h2>Signal entry</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+      <p class="gr-note">Model: liquidity sweep → BOS → retrace ke Order Block. Entry pada 50% OB, SL di luar titik sweep, TP1 = 2R (tutup separuh, SL ke BE), TP2 = liquidity seterusnya. "Lepas penapis" = sebelah betul EMA 200 harian dan ADX 1H &gt; 20.</p>
+      <p class="gr-empty" id="no-setup" hidden>Tiada setup H1 aktif sekarang. Tunggu sweep dan break structure.</p>
+      <div class="gr-setups" data-draw="setups" data-source="setups"></div>
+    </section>
+
+    <section class="gr-panel" id="h1-chart">
+      <div class="gr-h"><h2>Chart 1H</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+      <div class="gr-tools">
+        <button type="button" class="gr-btn" data-zoom="in" data-chart="h1">Zoom +</button>
+        <button type="button" class="gr-btn" data-zoom="out" data-chart="h1">Zoom −</button>
+        <button type="button" class="gr-btn" data-zoom="reset" data-chart="h1">Reset</button>
+        <span class="gr-hint">Scroll / pinch untuk zoom di pointer · drag untuk geser</span>
+      </div>
+      <div class="gr-chartbox" data-draw="chart-h1" data-source="candles levels setups"></div>
+      <div class="gr-legend" aria-hidden="true">
+        <span><i class="gr-sw" style="background: var(--gr-up); opacity: .45"></i>OB bullish</span>
+        <span><i class="gr-sw" style="background: var(--gr-dn); opacity: .45"></i>OB bearish</span>
+        <span><i class="gr-sw" style="border: 1px dashed var(--gr-muted)"></i>FVG</span>
+        <span>▲▼ Sweep · BOS / CHoCH</span>
+      </div>
+    </section>
+
+    <div class="gr-two">
+      <section class="gr-panel" id="history">
+        <div class="gr-h"><h2>Banding dengan sejarah</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+        <p class="gr-note">1H: <b data-draw="h-ltf" data-source="summary" data-field="hist_ltf_bias" data-row="0">—</b> · <span class="gr-num" data-draw="h-ltf-pct" data-source="summary" data-field="hist_ltf_pct_up" data-row="0">—</span>% naik dalam 32 jam. Harian: <b data-draw="h-htf" data-source="summary" data-field="hist_htf_bias" data-row="0">—</b> · <span class="gr-num" data-draw="h-htf-pct" data-source="summary" data-field="hist_htf_pct_up" data-row="0">—</span>% naik dalam 24 hari.</p>
+        <div class="gr-tablewrap">
+          <table data-source="analogs" data-row-key="key" aria-label="Pattern sejarah paling serupa">
+            <thead><tr><th data-field="tf">TF</th><th data-field="end">Pattern tamat</th><th class="r" data-field="corr">Corr</th><th class="r" data-field="fwd_ret">Selepas</th></tr></thead>
+            <tbody data-draw="analogs"></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="gr-panel" id="backtest">
+        <div class="gr-h"><h2>Backtest 2 tahun</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+        <div class="gr-kpis">
+          <div class="gr-kpi"><span class="lab">Semua setup</span><span class="val" data-draw="b-r" data-source="summary" data-field="bt_total_r" data-row="0">—</span><span class="note"><span data-draw="b-n" data-source="summary" data-field="bt_trades" data-row="0">—</span> trade · DD <span data-draw="b-dd" data-source="summary" data-field="bt_max_dd_r" data-row="0">—</span>R</span></div>
+          <div class="gr-kpi"><span class="lab">Lepas penapis</span><span class="val" data-draw="f-r" data-source="summary" data-field="bt_f_r" data-row="0">—</span><span class="note"><span data-draw="f-n" data-source="summary" data-field="bt_f_trades" data-row="0">—</span> trade · DD <span data-draw="f-dd" data-source="summary" data-field="bt_f_dd" data-row="0">—</span>R</span></div>
+        </div>
+        <p class="gr-note" style="margin: 12px 0 0">R = gandaan risiko (1R = jarak entry ke SL). Penapis EMA 200 harian + ADX &gt; 20 kurangkan trade tapi naikkan purata setiap trade dan kurangkan drawdown.</p>
+      </section>
+    </div>
+  </section>
+
+  <!-- ===================== M15 SCALP ===================== -->
+  <section class="gr-tab" id="m15" data-tabpanel="m15" hidden>
+    <div class="gr-glass" id="m15-hero">
+      <div class="gr-glass-head"><div class="gr-glass-title"><b>Scalp M15</b><span data-draw="m15-title" data-source="s_signals">—</span></div></div>
+      <div class="gr-dial" data-draw="m15-dial" data-source="s_signals"></div>
+      <div class="gr-glass-box">
+        <div class="gr-meas">
+          <div class="gr-meas-top"><div><span class="name">Harga vs zone 1H</span><span class="ok" data-draw="m15-pos-ok" data-source="s_signals s_summary">—</span></div><div class="v"><span data-draw="m15-pos-v" data-source="s_summary" data-field="price" data-row="0">—</span></div></div>
+          <div class="gr-slider" data-draw="m15-pos" data-source="s_signals s_summary"></div>
+        </div>
+      </div>
+      <div class="gr-acts">
+        <button type="button" class="gr-act" data-scroll="m15-chart"><span class="ic"><span><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-6"/></svg></span><span><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></span></span><b>Lihat<br>chart 15m</b></button>
+        <button type="button" class="gr-act" data-goto="track"><span class="ic"><span><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg></span><span><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg></span></span><b>Lihat<br>tracking</b></button>
+      </div>
+    </div>
+
+    <section class="gr-panel" id="m15-signal">
+      <div class="gr-h"><h2>Signal scalp</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+      <p class="gr-note">Tunggu harga masuk zone Order Block 1H, kemudian candle 15m break structure (CHoCH/BOS) ke arah setup. Entry pada tutup candle itu, SL di luar high/low 15m dalam zone, TP separuh 1.5R dan baki 3R. Ambil yang bertanda "Disyorkan" (sebelah betul EMA 200 harian).</p>
+      <p class="gr-empty" id="no-signal" hidden>Tiada zone 1H aktif sekarang. Tunggu zone baru terbentuk.</p>
+      <div class="gr-setups" data-draw="s-signals" data-source="s_signals"></div>
+    </section>
+
+    <section class="gr-panel" id="m15-chart">
+      <div class="gr-h"><h2>Chart 15m</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+      <div class="gr-tools">
+        <button type="button" class="gr-btn" data-zoom="in" data-chart="m15">Zoom +</button>
+        <button type="button" class="gr-btn" data-zoom="out" data-chart="m15">Zoom −</button>
+        <button type="button" class="gr-btn" data-zoom="reset" data-chart="m15">Reset</button>
+        <span class="gr-hint">Scroll / pinch untuk zoom di pointer · drag untuk geser</span>
+      </div>
+      <div class="gr-chartbox" data-draw="chart-m15" data-source="s_candles s_levels s_signals"></div>
+      <div class="gr-legend" aria-hidden="true">
+        <span><i class="gr-sw" style="background: var(--gr-accent); opacity: .5"></i>Zone 1H</span>
+        <span><i class="gr-sw" style="background: var(--gr-up); opacity: .45"></i>OB 15m bullish</span>
+        <span><i class="gr-sw" style="background: var(--gr-dn); opacity: .45"></i>OB 15m bearish</span>
+        <span><i class="gr-sw" style="border: 1px dashed var(--gr-muted)"></i>FVG 15m</span>
+      </div>
+    </section>
+
+    <div class="gr-two">
+      <section class="gr-panel" id="m15-log">
+        <div class="gr-h"><h2>Trade scalp 60 hari</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+        <div class="gr-tablewrap">
+          <table data-source="s_trades" data-row-key="key" aria-label="Trade scalp">
+            <thead><tr><th data-field="time">Masa (MYT)</th><th data-field="side">Arah</th><th class="r" data-field="entry">Entry</th><th class="r" data-field="risk">SL (pt)</th><th class="r" data-field="result_r">R</th></tr></thead>
+            <tbody data-draw="s-trades"></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="gr-panel" id="research">
+        <div class="gr-h"><h2>Kenapa strategi ini</h2><span class="gr-fresh static"><span class="gr-fresh-dot"></span>Kajian tetap · 18 Nov 2026</span></div>
+        <div class="gr-tablewrap">
+          <table data-source="research" data-row-key="key" aria-label="Perbandingan strategi scalping">
+            <thead><tr><th data-field="strategy">Strategi</th><th class="r" data-field="test_r">R ujian</th><th data-field="verdict">Keputusan</th></tr></thead>
+            <tbody data-draw="research"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <!-- ===================== TRACKING ===================== -->
+  <section class="gr-tab" id="track" data-tabpanel="track" hidden>
+    <div class="gr-def" id="definitions">
+      <p><b>Cara status dikira.</b> Setiap jam, semua signal H1 dan M15 dinilai semula dengan peraturan yang sama seperti scanner. Berjaya bermaksud entry kena dan harga bergerak <b>100 pip ($10)</b> ke arah trade sebelum SL kena.</p>
+      <div class="chips">
+        <span><span class="gr-st s-berjaya">Berjaya</span> +100 pip dulu</span>
+        <span><span class="gr-st s-gagal">Gagal</span> SL dulu / tamat masa</span>
+        <span><span class="gr-st s-berjalan">Berjalan</span> dah entry, belum selesai</span>
+        <span><span class="gr-st s-menunggu">Menunggu</span> belum entry</span>
+        <span><span class="gr-st s-tak">Tak execute</span> batal tanpa entry</span>
+      </div>
+    </div>
+
+    <section class="gr-panel" id="track-kpi">
+      <div class="gr-h"><h2>7 hari terakhir</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+      <div class="gr-kpis">
+        <div class="gr-kpi"><span class="lab">H1 berjaya</span><span class="val" data-draw="t-h1r" data-source="t_summary" data-field="h1_7d_rate" data-row="0">—</span><span class="note"><span data-draw="t-h1s" data-source="t_summary" data-field="h1_7d_success" data-row="0">—</span> berjaya · <span data-draw="t-h1f" data-source="t_summary" data-field="h1_7d_fail" data-row="0">—</span> gagal</span></div>
+        <div class="gr-kpi"><span class="lab">M15 berjaya</span><span class="val" data-draw="t-m15r" data-source="t_summary" data-field="m15_7d_rate" data-row="0">—</span><span class="note"><span data-draw="t-m15s" data-source="t_summary" data-field="m15_7d_success" data-row="0">—</span> berjaya · <span data-draw="t-m15f" data-source="t_summary" data-field="m15_7d_fail" data-row="0">—</span> gagal</span></div>
+        <div class="gr-kpi"><span class="lab">Sedang berjalan</span><span class="val" data-draw="t-run" data-source="t_summary">—</span><span class="note">H1 + M15</span></div>
+        <div class="gr-kpi"><span class="lab">Menunggu entry</span><span class="val" data-draw="t-wait" data-source="t_summary">—</span><span class="note">H1 + M15</span></div>
+      </div>
+    </section>
+
+    <section class="gr-panel" id="daily">
+      <div class="gr-h"><h2>Rekod harian</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+      <p class="gr-note">Satu baris setiap model setiap hari (waktu Malaysia). Hari yang belum habis ditanda "hari ini". Hari tanpa signal tidak ditunjuk.</p>
       <div class="gr-tablewrap">
-        <table data-source="analogs" data-row-key="key" aria-label="Pattern sejarah paling serupa">
-          <thead><tr><th data-field="tf">TF</th><th data-field="end">Pattern tamat</th><th class="r" data-field="corr">Corr</th><th class="r" data-field="fwd_ret">Selepas</th><th class="r" data-field="max_up">Max naik</th><th class="r" data-field="max_down">Max turun</th></tr></thead>
-          <tbody data-draw="analogs"></tbody>
+        <table data-source="t_daily" data-row-key="key" aria-label="Rekod harian">
+          <thead><tr><th data-field="date">Tarikh</th><th data-field="model">Model</th><th class="r" data-field="signals">Signal</th><th class="r" data-field="entries">Entry</th><th class="r" data-field="success">Berjaya</th><th class="r" data-field="fail">Gagal</th><th class="r" data-field="running">Berjalan</th><th class="r" data-field="not_executed">Tak execute</th><th class="r" data-field="success_rate">Kadar</th></tr></thead>
+          <tbody data-draw="t-daily"></tbody>
         </table>
       </div>
     </section>
 
-    <section class="gr-panel" id="backtest">
-      <h2>Prestasi strategi dalam sejarah <span class="gr-fresh" data-draw="fresh" data-source="summary" data-field="generated" data-row="0">—</span></h2>
-      <p class="gr-note">Backtest model yang sama atas 2 tahun data 1H, tanpa intip data masa depan. R = gandaan risiko (1R = jarak entry ke SL).</p>
-      <div class="gr-bt">
-        <div class="gr-kpi"><span class="lab">Trade</span><span class="val" data-draw="b-trades" data-source="summary" data-field="bt_trades" data-row="0">—</span></div>
-        <div class="gr-kpi"><span class="lab">Win rate</span><span class="val" data-draw="b-win" data-source="summary" data-field="bt_win_rate" data-row="0">—</span></div>
-        <div class="gr-kpi"><span class="lab">Jumlah</span><span class="val" data-draw="b-r" data-source="summary" data-field="bt_total_r" data-row="0">—</span></div>
-        <div class="gr-kpi"><span class="lab">Max drawdown</span><span class="val" data-draw="b-dd" data-source="summary" data-field="bt_max_dd_r" data-row="0">—</span></div>
+    <section class="gr-panel" id="hourly">
+      <div class="gr-h"><h2>Status setiap jam · 24 jam</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+      <p class="gr-note">Signal yang muncul dalam setiap jam dan status terkininya. Gerak = perubahan harga dalam jam itu.</p>
+      <div class="gr-tablewrap">
+        <table data-source="t_hourly" data-row-key="key" aria-label="Status setiap jam">
+          <thead><tr><th data-field="hour">Jam (MYT)</th><th class="r" data-field="close">Harga</th><th class="r" data-field="chg_pips">Gerak (pip)</th><th data-field="h1_status">H1</th><th data-field="m15_status">M15</th></tr></thead>
+          <tbody data-draw="t-hourly"></tbody>
+        </table>
       </div>
-      <div class="gr-filterbt" id="filter-bt">
-        <span class="gr-reco">Penapis EMA200 harian + ADX &gt; 20</span>
-        <p><b class="gr-num" data-draw="f-n" data-source="summary" data-field="bt_f_trades" data-row="0">—</b> trade · win <b class="gr-num" data-draw="f-w" data-source="summary" data-field="bt_f_win" data-row="0">—</b>% · <b class="gr-num" data-draw="f-r" data-source="summary" data-field="bt_f_r" data-row="0">—</b>R · purata <b class="gr-num" data-draw="f-a" data-source="summary" data-field="bt_f_avg" data-row="0">—</b>R · max DD <b class="gr-num" data-draw="f-dd" data-source="summary" data-field="bt_f_dd" data-row="0">—</b>R</p>
-        <p class="gr-note" style="margin: 0">Ambil hanya setup bila harga di sebelah betul EMA 200 harian dan ADX(14) 1H melebihi 20. Trade lebih sedikit, tapi purata dan drawdown jauh lebih baik. RSI divergence dan penapis sesi turut diuji dan tidak membantu.</p>
-      </div>
-      <p class="gr-note" style="margin: var(--cds-gap-md) 0 0">Gred A+ sahaja: <b class="gr-num" data-draw="b-ap-n" data-source="summary" data-field="bt_aplus_trades" data-row="0">—</b> trade, win <b class="gr-num" data-draw="b-ap-w" data-source="summary" data-field="bt_aplus_win" data-row="0">—</b>%, <b class="gr-num" data-draw="b-ap-r" data-source="summary" data-field="bt_aplus_r" data-row="0">—</b>R. Atas candle harian (10 tahun): <b class="gr-num" data-draw="b-d-n" data-source="summary" data-field="bt_htf_trades" data-row="0">—</b> trade, <b class="gr-num" data-draw="b-d-r" data-source="summary" data-field="bt_htf_total_r" data-row="0">—</b>R. Pada 15m strategi ini rugi (-10.5R dalam 60 hari), sebab itu dashboard guna 1H.</p>
     </section>
-  </div>
 
-  <p class="gr-foot">Harga GC=F (gold futures) biasanya beza beberapa dollar dari XAUUSD spot di broker, jadi laraskan zone ikut chart broker anda. Risiko $ dikira untuk 0.01 lot (1 oz). Tetapan strategi dipilih menggunakan data yang sama dengan backtest, jadi prestasi sebenar mungkin lebih rendah. Bukan nasihat kewangan.</p>
+    <section class="gr-panel" id="log">
+      <div class="gr-h"><h2>Log signal</h2><span class="gr-fresh" data-draw="fresh" data-source="t_summary" data-field="generated" data-row="0">—</span></div>
+      <div class="gr-tablewrap">
+        <table data-source="t_log" data-row-key="key" aria-label="Log signal">
+          <thead><tr><th data-field="time">Masa (MYT)</th><th data-field="model">Model</th><th data-field="side">Arah</th><th class="r" data-field="entry">Entry</th><th class="r" data-field="sl">SL</th><th data-field="status">Status</th><th class="r" data-field="best_pips">Pip terbaik</th></tr></thead>
+          <tbody data-draw="t-log"></tbody>
+        </table>
+      </div>
+    </section>
+  </section>
+
+  <p class="gr-foot">Harga GC=F (gold futures) beza beberapa dollar dari XAUUSD broker. 1 pip = $0.10, jadi 100 pip = $10 pergerakan harga dan risiko $ untuk 0.01 lot = jarak SL dalam point. Dikemaskini setiap jam, bukan setiap tick. Bukan nasihat kewangan.</p>
+
+  <div class="gr-navbar">
+    <nav class="gr-nav" role="tablist" aria-label="Navigasi">
+      <button type="button" role="tab" data-tab="home" aria-selected="true" aria-label="Ringkasan"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg></button>
+      <button type="button" role="tab" data-tab="h1" aria-selected="false" aria-label="H1 Swing"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-6"/></svg></button>
+      <button type="button" role="tab" data-tab="m15" aria-selected="false" aria-label="M15 Scalp"><svg viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg></button>
+      <button type="button" role="tab" data-tab="track" aria-selected="false" aria-label="Tracking"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg></button>
+    </nav>
+    <button type="button" class="gr-navlime" id="nav-signal" aria-label="Buka signal terkini"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="5"/></svg></button>
+  </div>
 </div>
 
 <script>
+  // ---------- shared helpers ----------
   window.GR = (() => {
-    const tzFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kuala_Lumpur', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
-    const dayFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kuala_Lumpur', day: '2-digit', month: 'short', year: '2-digit' });
-    const hmFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kuala_Lumpur', hour: '2-digit', minute: '2-digit', hour12: false });
+    const tz = 'Asia/Kuala_Lumpur';
+    const tzFmt = new Intl.DateTimeFormat('en-GB', { timeZone: tz, day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+    const dayFmt = new Intl.DateTimeFormat('en-GB', { timeZone: tz, day: '2-digit', month: 'short', year: '2-digit' });
+    const hmFmt = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false });
+    const dShort = new Intl.DateTimeFormat('ms-MY', { timeZone: tz, weekday: 'short', day: 'numeric', month: 'short' });
     const f2 = d3.format(',.2f');
-    return {
+    const G = {
       f2,
       t: (iso) => tzFmt.format(new Date(iso)),
       hm: (d) => hmFmt.format(d),
       day: (iso) => dayFmt.format(new Date(iso)),
+      dshort: (iso) => dShort.format(new Date(iso)),
       pct: (v) => (v > 0 ? '+' : '') + d3.format('.2f')(v) + '%',
-      trendWord: (t) => ({ bull: 'BULLISH', bear: 'BEARISH' })[t] || 'TIADA',
-      trendCls: (t) => ({ bull: 'gr-up', bear: 'gr-down' })[t] || 'gr-flat',
-      biasCls: (b) => ({ BULLISH: 'gr-up', BEARISH: 'gr-down' })[b] || 'gr-flat',
-      row: (id) => { const d = dash.data(id); return d.status === 'ok' && d.data.length ? d.data[0] : null; },
-      up: '#3ddc97', dn: '#ff6b81', gold: '#e3bb55', gold2: '#f6dc92', lilac: '#b9a8e8', ink: '#120a22',
+      sgn: (v, f = '.1f') => (v > 0 ? '+' : '') + d3.format(f)(+v),
+      row: (id, i = 0) => { const d = dash.data(id); return d.status === 'ok' && d.data && d.data.length > i ? d.data[i] : null; },
+      rows: (id) => { const d = dash.data(id); return d.status === 'ok' && Array.isArray(d.data) ? d.data : null; },
       el: (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; },
       mark: (e, src, field, row) => { e.dataset.source = src; e.dataset.field = field; e.dataset.row = String(row); return e; },
+      css: (el, name) => getComputedStyle(el.closest('.gr') || document.documentElement).getPropertyValue(name).trim(),
+      statusCls: (s) => ({ BERJAYA: 's-berjaya', GAGAL: 's-gagal', BERJALAN: 's-berjalan', MENUNGGU: 's-menunggu', 'TAK EXECUTE': 's-tak' })[s] || 's-none',
+      statusWord: (s) => ({ BERJAYA: 'Berjaya', GAGAL: 'Gagal', BERJALAN: 'Berjalan', MENUNGGU: 'Menunggu', 'TAK EXECUTE': 'Tak execute', 'TIADA SIGNAL': 'Tiada signal' })[s] || s,
+      // "SELL BERJAYA, BUY TAK EXECUTE" -> chips
+      chips: (txt) => {
+        const box = document.createDocumentFragment();
+        if (!txt || txt === 'TIADA SIGNAL') { box.append(G.el('span', 'gr-st s-none', 'Tiada signal')); return box; }
+        txt.split(', ').forEach((p) => {
+          const sp = p.indexOf(' '), side = p.slice(0, sp), st = p.slice(sp + 1);
+          box.append(G.el('span', 'gr-st ' + G.statusCls(st), `${side} · ${G.statusWord(st)}`));
+        });
+        return box;
+      },
+      trendWord: (t) => ({ bull: 'BULLISH', bear: 'BEARISH' })[t] || 'TIADA',
+      biasCls: (b) => ({ BULLISH: 'gr-up', BEARISH: 'gr-down' })[b] || 'gr-flat',
+      // the hourly scan fires at minute 3 of each UTC hour, Monday-Friday (UTC), and takes a few minutes
+      nextRun: (from) => {
+        const t = new Date(from); t.setUTCSeconds(0, 0);
+        if (t.getUTCMinutes() >= 3) t.setUTCHours(t.getUTCHours() + 1);
+        t.setUTCMinutes(3);
+        while (t.getUTCDay() === 0 || t.getUTCDay() === 6) { t.setUTCDate(t.getUTCDate() + 1); t.setUTCHours(0, 3, 0, 0); }
+        return new Date(+t + 3 * 60000);
+      },
+      cd: (ms) => {
+        const s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+        return h ? `${h}j ${m}m` : `${m}:${String(x).padStart(2, '0')}`;
+      },
+      pickScalp: (rows) => rows.find((r) => r.fresh) || rows.find((r) => r.state === 'IN TRADE')
+        || rows.find((r) => r.state === 'IN ZONE' && r.reco) || rows.find((r) => r.state === 'IN ZONE') || rows.find((r) => r.reco) || rows[0],
+      scalpWord: (r) => (r.fresh ? 'MASUK SEKARANG' : r.state === 'IN TRADE' ? 'Sedang berjalan' : r.state === 'IN ZONE' ? 'Tunggu CHoCH 15m' : 'Tunggu harga ke zone'),
+      pickSwing: (rows) => rows.find((r) => r.status === 'TRIGGER') || rows.find((r) => r.status === 'IN TRADE') || rows[0],
     };
+    return G;
   })();
 
-  // the hourly scan fires at minute 3 of each UTC hour, Monday to Friday (UTC), and takes ~2 minutes
-  window.GR.nextRun = (from) => {
-    const t = new Date(from); t.setUTCSeconds(0, 0);
-    if (t.getUTCMinutes() >= 3) t.setUTCHours(t.getUTCHours() + 1);
-    t.setUTCMinutes(3);
-    while (t.getUTCDay() === 0 || t.getUTCDay() === 6) { t.setUTCDate(t.getUTCDate() + 1); t.setUTCHours(0, 3, 0, 0); }
-    return new Date(+t + 2 * 60000);
-  };
-  window.GR.cd = (ms) => {
-    const s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
-    return h ? `${h}j ${m}m` : `${m}:${String(x).padStart(2, '0')}`;
-  };
+  // every dashboard dataset except "research" is one key of the hourly bundle file
+  ['candles', 'setups', 'levels', 'summary', 'analogs', 's_candles', 's_signals', 's_levels', 's_trades', 's_summary', 't_log', 't_hourly', 't_daily', 't_summary']
+    .forEach((key) => dash.loader(key, {
+      description: `Ambil bahagian "${key}" daripada fail bundle yang scanner hasilkan setiap jam.`,
+      fn: ({ answer }) => {
+        if (!answer || !Array.isArray(answer[key])) throw new Error(`Bundle tiada bahagian ${key}`);
+        return answer[key];
+      },
+    }));
 
-  dash.calc('chg24', {
-    title: 'Perubahan 24 jam',
-    description: 'Peratus perubahan harga tutup candle 1H terakhir berbanding 24 candle sebelumnya.',
-    inputs: ['candles'],
-    fn: (candles) => {
-      if (!candles || candles.length < 25) return null;
-      const last = +candles[candles.length - 1].close, prev = +candles[candles.length - 25].close;
-      return Math.round((last / prev - 1) * 10000) / 100;
-    },
-  });
+  // ---------- tabs (listeners only set hidden / aria / class) ----------
+  (() => {
+    const tabs = ['home', 'h1', 'm15', 'track'];
+    const show = (name, scroll) => {
+      if (!tabs.includes(name)) name = 'home';
+      document.querySelectorAll('[data-tabpanel]').forEach((p) => { p.hidden = p.dataset.tabpanel !== name; });
+      document.querySelectorAll('[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+      if (scroll) document.querySelectorAll('.gr-seg').forEach((s) => s.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+      try { dash.setLink(name === 'home' ? null : name); } catch (e) { /* link is optional */ }
+    };
+    document.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => show(b.dataset.tab, false)));
+    document.querySelectorAll('[data-goto]').forEach((b) => b.addEventListener('click', () => show(b.dataset.goto, true)));
+    document.querySelectorAll('[data-scroll]').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('#' + b.dataset.scroll).forEach((t) => t.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }));
+    document.querySelectorAll('#nav-signal').forEach((b) => b.addEventListener('click', () => {
+      const sc = window.GR.rows('s_signals') || [];
+      show(sc.some((r) => r.fresh || r.state === 'IN TRADE') ? 'm15' : 'h1', true);
+    }));
+    const h = (location.hash || '').replace('#', '');
+    show(tabs.includes(h) ? h : 'home', false);
 
-  // island: tap / Enter / hover toggles the expanded state (class only)
-  document.querySelectorAll('.gr-island').forEach((isl) => {
-    const set = (open) => { isl.classList.toggle('open', open); isl.setAttribute('aria-expanded', String(open)); };
-    let pinned = false;
-    isl.addEventListener('click', () => { pinned = !pinned; set(pinned); });
-    isl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pinned = !pinned; set(pinned); } });
-    if (matchMedia('(pointer: fine)').matches) {
-      isl.addEventListener('pointerenter', () => set(true));
-      isl.addEventListener('pointerleave', () => set(pinned));
-    }
-  });
+    document.querySelectorAll('.gr-island').forEach((isl) => {
+      const set = (open) => { isl.classList.toggle('open', open); isl.setAttribute('aria-expanded', String(open)); };
+      let pinned = false;
+      isl.addEventListener('click', () => { pinned = !pinned; set(pinned); });
+      isl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pinned = !pinned; set(pinned); } });
+      if (matchMedia('(pointer: fine)').matches) {
+        isl.addEventListener('pointerenter', () => set(true));
+        isl.addEventListener('pointerleave', () => set(pinned));
+      }
+    });
+  })();
 </script>
 
 <script>
+  // ---------- small text drawings ----------
   const G = window.GR;
-  const simple = (name, field, fmt, cls) => dash.draw(name, (el) => {
-    const r = G.row('summary');
+  const simple = (name, src, field, fmt, cls) => dash.draw(name, (el) => {
+    const r = G.row(src);
     if (!r || r[field] == null) { el.textContent = '—'; return; }
     el.textContent = fmt ? fmt(r[field], r) : r[field];
-    if (cls) { el.classList.remove('gr-up', 'gr-down', 'gr-flat'); el.classList.add(cls(r[field])); }
+    if (cls) { el.classList.remove('gr-up', 'gr-down', 'gr-flat'); el.classList.add(cls(r[field], r)); }
   });
-  const signed = (d) => (v) => (v > 0 ? '+' : '') + d3.format(d)(+v);
-  simple('last-time', 'time', (v) => G.t(v));
-  simple('tk-price', 'price', (v) => G.f2(+v));
-  simple('k-price', 'price', (v) => G.f2(+v));
-  simple('k-atr', 'atr', (v) => G.f2(+v));
-  for (const [n, f] of [['tk-trend', 'trend_ltf'], ['tk-htrend', 'trend_htf'], ['k-trend', 'trend_ltf'], ['k-htrend', 'trend_htf']])
-    simple(n, f, G.trendWord, G.trendCls);
-  for (const [n, f] of [['k-hist', 'hist_ltf_bias'], ['h-ltf', 'hist_ltf_bias'], ['h-htf', 'hist_htf_bias']])
-    simple(n, f, (v) => v, G.biasCls);
-  for (const [n, f] of [['k-histpct', 'hist_ltf_pct_up'], ['h-ltf-pct', 'hist_ltf_pct_up'], ['h-htf-pct', 'hist_htf_pct_up']])
-    simple(n, f, (v) => d3.format('.0f')(+v));
-  simple('h-ltf-med', 'hist_ltf_median', signed('.2f'));
-  simple('h-htf-med', 'hist_htf_median', signed('.2f'));
-  simple('b-trades', 'bt_trades', (v) => d3.format(',')(+v));
-  simple('b-win', 'bt_win_rate', (v) => d3.format('.0f')(+v) + '%');
-  simple('b-r', 'bt_total_r', (v) => signed('.1f')(v) + 'R', (v) => (v > 0 ? 'gr-up' : 'gr-down'));
-  simple('b-dd', 'bt_max_dd_r', (v) => d3.format('.1f')(+v) + 'R');
-  simple('b-ap-n', 'bt_aplus_trades', (v) => v);
-  simple('b-ap-w', 'bt_aplus_win', (v) => d3.format('.0f')(+v));
-  simple('b-ap-r', 'bt_aplus_r', signed('.1f'));
-  simple('b-d-n', 'bt_htf_trades', (v) => v);
-  simple('b-d-r', 'bt_htf_total_r', signed('.1f'));
-  simple('f-n', 'bt_f_trades', (v) => v);
-  simple('f-w', 'bt_f_win', (v) => d3.format('.0f')(+v));
-  simple('f-r', 'bt_f_r', signed('.1f'), (v) => (v > 0 ? 'gr-up' : 'gr-down'));
-  simple('f-a', 'bt_f_avg', signed('.2f'));
-  simple('f-dd', 'bt_f_dd', (v) => d3.format('.1f')(+v));
+  const pct0 = (v) => d3.format('.0f')(+v) + '%';
+  dash.draw('today', (el) => { el.textContent = new Intl.DateTimeFormat('ms-MY', { timeZone: 'Asia/Kuala_Lumpur', weekday: 'long', day: 'numeric', month: 'long' }).format(new Date()); });
+  simple('sc-rate', 't_summary', 'all_7d_rate', pct0);
+  simple('sc-ent', 't_summary', 'all_7d_entries');
+  simple('h-price', 'summary', 'price', (v) => G.f2(+v));
+  simple('h-last', 't_summary', 'last_hour_h1', (v) => G.statusWord(v).toLowerCase());
+  simple('m-last', 't_summary', 'last_hour_m15', (v) => G.statusWord(v).toLowerCase());
+  simple('m-session', 's_summary', 'session');
+  simple('m-atr', 's_summary', 'atr15', (v) => G.f2(+v));
+  simple('r-h1', 't_summary', 'h1_7d_rate', pct0);
+  simple('r-m15', 't_summary', 'm15_7d_rate', pct0);
+  simple('h1-pos-v', 'summary', 'price', (v) => G.f2(+v));
+  simple('m15-pos-v', 's_summary', 'price', (v) => G.f2(+v));
+  simple('h-ltf', 'summary', 'hist_ltf_bias', (v) => v, G.biasCls);
+  simple('h-htf', 'summary', 'hist_htf_bias', (v) => v, G.biasCls);
+  simple('h-ltf-pct', 'summary', 'hist_ltf_pct_up', (v) => d3.format('.0f')(+v));
+  simple('h-htf-pct', 'summary', 'hist_htf_pct_up', (v) => d3.format('.0f')(+v));
+  simple('b-r', 'summary', 'bt_total_r', (v) => G.sgn(v) + 'R', (v) => (v > 0 ? 'gr-up' : 'gr-down'));
+  simple('b-n', 'summary', 'bt_trades');
+  simple('b-dd', 'summary', 'bt_max_dd_r', (v) => d3.format('.1f')(+v));
+  simple('f-r', 'summary', 'bt_f_r', (v) => G.sgn(v) + 'R', (v) => (v > 0 ? 'gr-up' : 'gr-down'));
+  simple('f-n', 'summary', 'bt_f_trades');
+  simple('f-dd', 'summary', 'bt_f_dd', (v) => d3.format('.1f')(+v));
+  simple('t-h1r', 't_summary', 'h1_7d_rate', pct0);
+  simple('t-m15r', 't_summary', 'm15_7d_rate', pct0);
+  simple('t-h1s', 't_summary', 'h1_7d_success');
+  simple('t-h1f', 't_summary', 'h1_7d_fail');
+  simple('t-m15s', 't_summary', 'm15_7d_success');
+  simple('t-m15f', 't_summary', 'm15_7d_fail');
+  simple('t-run', 't_summary', 'h1_running', (v, r) => String(r.h1_running + r.m15_running));
+  simple('t-wait', 't_summary', 'h1_waiting', (v, r) => String(r.h1_waiting + r.m15_waiting));
+  const meter = (name, field) => dash.draw(name, (el) => {
+    const r = G.row('t_summary');
+    el.replaceChildren();
+    const i = G.el('i'); i.style.width = (r && r[field] != null ? r[field] : 0) + '%'; el.append(i);
+  });
+  meter('r-h1m', 'h1_7d_rate'); meter('r-m15m', 'm15_7d_rate');
 
-  dash.draw('k-chg', (el) => {
-    const c = dash.data('chg24');
-    if (c.status !== 'ok' || c.data == null) { el.textContent = '—'; return; }
-    el.textContent = G.pct(c.data);
-    el.className = c.data > 0 ? 'gr-up' : c.data < 0 ? 'gr-down' : 'gr-flat';
+  dash.draw('h-status', (el) => {
+    const rows = G.rows('setups');
+    if (!rows) { el.textContent = '—'; return; }
+    const s = G.pickSwing(rows);
+    el.textContent = !s ? 'Tiada setup' : `${s.side} · ${s.status === 'TRIGGER' ? 'TRIGGER' : s.status === 'IN TRADE' ? 'berjalan' : 'tunggu'}`;
+  });
+  dash.draw('m-word', (el) => {
+    const rows = G.rows('s_signals');
+    if (!rows) { el.textContent = '—'; return; }
+    const s = rows.length ? G.pickScalp(rows) : null;
+    el.textContent = s ? G.scalpWord(s) : 'Tiada zone';
+  });
+  dash.draw('m-sub', (el) => {
+    const rows = G.rows('s_signals');
+    if (!rows) { el.textContent = '—'; return; }
+    const s = rows.length ? G.pickScalp(rows) : null;
+    el.textContent = s ? `${s.side} · zone ${G.f2(s.zone_bottom)}–${G.f2(s.zone_top)}${s.reco ? ' · disyorkan' : ''}` : 'Tunggu zone 1H baru';
   });
 
-  dash.draw('tk-status', (el) => {
-    const s = dash.data('setups');
-    if (s.status !== 'ok') { el.textContent = '—'; return; }
-    const trig = s.data.find((r) => r.status === 'TRIGGER');
-    const live = s.data.find((r) => r.status === 'IN TRADE');
-    const wait = s.data.find((r) => r.status === 'WAIT');
-    const pf = (r) => (r.filter_ok ? ', lepas penapis' : ', tak lepas penapis');
-    el.textContent = trig ? `ENTRY TRIGGER ${trig.side} (gred ${trig.grade}${pf(trig)}), harga dalam zone`
-      : live ? `setup ${live.side} gred ${live.grade}${pf(live)}, sudah capai entry dan sedang berjalan`
-      : wait ? `setup ${wait.side} gred ${wait.grade}${pf(wait)}, menunggu harga retrace ke zone`
-      : 'tiada setup aktif, tunggu';
+  // last-24h price movement bars on the H1 card (like the vitals bars)
+  dash.draw('hourbars', (el) => {
+    const rows = G.rows('t_hourly');
+    el.replaceChildren();
+    if (!rows) return;
+    const vals = [...rows].reverse().map((r) => (r.chg_pips == null ? 0 : Math.abs(r.chg_pips)));
+    const mx = Math.max(10, ...vals);
+    vals.forEach((v, i) => {
+      const b = G.el('span', i >= vals.length - 4 ? 'hi' : null);
+      b.style.height = Math.max(6, (v / mx) * 100) + '%';
+      el.append(b);
+    });
+  });
+
+  dash.draw('hours6', (el) => {
+    const rows = G.rows('t_hourly');
+    el.replaceChildren();
+    if (!rows) { el.textContent = '—'; return; }
+    rows.slice(0, 6).forEach((r) => {
+      const line = G.el('div', 'gr-hr');
+      line.append(G.el('span', 't', G.hm(new Date(r.hour)) + ' MYT'));
+      const a = G.el('span', 'cell'); a.append(G.el('span', 'm', 'H1'), G.chips(r.h1_status));
+      const b = G.el('span', 'cell'); b.append(G.el('span', 'm', 'M15'), G.chips(r.m15_status));
+      line.append(a, b); el.append(line);
+    });
+  });
+
+  // "last refresh / next refresh" chip
+  dash.draw('fresh', {
+    mount() { const st = {}; st.timer = setInterval(() => st.tick && st.tick(), 1000); return st; },
+    update(el, st) {
+      const r = G.row('t_summary');
+      if (!r || !r.generated) { el.textContent = '—'; st.tick = null; return; }
+      const gen = new Date(r.generated);
+      const day = (d) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kuala_Lumpur', day: '2-digit', month: 'short' }).format(d);
+      const when = (d) => (day(d) === day(new Date()) ? G.hm(d) : G.t(d.toISOString()));
+      const last = G.el('span', null, `Dikemaskini ${when(gen)}`), nxt = G.el('span');
+      el.replaceChildren(G.el('span', 'gr-fresh-dot'), last, nxt);
+      const due = G.nextRun(gen);
+      st.tick = () => {
+        const now = new Date(), next = G.nextRun(now);
+        const late = now - due > 8 * 60000;
+        el.classList.toggle('late', late);
+        nxt.textContent = (late ? ' · Lambat, cuba ' : ' · Seterusnya ') + `${when(next)} (${G.cd(next - now)})`;
+      };
+      st.tick();
+    },
+    unmount(el, st) { clearInterval(st.timer); },
   });
 </script>
 
 <script>
-  // Dynamic island: compact status pill that expands into the active setup
+  // ---------- dynamic island ----------
   dash.draw('island', {
     mount() {
-      const st = { next: null, cd: null };
-      st.timer = setInterval(() => {
-        if (!st.next || !st.cd) return;
-        const ms = Math.max(0, st.next - Date.now());
-        st.cd.textContent = window.GR.cd(ms);
-      }, 1000);
+      const st = {};
+      st.timer = setInterval(() => { if (st.next && st.cd) st.cd.textContent = window.GR.cd(st.next - Date.now()); }, 1000);
       return st;
     },
     update(el, st) {
       const G = window.GR;
       const sum = G.row('summary');
-      const S = dash.data('setups'), C = dash.data('chg24');
       if (!sum) { el.textContent = '—'; return; }
-      const setups = S.status === 'ok' ? S.data : [];
-      const s = setups.find((r) => r.status === 'TRIGGER') || setups.find((r) => r.status === 'IN TRADE') || setups[0];
-      const i = s ? setups.indexOf(s) : -1;
-      el.classList.toggle('hot', !!(s && s.status === 'TRIGGER'));
+      const sw = G.rows('setups') || [], sc = G.rows('s_signals') || [];
+      const s = G.pickSwing(sw), q = sc.length ? G.pickScalp(sc) : null;
+      const hot = (s && s.status === 'TRIGGER') || (q && q.fresh);
+      el.classList.toggle('hot', !!hot);
       el.replaceChildren();
-
       const row = G.el('div', 'gr-isl-row');
-      row.append(G.el('span', 'gr-isl-dot' + (s ? (s.status === 'TRIGGER' ? ' trig' : s.status === 'IN TRADE' ? ' live' : '') : '')),
-        G.el('span', 'gr-isl-sym', 'XAU'), G.mark(G.el('span', 'gr-isl-px', G.f2(+sum.price)), 'summary', 'price', 0));
-      if (C.status === 'ok' && C.data != null) {
-        const ch = G.el('span', C.data > 0 ? 'gr-up' : 'gr-down', G.pct(C.data));
-        ch.dataset.source = 'chg24'; row.append(ch);
-      }
-      row.append(G.el('span', 'gr-isl-chip' + (s && s.status === 'TRIGGER' ? ' trig' : ''),
-        !s ? 'Tiada setup' : s.status === 'TRIGGER' ? `${s.side} TRIGGER` : s.status === 'IN TRADE' ? `${s.side} berjalan` : `${s.side} tunggu`));
+      row.append(G.el('span', 'gr-isl-dot' + (hot ? ' trig' : (s && s.status === 'IN TRADE') || (q && q.state === 'IN TRADE') ? ' live' : '')),
+        G.el('span', 'gr-isl-sym', 'XAU'), G.mark(G.el('span', 'gr-isl-px', G.f2(+sum.price)), 'summary', 'price', 0),
+        G.el('span', 'gr-isl-chip' + (s && s.status === 'TRIGGER' ? ' trig' : ''), s ? `H1 ${s.side} ${s.status === 'TRIGGER' ? 'TRIGGER' : s.status === 'IN TRADE' ? 'jalan' : 'tunggu'}` : 'H1 tiada'),
+        G.el('span', 'gr-isl-chip' + (q && q.fresh ? ' trig' : ''), q ? `M15 ${q.side} ${q.fresh ? 'MASUK' : q.state === 'IN TRADE' ? 'jalan' : 'tunggu'}` : 'M15 tiada'));
       el.append(row);
-
-      const more = G.el('div', 'gr-isl-more');
-      const inner = G.el('div');
+      const more = G.el('div', 'gr-isl-more'), inner = G.el('div'), grid = G.el('div', 'gr-isl-grid');
+      const cell = (lab, txt, cls, mk) => { const d = G.el('div'); d.append(G.el('span', 'lab', lab)); const v = G.el('span', 'val ' + (cls || ''), txt); if (mk) G.mark(v, ...mk); d.append(v); return d; };
       if (s) {
-        const grid = G.el('div', 'gr-isl-grid');
-        const cell = (lab, field, txt, cls) => {
-          const d = G.el('div'); d.append(G.el('span', 'lab', lab));
-          const v = G.el('span', 'val ' + (cls || ''), txt);
-          if (field) G.mark(v, 'setups', field, i);
-          d.append(v); return d;
-        };
-        grid.append(
-          cell('Setup', null, `${s.side} · Gred ${s.grade}${s.filter_ok ? ' ✓' : ''}`, s.side === 'BUY' ? 'gr-up' : 'gr-down'),
-          cell('Penapis', null, s.filter_ok ? 'Lepas' : 'Tak lepas', s.filter_ok ? 'gr-up' : 'gr-down'),
-          cell('Entry', 'entry', G.f2(s.entry)),
-          cell('Stop loss', 'sl', G.f2(s.sl), 'gr-down'),
-          cell('TP1', 'tp1', G.f2(s.tp1), 'gr-up'),
-          cell('TP2', 'tp2', G.f2(s.tp2), 'gr-up'),
-          cell('Risiko 0.01 lot', 'risk_usd_001', '$' + G.f2(s.risk_usd_001)));
-        inner.append(grid);
-      } else {
-        inner.append(G.el('p', 'gr-isl-foot', 'Tiada setup aktif. Tunggu sweep → BOS → OB.'));
+        const i = sw.indexOf(s);
+        grid.append(cell('H1 entry', G.f2(s.entry), '', ['setups', 'entry', i]), cell('H1 SL', G.f2(s.sl), 'gr-down', ['setups', 'sl', i]),
+          cell('H1 TP1', G.f2(s.tp1), 'gr-up', ['setups', 'tp1', i]), cell('Penapis', s.filter_ok ? 'Lepas' : 'Tak lepas', s.filter_ok ? 'gr-up' : 'gr-down'));
       }
+      if (q) {
+        const i = sc.indexOf(q);
+        if (q.entry != null) grid.append(cell('M15 entry', G.f2(q.entry), '', ['s_signals', 'entry', i]), cell('M15 SL', G.f2(q.sl), 'gr-down', ['s_signals', 'sl', i]), cell('M15 TP 3R', G.f2(q.tp), 'gr-up', ['s_signals', 'tp', i]));
+        else grid.append(cell('M15', G.scalpWord(q)));
+      }
+      inner.append(grid);
       const foot = G.el('div', 'gr-isl-foot');
       foot.append(G.el('span', null, `Candle terakhir ${G.t(sum.time)} MYT`));
-      // the hourly scan runs at minute 3 of every UTC hour on weekdays
       const next = G.nextRun(new Date());
-      const cdWrap = G.el('span', null, `Scan seterusnya ${G.hm(next)} · `);
-      const cd = G.el('span', 'gr-num', G.cd(next - Date.now())); cdWrap.append(cd);
-      foot.append(cdWrap);
-      inner.append(foot);
-      more.append(inner);
-      el.append(more);
+      const cdWrap = G.el('span', null, `Kemas kini seterusnya ${G.hm(next)} · `);
+      const cd = G.el('span', 'gr-num', G.cd(next - Date.now())); cdWrap.append(cd); foot.append(cdWrap);
+      inner.append(foot); more.append(inner); el.append(more);
       st.next = next; st.cd = cd;
     },
     unmount(el, st) { clearInterval(st.timer); },
@@ -436,76 +815,238 @@
 </script>
 
 <script>
-  dash.draw('setups', (el) => {
+  // ---------- hero: dial + range sliders (like the blood-panel screen) ----------
+  const dial = (el, value, max, big, small) => {
     const G = window.GR;
-    const s = dash.data('setups');
-    document.querySelectorAll('#no-setup').forEach((p) => { p.hidden = !(s.status === 'ok' && s.data.length === 0); });
-    if (s.status !== 'ok') { el.textContent = s.status === 'error' ? 'Gagal load data setup' : '—'; return; }
     el.replaceChildren();
-    s.data.forEach((r, i) => {
-      const card = G.el('article', 'gr-setup');
-      card.dataset.side = r.side;
-      card.id = `setup-${i}`;
-      const top = G.el('div', 'gr-setup-top');
-      top.append(
-        G.el('span', 'gr-side ' + (r.side === 'BUY' ? 'gr-up' : 'gr-down'), r.side),
-        G.el('span', 'gr-pill gold', `Gred ${r.grade} · ${r.score}/5`),
-        G.el('span', 'gr-pill ' + (r.status === 'TRIGGER' ? 'trig' : r.status === 'IN TRADE' ? 'live' : ''),
-          r.status === 'TRIGGER' ? 'ENTRY TRIGGER' : r.status === 'IN TRADE' ? 'Entry sudah kena' : 'Tunggu retrace'));
-      if (r.new) top.append(G.el('span', 'gr-pill gold', 'Baru'));
-      top.append(r.filter_ok ? G.el('span', 'gr-reco', 'Lepas penapis') : G.el('span', 'gr-pill', 'Tak lepas penapis · risiko lebih tinggi'));
+    const W = 240, R = 110, r0 = 78;
+    const svg = d3.select(el).append('svg').attr('viewBox', `0 0 ${W} ${W}`).attr('role', 'img').attr('aria-label', `${big} ${small}`);
+    const c = W / 2, fg = G.css(el, '--gr-glass-fg'), ok = G.css(el, '--gr-glass-ok');
+    svg.append('circle').attr('cx', c).attr('cy', c).attr('r', R).style('fill', 'none').style('stroke', fg).style('stroke-opacity', 0.35).style('stroke-dasharray', '1.5 5');
+    svg.append('circle').attr('cx', c).attr('cy', c).attr('r', r0).style('fill', fg).style('fill-opacity', 0.12).style('stroke', fg).style('stroke-opacity', 0.25);
+    const a = (-90 + 360 * Math.max(0.02, Math.min(1, value / max))) * Math.PI / 180;
+    svg.append('path').attr('d', d3.arc()({ innerRadius: R - 1, outerRadius: R + 1, startAngle: 0, endAngle: (a + Math.PI / 2) }))
+      .attr('transform', `translate(${c},${c})`).style('fill', ok).style('fill-opacity', 0.7);
+    svg.append('circle').attr('cx', c + R * Math.cos(a)).attr('cy', c + R * Math.sin(a)).attr('r', 8).style('fill', ok);
+    svg.append('text').attr('x', c).attr('y', c + 8).attr('text-anchor', 'middle').text(big)
+      .style('fill', fg).style('font-size', '46px').style('font-weight', 300).style('letter-spacing', '-1px');
+    svg.append('text').attr('x', c).attr('y', c + 34).attr('text-anchor', 'middle').text(small)
+      .style('fill', fg).style('fill-opacity', 0.7).style('font-size', '13px');
+  };
+  // track from min to max, "good" range [lo, hi] in accent, knob at val, three labels under it
+  const slider = (el, o) => {
+    const G = window.GR;
+    el.replaceChildren();
+    const W = Math.max(240, el.clientWidth || 300), H = 40;
+    const x = d3.scaleLinear().domain([o.min, o.max]).range([10, W - 10]).clamp(true);
+    const fg = G.css(el, '--gr-glass-fg'), ok = G.css(el, '--gr-glass-ok');
+    const svg = d3.select(el).append('svg').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', o.aria);
+    const lo = x(Math.min(o.lo, o.hi)), hi = x(Math.max(o.lo, o.hi));
+    svg.append('line').attr('x1', 10).attr('x2', W - 10).attr('y1', 12).attr('y2', 12).style('stroke', fg).style('stroke-opacity', 0.28).style('stroke-width', 6).style('stroke-linecap', 'round');
+    svg.append('line').attr('x1', lo).attr('x2', hi).attr('y1', 12).attr('y2', 12).style('stroke', ok).style('stroke-width', 6).style('stroke-linecap', 'round');
+    svg.append('circle').attr('cx', x(o.val)).attr('cy', 12).attr('r', 9).style('fill', '#fff').style('stroke', '#2b2b3a').style('stroke-width', 4);
+    const lab = (tx, t, anchor) => svg.append('text').attr('x', tx).attr('y', 36).attr('text-anchor', anchor).text(t).style('fill', fg).style('fill-opacity', 0.65).style('font-size', '11px');
+    lab(10, o.labels[0], 'start'); lab((lo + hi) / 2, o.labels[1], 'middle'); lab(W - 10, o.labels[2], 'end');
+  };
 
-      const lv = G.el('div', 'gr-levels');
-      const item = (lab, field, txt, cls, extra) => {
-        const d = G.el('div', 'gr-lv ' + (extra || ''));
-        d.append(G.el('span', 'lab', lab));
-        d.append(G.mark(G.el('span', 'val ' + (cls || ''), txt), 'setups', field, i));
-        return d;
-      };
-      const zone = G.el('div', 'gr-lv');
-      zone.append(G.el('span', 'lab', 'Zone OB'));
-      const zv = G.el('span', 'val');
-      zv.append(G.mark(G.el('span', null, G.f2(r.zone_bottom)), 'setups', 'zone_bottom', i), ' – ',
-        G.mark(G.el('span', null, G.f2(r.zone_top)), 'setups', 'zone_top', i));
-      zone.append(zv);
-      lv.append(zone,
-        item('Entry (50% OB)', 'entry', G.f2(r.entry), '', 'entry'),
-        item('Stop loss', 'sl', G.f2(r.sl), 'gr-down'),
-        item('TP1 (2R)', 'tp1', G.f2(r.tp1), 'gr-up'),
-        item('TP2', 'tp2', G.f2(r.tp2), 'gr-up'),
-        item('Risiko / 0.01 lot', 'risk_usd_001', '$' + G.f2(r.risk_usd_001)));
-
-      const meta = G.el('div', 'gr-meta');
-      [`Sweep: ${r.sweep} MYT`, `BOS: ${r.bos} MYT`, `FVG: ${r.fvg ? 'ada ✓' : 'tiada'}`,
-       `Trend harian: ${r.htf_aligned ? 'sama arah ✓' : 'lawan arah'}`,
-       `EMA200 harian: ${r.ema200_d ? 'searah ✓' : 'lawan ✗'}`, `ADX 1H: ${r.adx == null ? '—' : d3.format('.0f')(r.adx)} ${r.adx > 20 ? '✓' : '✗'}`, `RR ke TP2: ${r.rr_tp2}`,
-       `Luput dalam ${r.expires_in_bars} candle`].forEach((t) => meta.append(G.el('span', null, t)));
-      card.append(top, lv, meta);
-      el.append(card);
-    });
+  dash.draw('h1-title', (el) => {
+    const rows = window.GR.rows('setups');
+    if (!rows) { el.textContent = '—'; return; }
+    const s = window.GR.pickSwing(rows);
+    el.textContent = s ? `${s.side} · gred ${s.grade} · ${s.filter_ok ? 'lepas penapis' : 'tak lepas penapis'}` : 'Tiada setup aktif';
+  });
+  dash.draw('h1-dial', (el) => {
+    const rows = window.GR.rows('setups');
+    if (!rows) { el.textContent = '—'; return; }
+    const s = window.GR.pickSwing(rows);
+    dial(el, s ? s.score : 0, 5, s ? `${s.score}/5` : '0/5', s ? 'skor confluence SMC' : 'tiada setup');
+  });
+  dash.draw('h1-pos', (el) => {
+    const G = window.GR, rows = G.rows('setups'), sum = G.row('summary');
+    if (!rows || !sum) { el.textContent = '—'; return; }
+    const s = G.pickSwing(rows);
+    if (!s) { el.textContent = ''; return; }
+    const buy = s.side === 'BUY';
+    slider(el, { min: buy ? s.sl : s.tp1, max: buy ? s.tp1 : s.sl, lo: s.zone_bottom, hi: s.zone_top, val: sum.price,
+      labels: buy ? ['SL', 'Zone OB', 'TP1'] : ['TP1', 'Zone OB', 'SL'], aria: `Harga ${G.f2(sum.price)} antara SL dan TP1` });
+  });
+  dash.draw('h1-pos-ok', (el) => {
+    const G = window.GR, rows = G.rows('setups'), sum = G.row('summary');
+    if (!rows || !sum) { el.textContent = '—'; return; }
+    const s = G.pickSwing(rows);
+    if (!s) { el.textContent = 'Tiada setup'; return; }
+    const inZone = sum.price >= s.zone_bottom && sum.price <= s.zone_top;
+    const prog = ((sum.price - s.entry) * (s.side === 'BUY' ? 1 : -1)) / 0.1;
+    el.textContent = s.status === 'IN TRADE' ? `Berjalan · ${G.sgn(prog, '.0f')} pip dari entry` : inZone ? 'Dalam zone' : 'Luar zone';
+    el.classList.toggle('bad', s.status === 'IN TRADE' && prog < 0);
+  });
+  dash.draw('h1-adx', (el) => {
+    const rows = window.GR.rows('setups');
+    if (!rows) { el.textContent = '—'; return; }
+    const s = window.GR.pickSwing(rows);
+    if (!s || s.adx == null) { el.textContent = ''; return; }
+    slider(el, { min: 0, max: 60, lo: 20, hi: 60, val: s.adx, labels: ['Lemah', 'Trending (> 20)', 'Kuat'], aria: `ADX ${s.adx}` });
+  });
+  dash.draw('h1-adx-v', (el) => {
+    const rows = window.GR.rows('setups'); const s = rows && window.GR.pickSwing(rows);
+    el.textContent = s && s.adx != null ? d3.format('.0f')(s.adx) : '—';
+  });
+  dash.draw('h1-adx-ok', (el) => {
+    const rows = window.GR.rows('setups'); const s = rows && window.GR.pickSwing(rows);
+    if (!s) { el.textContent = '—'; return; }
+    el.textContent = `${s.adx > 20 ? 'Trending' : 'Lemah'} · EMA200 harian ${s.ema200_d ? 'searah' : 'lawan'}`;
+    el.classList.toggle('bad', !s.filter_ok);
   });
 
-  dash.draw('analogs', (tb) => {
-    const G = window.GR;
-    const a = dash.data('analogs');
-    tb.replaceChildren();
-    if (a.status !== 'ok') return;
-    a.data.forEach((r) => {
-      const tr = G.el('tr'); tr.dataset.key = r.key;
-      const td = (txt, cls) => tr.append(G.el('td', cls, txt));
-      td(r.tf);
-      td(r.tf === '1d' ? G.day(r.end) : G.t(r.end));
-      td(d3.format('.2f')(r.corr), 'r');
-      td(G.pct(r.fwd_ret), 'r ' + (r.fwd_ret > 0 ? 'gr-up' : 'gr-down'));
-      td(G.pct(r.max_up), 'r');
-      td(G.pct(r.max_down), 'r');
-      tb.append(tr);
-    });
+  dash.draw('m15-title', (el) => {
+    const G = window.GR, rows = G.rows('s_signals');
+    if (!rows) { el.textContent = '—'; return; }
+    const s = rows.length ? G.pickScalp(rows) : null;
+    el.textContent = s ? `${s.side} · zone 1H gred ${s.grade}${s.reco ? ' · disyorkan' : ''}` : 'Tiada zone aktif';
+  });
+  dash.draw('m15-dial', (el) => {
+    const G = window.GR, rows = G.rows('s_signals');
+    if (!rows) { el.textContent = '—'; return; }
+    const s = rows.length ? G.pickScalp(rows) : null;
+    const step = !s ? 0 : s.state === 'WATCH' ? 1 : s.state === 'IN ZONE' ? 2 : 4;
+    dial(el, step, 4, `${step}/4`, s ? G.scalpWord(s).toLowerCase() : 'tiada zone');
+  });
+  dash.draw('m15-pos', (el) => {
+    const G = window.GR, rows = G.rows('s_signals'), sum = G.row('s_summary');
+    if (!rows || !sum) { el.textContent = '—'; return; }
+    const s = rows.length ? G.pickScalp(rows) : null;
+    if (!s) { el.textContent = ''; return; }
+    const a = sum.atr15 || 10;
+    if (s.entry != null) {
+      const buy = s.side === 'BUY';
+      slider(el, { min: buy ? s.sl : s.tp, max: buy ? s.tp : s.sl, lo: s.entry, hi: s.tp_half, val: sum.price,
+        labels: buy ? ['SL', 'Entry → TP1', 'TP 3R'] : ['TP 3R', 'TP1 ← Entry', 'SL'], aria: `Harga ${G.f2(sum.price)} antara SL dan TP` });
+    } else {
+      slider(el, { min: Math.min(sum.price, s.zone_bottom) - 2 * a, max: Math.max(sum.price, s.zone_top) + 2 * a, lo: s.zone_bottom, hi: s.zone_top, val: sum.price,
+        labels: ['Bawah', 'Zone 1H', 'Atas'], aria: `Harga ${G.f2(sum.price)} berbanding zone 1H` });
+    }
+  });
+  dash.draw('m15-pos-ok', (el) => {
+    const G = window.GR, rows = G.rows('s_signals'), sum = G.row('s_summary');
+    if (!rows || !sum) { el.textContent = '—'; return; }
+    const s = rows.length ? G.pickScalp(rows) : null;
+    if (!s) { el.textContent = 'Tiada zone'; return; }
+    if (s.entry != null) {
+      const prog = ((sum.price - s.entry) * (s.side === 'BUY' ? 1 : -1)) / 0.1;
+      el.textContent = `${G.scalpWord(s)} · ${G.sgn(prog, '.0f')} pip`;
+      el.classList.toggle('bad', prog < 0);
+    } else { el.textContent = `${G.scalpWord(s)} · jarak ${G.f2(Math.max(0, s.dist))} pt`; }
   });
 </script>
 
 <script>
-  // Custom cursor: gold ring that trails the pointer and grows over things you can press
+  // ---------- cards & tables ----------
+  dash.draw('setups', (el) => {
+    const G = window.GR, s = dash.data('setups');
+    document.querySelectorAll('#no-setup').forEach((p) => { p.hidden = !(s.status === 'ok' && s.data.length === 0); });
+    if (s.status !== 'ok') { el.textContent = s.status === 'error' ? 'Gagal load data setup' : '—'; return; }
+    el.replaceChildren();
+    s.data.forEach((r, i) => {
+      const card = G.el('article', 'gr-setup'); card.dataset.side = r.side; card.id = `setup-${i}`;
+      const top = G.el('div', 'gr-setup-top');
+      top.append(G.el('span', 'gr-side ' + (r.side === 'BUY' ? 'gr-up' : 'gr-down'), r.side), G.el('span', 'gr-pill', `Gred ${r.grade} · ${r.score}/5`),
+        G.el('span', 'gr-st ' + (r.status === 'TRIGGER' ? 's-berjalan' : r.status === 'IN TRADE' ? 's-berjaya' : 's-menunggu'), r.status === 'TRIGGER' ? 'ENTRY TRIGGER' : r.status === 'IN TRADE' ? 'Entry sudah kena' : 'Tunggu retrace'),
+        r.filter_ok ? G.el('span', 'gr-reco', 'Lepas penapis') : G.el('span', 'gr-pill', 'Tak lepas penapis'));
+      const lv = G.el('div', 'gr-levels');
+      const item = (lab, field, txt, cls, extra) => { const d = G.el('div', 'gr-lv ' + (extra || '')); d.append(G.el('span', 'lab', lab), G.mark(G.el('span', 'val ' + (cls || ''), txt), 'setups', field, i)); return d; };
+      const zone = G.el('div', 'gr-lv'); zone.append(G.el('span', 'lab', 'Zone OB'));
+      const zv = G.el('span', 'val'); zv.append(G.mark(G.el('span', null, G.f2(r.zone_bottom)), 'setups', 'zone_bottom', i), ' – ', G.mark(G.el('span', null, G.f2(r.zone_top)), 'setups', 'zone_top', i));
+      zone.append(zv);
+      lv.append(zone, item('Entry (50% OB)', 'entry', G.f2(r.entry), '', 'entry'), item('Stop loss', 'sl', G.f2(r.sl), 'gr-down'),
+        item('TP1 (2R)', 'tp1', G.f2(r.tp1), 'gr-up'), item('TP2', 'tp2', G.f2(r.tp2), 'gr-up'), item('Risiko / 0.01 lot', 'risk_usd_001', '$' + G.f2(r.risk_usd_001)));
+      const meta = G.el('div', 'gr-meta');
+      [`Sweep: ${r.sweep} MYT`, `BOS: ${r.bos} MYT`, `FVG: ${r.fvg ? 'ada ✓' : 'tiada'}`, `EMA200 harian: ${r.ema200_d ? 'searah ✓' : 'lawan ✗'}`,
+        `ADX: ${r.adx == null ? '—' : d3.format('.0f')(r.adx)}`, `Luput dalam ${r.expires_in_bars} candle`].forEach((t) => meta.append(G.el('span', null, t)));
+      card.append(top, lv, meta); el.append(card);
+    });
+  });
+
+  dash.draw('s-signals', (el) => {
+    const G = window.GR, s = dash.data('s_signals');
+    document.querySelectorAll('#no-signal').forEach((p) => { p.hidden = !(s.status === 'ok' && s.data.length === 0); });
+    if (s.status !== 'ok') { el.textContent = s.status === 'error' ? 'Gagal load signal' : '—'; return; }
+    el.replaceChildren();
+    [...s.data].sort((a, b) => (b.fresh - a.fresh) || (b.reco - a.reco)).forEach((r) => {
+      const i = s.data.indexOf(r);
+      const card = G.el('article', 'gr-setup'); card.dataset.side = r.side; card.id = `scalp-${i}`;
+      const top = G.el('div', 'gr-setup-top');
+      top.append(G.el('span', 'gr-side ' + (r.side === 'BUY' ? 'gr-up' : 'gr-down'), r.side), G.el('span', 'gr-pill', `Zone 1H gred ${r.grade}`),
+        G.el('span', 'gr-st ' + (r.fresh ? 's-berjalan' : r.state === 'IN TRADE' ? 's-berjaya' : 's-menunggu'), G.scalpWord(r)),
+        r.reco ? G.el('span', 'gr-reco', 'Disyorkan') : G.el('span', 'gr-pill', 'Lawan EMA200 harian'));
+      const steps = G.el('div', 'gr-steps');
+      const level = r.state === 'WATCH' ? 1 : r.state === 'IN ZONE' ? 2 : 4;
+      [['1', 'Zone 1H terbentuk'], ['2', 'Harga sentuh zone'], ['3', 'CHoCH / BOS 15m'], ['4', r.fresh ? 'ENTRY sekarang' : 'Entry']].forEach(([k, t], j) => {
+        const st = G.el('div', 'gr-step' + (j + 1 < level || (level === 4 && j < 3) ? ' done' : j + 1 === level || (level === 4 && j === 3) ? ' now' : ''));
+        st.append(G.el('b', null, `Langkah ${k}`), t); steps.append(st);
+      });
+      const lv = G.el('div', 'gr-levels');
+      const item = (lab, field, txt, cls, extra) => { const d = G.el('div', 'gr-lv ' + (extra || '')); d.append(G.el('span', 'lab', lab), G.mark(G.el('span', 'val ' + (cls || ''), txt), 's_signals', field, i)); return d; };
+      const zone = G.el('div', 'gr-lv'); zone.append(G.el('span', 'lab', 'Zone 1H'));
+      const zv = G.el('span', 'val'); zv.append(G.mark(G.el('span', null, G.f2(r.zone_bottom)), 's_signals', 'zone_bottom', i), ' – ', G.mark(G.el('span', null, G.f2(r.zone_top)), 's_signals', 'zone_top', i));
+      zone.append(zv); lv.append(zone);
+      if (r.entry != null) lv.append(item('Entry', 'entry', G.f2(r.entry), '', 'entry'), item('Stop loss', 'sl', G.f2(r.sl), 'gr-down'),
+        item('TP1 (1.5R)', 'tp_half', G.f2(r.tp_half), 'gr-up'), item('TP2 (3R)', 'tp', G.f2(r.tp), 'gr-up'), item('Risiko / 0.01 lot', 'risk', '$' + G.f2(r.risk)));
+      else lv.append(item('Jarak ke zone', 'dist', r.dist > 0 ? `${G.f2(r.dist)} pt` : 'Dalam zone'), item('Batal jika lepas', 'h1_sl', G.f2(r.h1_sl), 'gr-down'));
+      const meta = G.el('div', 'gr-meta');
+      [r.action, `EMA200 harian: ${r.ema200_d ? 'searah ✓' : 'lawan ✗'}`, `Zone sejak ${G.t(r.created)} MYT`, r.entry_time ? `CHoCH pada ${G.t(r.entry_time)} MYT` : null]
+        .filter(Boolean).forEach((t) => meta.append(G.el('span', null, t)));
+      card.append(top, steps, lv, meta); el.append(card);
+    });
+  });
+
+  const table = (name, src, build) => dash.draw(name, (tb) => {
+    const rows = window.GR.rows(src);
+    tb.replaceChildren();
+    if (!rows) return;
+    build(tb, rows);
+  });
+  const td = (tr, txt, cls) => { const c = window.GR.el('td', cls, txt); tr.append(c); return c; };
+  table('analogs', 'analogs', (tb, rows) => rows.forEach((r) => {
+    const G = window.GR, tr = G.el('tr'); tr.dataset.key = r.key;
+    td(tr, r.tf); td(tr, r.tf === '1d' ? G.day(r.end) : G.t(r.end)); td(tr, d3.format('.2f')(r.corr), 'r');
+    td(tr, G.pct(r.fwd_ret), 'r ' + (r.fwd_ret > 0 ? 'gr-up' : 'gr-down')); tb.append(tr);
+  }));
+  table('s-trades', 's_trades', (tb, rows) => rows.forEach((r) => {
+    const G = window.GR, tr = G.el('tr'); tr.dataset.key = r.key;
+    td(tr, G.t(r.time)); td(tr, r.side + (r.reco ? ' ✓' : ''), r.side === 'BUY' ? 'gr-up' : 'gr-down'); td(tr, G.f2(r.entry), 'r');
+    td(tr, d3.format('.1f')(r.risk), 'r');
+    td(tr, r.result_r == null ? '—' : G.sgn(r.result_r, '.2f'), 'r ' + (r.result_r > 0 ? 'gr-up' : r.result_r < 0 ? 'gr-down' : '')); tb.append(tr);
+  }));
+  table('research', 'research', (tb, rows) => rows.forEach((r) => {
+    const G = window.GR, tr = G.el('tr'); tr.dataset.key = r.key;
+    td(tr, r.strategy); td(tr, G.sgn(r.test_r), 'r ' + (r.test_r > 0 ? 'gr-up' : 'gr-down'));
+    td(tr, r.verdict, r.verdict.startsWith('Lulus') ? 'gr-up' : 'gr-down'); tb.append(tr);
+  }));
+  table('t-daily', 't_daily', (tb, rows) => rows.filter((r) => r.signals > 0).forEach((r) => {
+    const G = window.GR, tr = G.el('tr', r.complete ? null : 'today'); tr.dataset.key = r.key;
+    td(tr, G.dshort(r.date + 'T04:00:00Z') + (r.complete ? '' : ' · hari ini')); td(tr, r.model);
+    td(tr, String(r.signals), 'r'); td(tr, String(r.entries), 'r');
+    td(tr, String(r.success), 'r gr-up'); td(tr, String(r.fail), 'r gr-down'); td(tr, String(r.running), 'r'); td(tr, String(r.not_executed), 'r');
+    td(tr, r.success_rate == null ? '—' : d3.format('.0f')(r.success_rate) + '%', 'r'); tb.append(tr);
+  }));
+  table('t-hourly', 't_hourly', (tb, rows) => rows.forEach((r) => {
+    const G = window.GR, tr = G.el('tr'); tr.dataset.key = r.key;
+    td(tr, G.dshort(r.hour) + ' · ' + G.hm(new Date(r.hour)));
+    td(tr, r.close == null ? 'Pasaran tutup' : G.f2(r.close), 'r');
+    td(tr, r.chg_pips == null ? '—' : G.sgn(r.chg_pips, '.0f'), 'r ' + (r.chg_pips > 0 ? 'gr-up' : r.chg_pips < 0 ? 'gr-down' : ''));
+    td(tr, '').append(G.chips(r.h1_status)); td(tr, '').append(G.chips(r.m15_status)); tb.append(tr);
+  }));
+  table('t-log', 't_log', (tb, rows) => rows.forEach((r) => {
+    const G = window.GR, tr = G.el('tr'); tr.dataset.key = r.key;
+    td(tr, G.t(r.time)); td(tr, r.model); td(tr, r.side + (r.filter_ok ? ' ✓' : ''), r.side === 'BUY' ? 'gr-up' : 'gr-down');
+    td(tr, r.entry == null ? '—' : G.f2(r.entry), 'r'); td(tr, r.sl == null ? '—' : G.f2(r.sl), 'r');
+    td(tr, '').append(G.el('span', 'gr-st ' + G.statusCls(r.status), G.statusWord(r.status)));
+    td(tr, r.entry == null ? '—' : d3.format('.0f')(r.best_pips), 'r'); tb.append(tr);
+  }));
+</script>
+
+<script>
+  // ---------- custom cursor (mouse only) ----------
   dash.draw('cursor', {
     mount(el) {
       const root = el.closest('.gr');
@@ -523,23 +1064,16 @@
         const b = root.getBoundingClientRect();
         tx = e.clientX - b.left; ty = e.clientY - b.top;
         dot.style.transform = `translate(${tx}px, ${ty}px)`;
-        const t = e.target;
-        el.classList.toggle('off', !!t.closest('.gr-chartbox'));
-        el.classList.toggle('big', !!t.closest('button, [role="button"], .gr-lv, tbody tr, .gr-pill'));
+        el.classList.toggle('off', !!e.target.closest('.gr-chartbox'));
+        el.classList.toggle('big', !!e.target.closest('button, [role="button"], .gr-lv, tbody tr'));
         if (!raf) raf = requestAnimationFrame(tick);
       };
       const leave = () => el.classList.add('off');
       const down = () => el.classList.add('down');
       const up = () => el.classList.remove('down');
-      root.addEventListener('pointermove', move);
-      root.addEventListener('pointerleave', leave);
-      root.addEventListener('pointerdown', down);
-      window.addEventListener('pointerup', up);
-      return { off: () => {
-        root.removeEventListener('pointermove', move); root.removeEventListener('pointerleave', leave);
-        root.removeEventListener('pointerdown', down); window.removeEventListener('pointerup', up);
-        cancelAnimationFrame(raf);
-      } };
+      root.addEventListener('pointermove', move); root.addEventListener('pointerleave', leave);
+      root.addEventListener('pointerdown', down); window.addEventListener('pointerup', up);
+      return { off: () => { root.removeEventListener('pointermove', move); root.removeEventListener('pointerleave', leave); root.removeEventListener('pointerdown', down); window.removeEventListener('pointerup', up); cancelAnimationFrame(raf); } };
     },
     update() {},
     unmount(el, made) { made.off(); },
@@ -547,21 +1081,19 @@
 </script>
 
 <script>
-  // Candlestick chart with SMC overlays, zoom at the pointer, drag to pan and a gold crosshair cursor
-  dash.draw('chart', {
+  // ---------- candlestick chart factory: zoom at pointer, drag to pan, crosshair ----------
+  window.GR.chart = (name, chartId, ids, opt) => dash.draw(name, {
     mount(el) {
       const G = window.GR;
       const svg = d3.select(el).append('svg').attr('role', 'img');
-      svg.append('defs').append('clipPath').attr('id', 'grclip').append('rect');
-      const plot = svg.append('g');
-      const cur = svg.append('g').style('pointer-events', 'none').style('display', 'none');
+      const clip = 'grclip-' + chartId;
+      svg.append('defs').append('clipPath').attr('id', clip).append('rect');
+      const plot = svg.append('g'), cur = svg.append('g').style('pointer-events', 'none').style('display', 'none');
       const tip = G.el('div', 'gr-tip'); tip.hidden = true; el.append(tip);
-      const st = { svg, plot, cur, tip, t: d3.zoomIdentity, init: false };
-      st.zoom = d3.zoom().scaleExtent([1, 12])
-        .filter((ev) => (ev.type === 'wheel' || !ev.button) && ev.type !== 'dblclick')
+      const st = { svg, plot, cur, tip, clip, t: d3.zoomIdentity, init: false };
+      st.zoom = d3.zoom().scaleExtent([1, 12]).filter((ev) => (ev.type === 'wheel' || !ev.button) && ev.type !== 'dblclick')
         .on('zoom', (ev) => { st.t = ev.transform; if (st.render) st.render(); if (st.lastEv) st.hover(st.lastEv); });
-      svg.call(st.zoom).on('dblclick.zoom', null)
-        .on('dblclick', () => svg.transition().duration(350).call(st.zoom.transform, st.home || d3.zoomIdentity));
+      svg.call(st.zoom).on('dblclick.zoom', null).on('dblclick', () => svg.transition().duration(350).call(st.zoom.transform, st.home || d3.zoomIdentity));
       svg.on('pointermove', (ev) => { st.lastEv = ev; if (st.hover) st.hover(ev); })
         .on('pointerleave', () => { st.lastEv = null; cur.style('display', 'none'); tip.hidden = true; plot.selectAll('.gr-ax text').style('opacity', null); });
       st.btn = (e) => {
@@ -569,217 +1101,159 @@
         if (k === 'reset') svg.transition().duration(350).call(st.zoom.transform, st.home || d3.zoomIdentity);
         else svg.transition().duration(250).call(st.zoom.scaleBy, k === 'in' ? 1.6 : 1 / 1.6, [st.right || 0, 0]);
       };
-      document.querySelectorAll('[data-zoom]').forEach((b) => b.addEventListener('click', st.btn));
+      document.querySelectorAll(`[data-zoom][data-chart="${chartId}"]`).forEach((b) => b.addEventListener('click', st.btn));
       return st;
     },
-    unmount(el, st) { document.querySelectorAll('[data-zoom]').forEach((b) => b.removeEventListener('click', st.btn)); },
+    unmount(el, st) { document.querySelectorAll(`[data-zoom][data-chart="${chartId}"]`).forEach((b) => b.removeEventListener('click', st.btn)); },
     update(el, st) {
       const G = window.GR;
-      const c = dash.data('candles'), L = dash.data('levels'), S = dash.data('setups');
+      const c = dash.data(ids[0]), L = dash.data(ids[1]), S = dash.data(ids[2]);
+      const C = { up: G.css(el, '--gr-up'), dn: G.css(el, '--gr-dn'), acc: G.css(el, '--gr-accent'), em: G.css(el, '--gr-em'), fg: G.css(el, '--gr-fg'),
+        muted: G.css(el, '--gr-muted'), bg: G.css(el, '--gr-card-solid'), tip: G.css(el, '--gr-tip'), tipfg: G.css(el, '--gr-tip-fg') };
       if (c.status !== 'ok' || !c.data.length) {
-        st.render = null;
-        st.plot.selectAll('*').remove();
-        st.svg.attr('viewBox', '0 0 300 60');
-        st.plot.append('text').attr('x', 12).attr('y', 30).style('fill', G.lilac).text(c.status === 'error' ? 'Gagal load chart' : '—');
+        st.render = null; st.plot.selectAll('*').remove(); st.svg.attr('viewBox', '0 0 300 60');
+        st.plot.append('text').attr('x', 12).attr('y', 30).style('fill', C.muted).text(c.status === 'error' ? 'Gagal load chart' : '—');
         return;
       }
       const rows = c.data.map((d) => ({ t: d.time, o: +d.open, h: +d.high, l: +d.low, c: +d.close }));
-      const levels = L.status === 'ok' ? L.data : [];
-      const setups = S.status === 'ok' ? S.data : [];
-      const n = rows.length;
-      const W = Math.max(300, el.clientWidth);
-      const H = W < 520 ? 340 : 460;
-      const m = { t: 14, r: 70, b: 28, l: 10 };
-      const iw = W - m.l - m.r, ih = H - m.t - m.b;
+      const levels = L.status === 'ok' ? L.data : [], setups = S.status === 'ok' ? S.data : [];
+      const n = rows.length, W = Math.max(300, el.clientWidth), H = W < 520 ? 340 : 440;
+      const m = { t: 14, r: 70, b: 28, l: 10 }, iw = W - m.l - m.r, ih = H - m.t - m.b;
       const times = rows.map((d) => +new Date(d.t));
       const idxOf = (iso) => Math.min(n - 1, Math.max(0, d3.bisectLeft(times, +new Date(iso))));
-      st.svg.attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%')
-        .attr('aria-label', `Chart candlestick emas 1H, ${n} candle, dengan zone order block, FVG dan setup aktif. Boleh zoom dan geser.`);
-      st.svg.select('#grclip rect').attr('x', m.l).attr('y', m.t).attr('width', iw).attr('height', ih);
+      st.svg.attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%').attr('aria-label', `Chart candlestick emas ${opt.tf}, ${n} candle, dengan zone dan setup. Boleh zoom dan geser.`);
+      st.svg.select(`#${st.clip} rect`).attr('x', m.l).attr('y', m.t).attr('width', iw).attr('height', ih);
       const x0 = d3.scaleLinear().domain([-0.5, n - 0.5]).range([m.l, m.l + iw]);
       st.zoom.extent([[m.l, m.t], [m.l + iw, m.t + ih]]).translateExtent([[m.l, -Infinity], [m.l + iw, Infinity]]);
       st.right = m.l + iw;
 
       st.render = () => {
-        const xz = st.t.rescaleX(x0);
-        const [a, b] = xz.domain();
+        const xz = st.t.rescaleX(x0), [a, b] = xz.domain();
         const i0 = Math.max(0, Math.floor(a)), i1 = Math.min(n - 1, Math.ceil(b));
         const vis = rows.slice(i0, i1 + 1);
         let ymin = d3.min(vis, (d) => d.l), ymax = d3.max(vis, (d) => d.h);
-        setups.forEach((s) => { ymin = Math.min(ymin, s.zone_bottom, s.entry); ymax = Math.max(ymax, s.zone_top, s.entry); });
+        setups.forEach((s) => { ymin = Math.min(ymin, s.zone_bottom, s.entry ?? s.zone_bottom); ymax = Math.max(ymax, s.zone_top, s.entry ?? s.zone_top); });
         const pad = (ymax - ymin) * 0.07;
         const y = d3.scaleLinear().domain([ymin - pad, ymax + pad]).range([m.t + ih, m.t]);
         const step = xz(1) - xz(0), bw = Math.max(1, step * 0.66);
         st.geo = { xz, y, m, iw, ih, rows, W };
         const P = st.plot; P.selectAll('*').remove();
-
-        // grid + price axis
         P.append('g').attr('class', 'gr-ax').attr('transform', `translate(${m.l + iw},0)`)
           .call(d3.axisRight(y).ticks(Math.max(3, ih / 55)).tickSize(-iw).tickPadding(8).tickFormat(d3.format(',.0f')));
-        // time axis: day labels, or hour labels when zoomed in
         const ax = P.append('g').attr('class', 'gr-ax').attr('transform', `translate(0,${m.t + ih})`);
-        const hourly = step > 14;
-        const ticks = []; let lastKey = '';
+        const hourly = step > 14, ticks = []; let lastKey = '';
         for (let i = i0; i <= i1; i++) {
           const key = hourly ? G.t(rows[i].t) : G.day(rows[i].t);
-          if (key !== lastKey && xz(i) >= m.l + 34 && xz(i) <= m.l + iw - 34
-              && (!ticks.length || xz(i) - xz(ticks[ticks.length - 1]) >= (hourly ? 90 : 56))) ticks.push(i);
+          if (key !== lastKey && xz(i) >= m.l + 34 && xz(i) <= m.l + iw - 34 && (!ticks.length || xz(i) - xz(ticks[ticks.length - 1]) >= (hourly ? 90 : 56))) ticks.push(i);
           lastKey = key;
         }
         ticks.forEach((i) => {
           const g = ax.append('g').attr('transform', `translate(${xz(i)},0)`);
-          g.append('line').attr('y2', 4).style('stroke', 'rgba(185,168,232,.35)');
+          g.append('line').attr('y2', 4).style('stroke', C.muted).style('stroke-opacity', 0.4);
           g.append('text').attr('y', 17).attr('text-anchor', 'middle').text(hourly ? G.t(rows[i].t) : G.day(rows[i].t).slice(0, 6));
         });
-
-        const body = P.append('g').attr('clip-path', 'url(#grclip)');
-        const labels = P.append('g');
-        const placed = [];
-        // a label stays only if it fits inside the plot and meets no other label (measured, not guessed)
+        const body = P.append('g').attr('clip-path', `url(#${st.clip})`), labels = P.append('g'), placed = [];
         const label = (tx, ty, txt, col, size = 10, anchor = 'start') => {
-          const t = labels.append('text').attr('x', tx).attr('y', ty).attr('text-anchor', anchor).text(txt)
-            .style('fill', col).style('font-size', size + 'px').style('font-weight', 600)
-            .style('paint-order', 'stroke').style('stroke', G.ink).style('stroke-width', 3);
-          const bb = t.node().getBBox();
-          const r = { x: bb.x - 3, y: bb.y - 2, w: bb.width + 6, h: bb.height + 4 };
+          const t = labels.append('text').attr('x', tx).attr('y', ty).attr('text-anchor', anchor).text(txt).style('fill', col).style('font-size', size + 'px').style('font-weight', 600)
+            .style('paint-order', 'stroke').style('stroke', C.bg).style('stroke-width', 3);
+          const bb = t.node().getBBox(), r = { x: bb.x - 3, y: bb.y - 2, w: bb.width + 6, h: bb.height + 4 };
           const out = r.x < m.l || r.x + r.w > m.l + iw || r.y < m.t || r.y + r.h > m.t + ih;
-          const hit = placed.some((q) => r.x < q.x + q.w && r.x + r.w > q.x && r.y < q.y + q.h && r.y + r.h > q.y);
-          if (out || hit) { t.remove(); return false; }
+          if (out || placed.some((q) => r.x < q.x + q.w && r.x + r.w > q.x && r.y < q.y + q.h && r.y + r.h > q.y)) { t.remove(); return false; }
           placed.push(r); return true;
         };
-
-        // zones
-        levels.filter((z) => z.kind === 'OB' || z.kind === 'FVG').forEach((z) => {
-          const col = z.side === 'bull' ? G.up : G.dn, zx = xz(idxOf(z.time) - 0.5);
-          body.append('rect').attr('x', zx).attr('width', Math.max(0, m.l + iw - zx))
-            .attr('y', y(z.top)).attr('height', Math.max(1, y(z.bottom) - y(z.top)))
-            .style('fill', col).style('fill-opacity', z.kind === 'OB' ? 0.16 : 0.05)
-            .style('stroke', col).style('stroke-opacity', z.kind === 'OB' ? 0.55 : 0.4)
+        const zones = levels.filter((z) => z.kind === 'OB' || z.kind === 'FVG');
+        zones.forEach((z) => {
+          const col = z.side === 'bull' ? C.up : C.dn, zx = xz(idxOf(z.time) - 0.5);
+          body.append('rect').attr('x', zx).attr('width', Math.max(0, m.l + iw - zx)).attr('y', y(z.top)).attr('height', Math.max(1, y(z.bottom) - y(z.top)))
+            .style('fill', col).style('fill-opacity', z.kind === 'OB' ? 0.14 : 0.05).style('stroke', col).style('stroke-opacity', z.kind === 'OB' ? 0.5 : 0.35)
             .style('stroke-dasharray', z.kind === 'FVG' ? '3 3' : null);
         });
-        // candles
         const cg = body.append('g');
         for (let i = i0; i <= i1; i++) {
-          const d = rows[i], col = d.c >= d.o ? G.up : G.dn, cx = xz(i);
+          const d = rows[i], col = d.c >= d.o ? C.up : C.dn, cx = xz(i);
           cg.append('line').attr('x1', cx).attr('x2', cx).attr('y1', y(d.h)).attr('y2', y(d.l)).style('stroke', col);
-          cg.append('rect').attr('x', cx - bw / 2).attr('width', bw)
-            .attr('y', y(Math.max(d.o, d.c))).attr('height', Math.max(1, Math.abs(y(d.o) - y(d.c)))).style('fill', col);
+          cg.append('rect').attr('x', cx - bw / 2).attr('width', bw).attr('y', y(Math.max(d.o, d.c))).attr('height', Math.max(1, Math.abs(y(d.o) - y(d.c)))).style('fill', col);
         }
-        // setup zone, lines and labels first, so other labels give way to them
         const [d0, d1] = y.domain();
         setups.forEach((s) => {
-          if (s.zone_top >= d0 && s.zone_bottom <= d1)
-            body.append('rect').attr('x', m.l).attr('width', iw).attr('y', y(s.zone_top))
-              .attr('height', Math.max(1, y(s.zone_bottom) - y(s.zone_top))).style('fill', G.gold).style('fill-opacity', 0.07);
-          [['Entry', s.entry, G.gold2], ['SL', s.sl, G.dn], ['TP1', s.tp1, G.up], ['TP2', s.tp2, G.up]].forEach(([lab, v, col], k) => {
+          if (s.zone_top >= d0 && s.zone_bottom <= d1) {
+            body.append('rect').attr('x', m.l).attr('width', iw).attr('y', y(s.zone_top)).attr('height', Math.max(1, y(s.zone_bottom) - y(s.zone_top)))
+              .style('fill', C.acc).style('fill-opacity', 0.14).style('stroke', C.acc).style('stroke-opacity', 0.6);
+            if (opt.zoneLabel) label(m.l + 6, y(s.zone_top) + 13, opt.zoneLabel(s), C.fg, 11);
+          }
+          opt.lines(s, C).filter((x) => x[1] != null).forEach(([lab, v, col], k) => {
             const inside = v >= d0 && v <= d1;
-            if (inside) body.append('line').attr('x1', m.l).attr('x2', m.l + iw).attr('y1', y(v)).attr('y2', y(v))
-              .style('stroke', col).style('stroke-dasharray', '6 4').style('stroke-width', lab === 'Entry' ? 1.6 : 1.1);
+            if (inside) body.append('line').attr('x1', m.l).attr('x2', m.l + iw).attr('y1', y(v)).attr('y2', y(v)).style('stroke', col).style('stroke-dasharray', '6 4').style('stroke-width', lab === 'Entry' ? 1.6 : 1.1);
             const yy = inside ? y(v) - 5 : v > d1 ? m.t + 16 + k * 15 : m.t + ih - 6 - (3 - k) * 15;
             label(m.l + iw - 6, yy, `${lab} ${G.f2(v)}${inside ? '' : v > d1 ? ' ↑' : ' ↓'}`, col, 11, 'end');
           });
         });
-        levels.filter((z) => z.kind === 'OB' || z.kind === 'FVG').forEach((z) => {
-          label(Math.max(m.l + 4, xz(idxOf(z.time) - 0.5) + 4), y(z.top) + 12, z.kind, z.side === 'bull' ? G.up : G.dn);
-        });
-        // structure events
+        zones.forEach((z) => label(Math.max(m.l + 4, xz(idxOf(z.time) - 0.5) + 4), y(z.top) + 12, z.kind, z.side === 'bull' ? C.up : C.dn));
         levels.filter((e) => e.price != null).forEach((e) => {
           const i = idxOf(e.time);
           if (i < i0 - 8 || i > i1) return;
-          const col = e.side === 'bull' ? G.up : G.dn;
+          const col = e.side === 'bull' ? C.up : C.dn;
           if (e.kind === 'SWEEP') {
             const d = rows[i], bull = e.side === 'bull';
             body.append('path').attr('d', d3.symbol(d3.symbolTriangle, Math.max(20, Math.min(60, step * 4)))())
-              .attr('transform', `translate(${xz(i)},${bull ? y(d.l) + 10 : y(d.h) - 10}) rotate(${bull ? 0 : 180})`)
-              .style('fill', G.gold);
+              .attr('transform', `translate(${xz(i)},${bull ? y(d.l) + 10 : y(d.h) - 10}) rotate(${bull ? 0 : 180})`).style('fill', C.acc).style('stroke', C.fg).style('stroke-opacity', 0.3);
           } else {
             const xa = xz(Math.max(0, i - 8));
-            body.append('line').attr('x1', xa).attr('x2', xz(i)).attr('y1', y(e.price)).attr('y2', y(e.price))
-              .style('stroke', col).style('stroke-dasharray', '2 2');
+            body.append('line').attr('x1', xa).attr('x2', xz(i)).attr('y1', y(e.price)).attr('y2', y(e.price)).style('stroke', col).style('stroke-dasharray', '2 2');
             label(Math.max(m.l + 4, xa), y(e.price) + (e.side === 'bull' ? -4 : 12), e.kind, col);
           }
         });
-        // last price tag (axis numbers under it are dropped)
-        const last = rows[n - 1];
-        const py = Math.max(m.t + 10, Math.min(m.t + ih - 10, y(last.c)));
+        const last = rows[n - 1], py = Math.max(m.t + 10, Math.min(m.t + ih - 10, y(last.c)));
         P.selectAll('.gr-ax .tick').filter((v) => typeof v === 'number' && v > 1000 && Math.abs(y(v) - py) < 16).select('text').remove();
-        P.append('rect').attr('x', m.l + iw + 3).attr('y', py - 10).attr('width', m.r - 6).attr('height', 20).attr('rx', 10).style('fill', G.gold);
-        P.append('text').attr('x', m.l + iw + 3 + (m.r - 6) / 2).attr('y', py + 4).attr('text-anchor', 'middle')
-          .text(d3.format(',.1f')(last.c)).style('fill', '#1a1000').style('font-size', '11px').style('font-weight', 700);
+        P.append('rect').attr('x', m.l + iw + 3).attr('y', py - 10).attr('width', m.r - 6).attr('height', 20).attr('rx', 10).style('fill', C.acc);
+        P.append('text').attr('x', m.l + iw + 3 + (m.r - 6) / 2).attr('y', py + 4).attr('text-anchor', 'middle').text(d3.format(',.1f')(last.c))
+          .style('fill', G.css(el, '--gr-accent-ink')).style('font-size', '11px').style('font-weight', 700);
       };
 
-      // gold crosshair cursor with price and time read-outs
       st.hover = (ev) => {
         const g = st.geo; if (!g) return;
         const [px, py] = d3.pointer(ev, st.svg.node());
         if (px < g.m.l || px > g.m.l + g.iw || py < g.m.t || py > g.m.t + g.ih) {
           st.cur.style('display', 'none'); st.tip.hidden = true; st.plot.selectAll('.gr-ax text').style('opacity', null); return;
         }
-        const i = Math.max(0, Math.min(g.rows.length - 1, Math.round(g.xz.invert(px))));
-        const d = g.rows[i], cx = g.xz(i);
-        const C = st.cur.style('display', null); C.selectAll('*').remove();
-        C.append('line').attr('x1', cx).attr('x2', cx).attr('y1', g.m.t).attr('y2', g.m.t + g.ih).style('stroke', G.gold).style('stroke-opacity', 0.55).style('stroke-dasharray', '3 3');
-        C.append('line').attr('x1', g.m.l).attr('x2', g.m.l + g.iw).attr('y1', py).attr('y2', py).style('stroke', G.gold).style('stroke-opacity', 0.55).style('stroke-dasharray', '3 3');
-        C.append('circle').attr('cx', px).attr('cy', py).attr('r', 9).style('fill', 'none').style('stroke', G.gold).style('stroke-width', 1.5);
-        C.append('circle').attr('cx', px).attr('cy', py).attr('r', 2).style('fill', G.gold2);
-        C.append('rect').attr('x', g.m.l + g.iw + 3).attr('y', py - 10).attr('width', g.m.r - 6).attr('height', 20).attr('rx', 4).style('fill', '#2a1b4a').style('stroke', G.gold);
-        C.append('text').attr('x', g.m.l + g.iw + 3 + (g.m.r - 6) / 2).attr('y', py + 4).attr('text-anchor', 'middle')
-          .text(d3.format(',.1f')(g.y.invert(py))).style('fill', G.gold2).style('font-size', '11px').style('font-weight', 600);
-        const tl = G.t(d.t), tw = tl.length * 6.4 + 14;
-        const tx = Math.max(g.m.l, Math.min(g.m.l + g.iw - tw, cx - tw / 2));
-        // hide axis labels the read-outs would cover
+        const i = Math.max(0, Math.min(g.rows.length - 1, Math.round(g.xz.invert(px)))), d = g.rows[i], cx = g.xz(i);
+        const K = st.cur.style('display', null); K.selectAll('*').remove();
+        const line = (x1, x2, y1, y2) => K.append('line').attr('x1', x1).attr('x2', x2).attr('y1', y1).attr('y2', y2).style('stroke', C.fg).style('stroke-opacity', 0.45).style('stroke-dasharray', '3 3');
+        line(cx, cx, g.m.t, g.m.t + g.ih); line(g.m.l, g.m.l + g.iw, py, py);
+        K.append('circle').attr('cx', px).attr('cy', py).attr('r', 9).style('fill', 'none').style('stroke', C.fg).style('stroke-width', 1.5);
+        K.append('circle').attr('cx', px).attr('cy', py).attr('r', 2).style('fill', C.fg);
+        const tl = G.t(d.t), tw = tl.length * 6.4 + 14, tx = Math.max(g.m.l, Math.min(g.m.l + g.iw - tw, cx - tw / 2));
         st.plot.selectAll('.gr-ax .tick text, .gr-ax g > text').style('opacity', function () {
           const b = this.getBBox(), ctm = this.getCTM(), bx = b.x + ctm.e, by = b.y + ctm.f;
-          const underTime = by > g.m.t + g.ih && bx < tx + tw + 4 && bx + b.width > tx - 4;
-          const underPrice = bx > g.m.l + g.iw && Math.abs(by + b.height / 2 - py) < 16;
-          return underTime || underPrice ? 0 : null;
+          return (by > g.m.t + g.ih && bx < tx + tw + 4 && bx + b.width > tx - 4) || (bx > g.m.l + g.iw && Math.abs(by + b.height / 2 - py) < 16) ? 0 : null;
         });
-        C.append('rect').attr('x', tx).attr('y', g.m.t + g.ih + 4).attr('width', tw).attr('height', 19).attr('rx', 4).style('fill', '#2a1b4a').style('stroke', G.gold);
-        C.append('text').attr('x', tx + tw / 2).attr('y', g.m.t + g.ih + 17).attr('text-anchor', 'middle').text(tl).style('fill', G.gold2).style('font-size', '11px');
+        K.append('rect').attr('x', g.m.l + g.iw + 3).attr('y', py - 10).attr('width', g.m.r - 6).attr('height', 20).attr('rx', 4).style('fill', C.tip);
+        K.append('text').attr('x', g.m.l + g.iw + 3 + (g.m.r - 6) / 2).attr('y', py + 4).attr('text-anchor', 'middle').text(d3.format(',.1f')(g.y.invert(py))).style('fill', C.tipfg).style('font-size', '11px');
+        K.append('rect').attr('x', tx).attr('y', g.m.t + g.ih + 4).attr('width', tw).attr('height', 19).attr('rx', 4).style('fill', C.tip);
+        K.append('text').attr('x', tx + tw / 2).attr('y', g.m.t + g.ih + 17).attr('text-anchor', 'middle').text(tl).style('fill', C.tipfg).style('font-size', '11px');
         const tip = st.tip; tip.replaceChildren();
         const chg = (d.c / d.o - 1) * 100;
-        tip.append(G.el('div', 't', tl + ' MYT'), G.el('div', null, `O ${G.f2(d.o)}   H ${G.f2(d.h)}`),
-          G.el('div', null, `L ${G.f2(d.l)}   C ${G.f2(d.c)}`), G.el('div', chg >= 0 ? 'gr-up' : 'gr-down', G.pct(chg)));
+        tip.append(G.el('div', null, tl + ' MYT'), G.el('div', null, `O ${G.f2(d.o)}   H ${G.f2(d.h)}`), G.el('div', null, `L ${G.f2(d.l)}   C ${G.f2(d.c)}`), G.el('div', null, G.pct(chg)));
         tip.hidden = false;
-        const bw = el.clientWidth, s = bw / g.W;
-        const left = px * s + 18 + 170 > bw ? px * s - 18 - 160 : px * s + 18;
-        tip.style.left = Math.max(4, left) + 'px';
-        tip.style.top = Math.max(4, Math.min(el.clientHeight - 100, py * s - 40)) + 'px';
+        const bw2 = el.clientWidth, s = bw2 / g.W, left = px * s + 18 + 170 > bw2 ? px * s - 18 - 160 : px * s + 18;
+        tip.style.left = Math.max(4, left) + 'px'; tip.style.top = Math.max(4, Math.min(el.clientHeight - 100, py * s - 40)) + 'px';
       };
 
       if (!st.init) {
-        // open zoomed on the latest ~60 candles; Reset and double-click come back here
         st.init = true;
-        const k = Math.max(1, n / 60), right = m.l + iw;
+        const k = Math.max(1, n / opt.show), right = m.l + iw;
         st.home = d3.zoomIdentity.translate(right - right * k, 0).scale(k);
         st.svg.call(st.zoom.transform, st.home);
       } else st.render();
     },
   });
-</script>
 
-<script>
-  // "last refresh / next refresh" chip shown beside every section title
-  dash.draw('fresh', {
-    mount() { const st = {}; st.timer = setInterval(() => st.tick && st.tick(), 1000); return st; },
-    update(el, st) {
-      const G = window.GR;
-      const r = G.row('summary');
-      if (!r || !r.generated) { el.textContent = '—'; st.tick = null; return; }
-      const gen = new Date(r.generated);
-      const day = (d) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kuala_Lumpur', day: '2-digit', month: 'short' }).format(d);
-      const when = (d) => (day(d) === day(new Date()) ? G.hm(d) : G.t(d.toISOString()));
-      const dot = G.el('span', 'gr-fresh-dot'), last = G.el('span', null, `Dikemaskini ${when(gen)}`), nxt = G.el('span');
-      el.replaceChildren(dot, last, nxt);
-      const due = G.nextRun(gen);
-      st.tick = () => {
-        const now = new Date(), next = G.nextRun(now);
-        const late = now - due > 8 * 60000;
-        el.classList.toggle('late', late);
-        nxt.textContent = (late ? ' · Lambat, cuba ' : ' · Seterusnya ') + `${when(next)} (${G.cd(next - now)})`;
-      };
-      st.tick();
-    },
-    unmount(el, st) { clearInterval(st.timer); },
+  window.GR.chart('chart-h1', 'h1', ['candles', 'levels', 'setups'], {
+    tf: '1H', show: 60,
+    lines: (s, C) => [['Entry', s.entry, C.em], ['SL', s.sl, C.dn], ['TP1', s.tp1, C.up], ['TP2', s.tp2, C.up]],
+  });
+  window.GR.chart('chart-m15', 'm15', ['s_candles', 's_levels', 's_signals'], {
+    tf: '15m', show: 64, zoneLabel: (s) => `Zone 1H ${s.side}`,
+    lines: (s, C) => [['Entry', s.entry, C.em], ['SL', s.sl, C.dn], ['TP 1.5R', s.tp_half, C.up], ['TP 3R', s.tp, C.up]],
   });
 </script>
