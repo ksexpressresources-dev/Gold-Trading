@@ -590,13 +590,14 @@
       },
       trendWord: (t) => ({ bull: 'BULLISH', bear: 'BEARISH' })[t] || 'NONE',
       biasCls: (b) => ({ BULLISH: 'gr-up', BEARISH: 'gr-down' })[b] || 'gr-flat',
-      // the hourly scan fires at minute 3 of each UTC hour, Monday-Friday (UTC), and takes a few minutes
+      // scans: hourly at minute 3 (claude.ai) or every GR_EVERY_MIN minutes (website); Monday-Friday UTC
       nextRun: (from) => {
-        const t = new Date(from); t.setUTCSeconds(0, 0);
-        if (t.getUTCMinutes() >= 3) t.setUTCHours(t.getUTCHours() + 1);
-        t.setUTCMinutes(3);
-        while (t.getUTCDay() === 0 || t.getUTCDay() === 6) { t.setUTCDate(t.getUTCDate() + 1); t.setUTCHours(0, 3, 0, 0); }
-        return new Date(+t + 3 * 60000);
+        const every = window.GR_EVERY_MIN || 60, off = every === 60 ? 3 : 0, lag = every === 60 ? 3 : 6;
+        const t = new Date(+new Date(from) - lag * 60000); t.setUTCSeconds(0, 0);
+        const m = t.getUTCHours() * 60 + t.getUTCMinutes();
+        t.setUTCHours(0, Math.floor((m - off) / every) * every + off + every, 0, 0);
+        while (t.getUTCDay() === 0 || t.getUTCDay() === 6) { t.setUTCDate(t.getUTCDate() + 1); t.setUTCHours(0, off, 0, 0); }
+        return new Date(+t + lag * 60000);
       },
       cd: (ms) => {
         const s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
@@ -763,7 +764,7 @@
       const due = G.nextRun(gen);
       st.tick = () => {
         const now = new Date(), next = G.nextRun(now);
-        const late = now - due > 8 * 60000;
+        const late = now - due > (window.GR_EVERY_MIN ? 20 : 8) * 60000;
         el.classList.toggle('late', late);
         nxt.textContent = (late ? ' · Late, retry ' : ' · Next ') + `${when(next)} (${G.cd(next - now)})`;
       };

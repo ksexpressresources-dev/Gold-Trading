@@ -1,0 +1,56 @@
+name: Gold Radar website
+
+# Scans gold every 15 minutes while the market is open and publishes the dashboard
+# to GitHub Pages: https://ksexpressresources-dev.github.io/Gold-Trading/
+on:
+  schedule:
+    - cron: "*/15 * * * 1-5"     # Monday-Friday (UTC)
+    - cron: "*/15 22-23 * * 0"   # Sunday evening UTC = market open (Monday morning MYT)
+  push:
+    branches: [claude/funny-ritchie-qt1dqv]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: gold-radar
+  cancel-in-progress: false
+
+jobs:
+  scan-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pandas numpy requests
+
+      - name: Run scanners and tracking
+        env:
+          # optional: spot XAU/USD from Twelve Data; without it the scanner falls back to GC=F futures
+          TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
+        run: |
+          python radar.py || [ $? -eq 2 ]
+
+      - name: Build site
+        run: python tools/build_site.py --out _site
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

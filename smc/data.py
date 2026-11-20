@@ -7,6 +7,7 @@ futures (GC=F), which trade a few dollars above spot; `source()` says which was 
 """
 from __future__ import annotations
 
+import os
 import pickle
 import time
 from pathlib import Path
@@ -49,7 +50,8 @@ def _fetch_td(interval: str) -> pd.DataFrame:
         return pickle.loads(cache.read_bytes())
     start = pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=TD_DAYS[interval])
     frames, end = [], None
-    headers = {"Authorization": "apikey proxy-injected"}  # the proxy swaps in the real key
+    # GitHub Actions passes the key as a secret env var; in a Claude session the proxy injects it
+    headers = {"Authorization": "apikey " + os.environ.get("TWELVEDATA_API_KEY", "proxy-injected")}
     for _ in range(8):
         params = {"symbol": SPOT, "interval": TD_INTERVAL[interval], "outputsize": 5000,
                   "timezone": "UTC", "order": "ASC"}
