@@ -42,6 +42,8 @@ def source() -> str:
         return "GC=F gold futures (Yahoo, fallback)"
     if vals == {"BTC-USD"}:
         return "BTC-USD (Yahoo Finance)"
+    if vals == {"CL=F"}:
+        return "CL=F WTI crude futures (Yahoo Finance)"
     return "mixed: " + ", ".join(f"{k}={v}" for k, v in sorted(_used.items()))
 
 

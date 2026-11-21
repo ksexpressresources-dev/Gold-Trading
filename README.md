@@ -85,7 +85,20 @@ The same two models run on Bitcoin (`python radar.py --asset BTC`, settings in `
 Success target on BTC = a **$150** move (about the same 0.27% as gold's 100 pips). Cost per scalp trade: $25.
 $ risk per 0.01 lot = stop distance × 0.01. Bitcoin trades 24/7, so the workflow now runs every 15 minutes every day.
 
-## One link for both markets
-**https://ksexpressresources-dev.github.io/Gold-Trading/** opens the combined page: a glass **Gold | Bitcoin** tab bar on top,
-with both dashboards kept loaded underneath so switching is instant. The last choice is remembered;
-`#gold` / `#btc` in the link opens a specific market. `gold.html` and `btc.html` still work on their own.
+## One link for all markets
+**https://ksexpressresources-dev.github.io/Gold-Trading/** opens the combined page: a liquid-glass **Gold | Bitcoin | WTI** tab bar
+(a water droplet slides to the chosen market and ripples on tap), with every dashboard kept loaded underneath so switching
+is instant. The last choice is remembered; `#gold`, `#btc` or `#wti` in the link opens a specific market.
+`gold.html`, `btc.html` and `wti.html` still work on their own.
+
+## WTI crude oil
+Same models on WTI (`python radar.py --asset WTI`, Yahoo `CL=F` futures), on the **WTI** tab with an ocean palette.
+
+| WTI check | Trades | Total R | Decision |
+|---|---|---|---|
+| H1 swing, all setups (2 years) | 214 | -33.5R | **Fails**: shown with a warning, information only |
+| H1 swing + ADX > 20 | 133 | +7.5R (year 1 -5R) | Not consistent, not used |
+| M15 scalp, recommended (daily EMA200) | 9 | +4.9R | Used (very small sample) |
+| M15 scalp, against daily EMA200 | 5 | -1.7R | Avoid |
+
+Success target = **25 pips ($0.25)**, 1 pip = $0.01. $ risk per 0.01 lot (10 barrels) = stop distance × 10. Cost per scalp trade: $0.04.

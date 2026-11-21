@@ -101,6 +101,81 @@ BTC_CSS = """
   }
 """
 
+# WTI: ocean palette (petrol, aqua, deep blue) and liquid-glass "water drop" tabs
+WTI_CSS = """
+  .gr.wti {
+    --gr-bg: #03121a;
+    --gr-bg-img: radial-gradient(900px 480px at 85% -12%, rgba(0,194,209,.30) 0%, transparent 62%), radial-gradient(800px 420px at -8% 108%, rgba(43,89,255,.26) 0%, transparent 58%);
+    --gr-card: rgba(255,255,255,.04); --gr-card-solid: #0a1d26; --gr-line: #173441;
+    --gr-fg: #f2fbfd; --gr-muted: #8fb3bf; --gr-em: #7ff3e8;
+    --gr-accent: #23d5c4; --gr-accent-ink: #00201c;
+    --gr-lav: linear-gradient(150deg, #6af0e6 0%, #1fb3d1 55%, #2b6bff 100%); --gr-lav-fg: #00171d; --gr-lav-muted: rgba(0,23,29,.7);
+    --gr-lav-bar: rgba(0,23,29,.28); --gr-lav-bar-hi: #00171d;
+    --gr-glass: linear-gradient(180deg, #0f3a48 0%, #0a2230 52%, #050e14 100%); --gr-glass-card: rgba(255,255,255,.07); --gr-glass-line: rgba(255,255,255,.16);
+    --gr-glass-fg: #ffffff; --gr-glass-muted: rgba(255,255,255,.68); --gr-glass-ok: #5ee7df;
+    --gr-up: #2ee59d; --gr-dn: #ff5c7a; --gr-wait: #8fb4ff; --gr-off: #557380;
+    --gr-seg: rgba(255,255,255,.06); --gr-seg-on: #23d5c4; --gr-seg-on-fg: #00201c; --gr-cursor: #5ee7df;
+  }
+  .gr.wti .gr-hello b { background: linear-gradient(90deg, #a6fff6, #23d5c4 45%, #2b8bff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .gr.wti .gr-island { border-color: rgba(94,231,223,.35); }
+  .gr.wti .gr-isl-sym { color: #5ee7df; }
+  .gr.wti .gr-score .gr-cardbtn { box-shadow: 0 8px 26px rgba(31,179,209,.45); }
+
+  /* liquid glass tabs with a droplet for the chosen one */
+  .gr.wti .gr-seg { position: sticky; top: 62px; z-index: 5; overflow: hidden;
+    background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.05)); border: 1px solid rgba(255,255,255,.26);
+    backdrop-filter: blur(24px) saturate(190%) brightness(1.06); -webkit-backdrop-filter: blur(24px) saturate(190%) brightness(1.06);
+    box-shadow: inset 0 1.5px 1px rgba(255,255,255,.5), inset 0 -2px 6px rgba(0,0,0,.22), 0 12px 34px rgba(0,0,0,.4); }
+  .gr.wti .gr-seg button, .gr.wti .gr-nav button { position: relative; overflow: hidden; color: rgba(255,255,255,.84); }
+  .gr.wti .gr-seg button[aria-selected="true"], .gr.wti .gr-nav button[aria-selected="true"] { color: #00171d;
+    background: radial-gradient(120% 160% at 28% 18%, rgba(255,255,255,.7) 0%, rgba(255,255,255,.12) 38%, rgba(255,255,255,0) 60%), linear-gradient(135deg, #6af0e6, #1fa6d6);
+    box-shadow: inset 0 2px 3px rgba(255,255,255,.8), inset 0 -4px 10px rgba(0,40,60,.3), 0 8px 22px rgba(46,200,220,.45); }
+  .gr.wti .gr-seg button[aria-selected="true"].drop-in { animation: grwobble .6s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes grwobble { 0% { transform: scale(1, 1); } 30% { transform: scale(1.12, .86); } 60% { transform: scale(.96, 1.05); } 100% { transform: scale(1, 1); } }
+  .gr-ripple { position: absolute; border-radius: 50%; pointer-events: none; width: 14px; height: 14px; margin: -7px 0 0 -7px; z-index: 0;
+    background: radial-gradient(circle, rgba(255,255,255,.6) 0%, rgba(255,255,255,.18) 45%, rgba(255,255,255,0) 70%);
+    box-shadow: 0 0 0 1.5px rgba(255,255,255,.45); animation: grripple .7s ease-out forwards; }
+  @keyframes grripple { from { transform: scale(0); opacity: .9; } to { transform: scale(12); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .gr.wti .gr-seg button.drop-in { animation: none; } .gr-ripple { display: none; } }
+
+  @media (max-width: 640px) {
+    .gr.wti {
+      --gr-bg: #e6f2f3; --gr-bg-img: radial-gradient(500px 300px at 100% 0%, rgba(35,213,196,.22), transparent 70%);
+      --gr-card: rgba(255,255,255,.8); --gr-card-solid: #ffffff; --gr-line: rgba(10,26,32,.07);
+      --gr-fg: #0a1a20; --gr-muted: #5f7a83; --gr-em: #0b7f8c;
+      --gr-accent: #12b5a6; --gr-accent-ink: #00201c;
+      --gr-lav: linear-gradient(150deg, #c2f6f1 0%, #7fd9ea 60%, #8fb0ff 100%); --gr-lav-fg: #00171d;
+      --gr-glass: linear-gradient(180deg, #2c5b6a 0%, #173845 52%, #08161d 100%);
+      --gr-up: #0c9a64; --gr-dn: #e23d5d; --gr-wait: #4f6bd6; --gr-off: #98abb1;
+      --gr-chart-bg: #f3f9fa; --gr-grid: rgba(10,26,32,.07); --gr-tip: #0a1a20; --gr-tip-fg: #ffffff;
+      --gr-seg: rgba(255,255,255,.6); --gr-cursor: #0a1a20;
+    }
+    .gr.wti .gr-seg { top: 58px; background: linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.5)); border-color: rgba(255,255,255,.95);
+      box-shadow: inset 0 1.5px 1px #fff, inset 0 -2px 6px rgba(10,26,32,.08), 0 10px 28px rgba(10,26,32,.12); }
+    .gr.wti .gr-seg button, .gr.wti .gr-nav button { color: #24383f; }
+    .gr.wti .gr-nav { background: linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.55));
+      backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(255,255,255,.95); }
+    .gr.wti .gr-navlime { color: #00171d; background: radial-gradient(120% 160% at 28% 18%, rgba(255,255,255,.7), rgba(255,255,255,0) 55%), linear-gradient(135deg, #6af0e6, #1fa6d6);
+      box-shadow: inset 0 2px 3px rgba(255,255,255,.8), 0 10px 26px rgba(31,166,214,.4); }
+    .gr-ripple { background: radial-gradient(circle, rgba(255,255,255,.95) 0%, rgba(120,210,225,.3) 45%, rgba(255,255,255,0) 70%); box-shadow: 0 0 0 1.5px rgba(60,160,185,.35); }
+  }
+"""
+
+# tap ripple + droplet wobble on the in-page tabs (WTI page)
+WTI_JS = """<script>
+  (() => {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    document.querySelectorAll('.gr.wti .gr-seg button, .gr.wti .gr-nav button, .gr.wti .gr-navlime').forEach((b) => {
+      b.addEventListener('pointerdown', (e) => {
+        const r = b.getBoundingClientRect(), dot = document.createElement('span');
+        dot.className = 'gr-ripple'; dot.style.left = (e.clientX - r.left) + 'px'; dot.style.top = (e.clientY - r.top) + 'px';
+        b.append(dot); dot.addEventListener('animationend', () => dot.remove());
+      });
+      b.addEventListener('click', () => { b.classList.remove('drop-in'); void b.offsetWidth; b.classList.add('drop-in'); });
+    });
+  })();
+</script>"""
+
 PAGES = {
     "XAU": {
         "file": "gold.html", "data": "data/", "bundle": "reports/bundle.json", "research": "research/scalp_research.json",
@@ -144,6 +219,39 @@ PAGES = {
              '. Success = a $150 move in the trade\'s favour. $ risk per 0.01 lot = stop distance × 0.01 (0.01 BTC). Bitcoin trades 24/7, so this page also updates at weekends, every 15 minutes.'),
         ],
     },
+    "WTI": {
+        "file": "wti.html", "data": "data/wti/", "bundle": "reports/wti/bundle.json", "research": "research/wti_model_check.json",
+        "title": "WTI Oil SMC Radar", "nav": "WTI · Crude oil",
+        "desc": "WTI crude oil Smart Money Concepts radar: H1 swing and M15 scalp signals with a live success tracker. Not financial advice.",
+        "theme": "#03121a", "site_bg": "#020c12", "site_bg_m": "#dcebee",
+        "pick": "linear-gradient(135deg, #5ee7df, #1f8fd6)", "glow": "rgba(46,200,220,.45)",
+        "settings": ("window.GR_EVERY_MIN = 15; window.GR_DATA = 'data/wti/'; window.GR_SYM = 'WTI'; window.GR_TICKER = 'WTI';"
+                     " window.GR_PIP = 0.01; window.GR_UNIT = 'pips'; window.GR_FILTER = false;"),
+        "css": WTI_CSS, "js": WTI_JS,
+        "replace": [
+            ('class="gr" lang="en"', 'class="gr wti" lang="en"'),
+            ('aria-label="Gold status. Press for details"', 'aria-label="WTI crude oil status. Press for details"'),
+            ('<div class="gr-avatar" aria-hidden="true">XAU</div>', '<div class="gr-avatar" aria-hidden="true">WTI</div>'),
+            ('Trade smart,<br><b>Gold Radar!</b>', 'Trade fluid,<br><b>WTI Oil Radar!</b>'),
+            ('<span class="lab">Hit +100 pips</span>', '<span class="lab">Hit +25 pips</span>'),
+            ('Success = +100 pips before SL', 'Success = +25 pips before SL'),
+            ('<p class="gr-note">Model: liquidity sweep',
+             '<p class="gr-empty" style="border-color: var(--gr-dn); color: var(--gr-dn)">⚠ On WTI this H1 model lost money in testing '
+             '(-33.5R over 2 years, both years negative). Treat H1 signals as information only and use the M15 scalp tab instead.</p>\n'
+             '      <p class="gr-note">Model: liquidity sweep'),
+            ('"Passes filter" = on the right side of the daily EMA 200 and 1H ADX &gt; 20.', 'WTI uses no swing filter.'),
+            ('<span class="lab">Passes filter</span>', '<span class="lab">With gold\'s filter</span>'),
+            ('The daily EMA 200 + ADX &gt; 20 filter takes fewer trades but raises the average per trade and cuts drawdown.',
+             'On WTI this H1 model lost money over 2 years with or without the gold filter (daily EMA 200 + ADX &gt; 20).'),
+            ('moved <b>100 pips ($10)</b>', 'moved <b>25 pips ($0.25)</b>'),
+            ('+100 pips first', '+25 pips first'),
+            ('<h2>Why this strategy</h2>', '<h2>WTI model check</h2>'),
+            ('Fixed research · 18 Nov 2026', 'Fixed check · 21 Nov 2026'),
+            ('data-field="test_r">Test R', 'data-field="test_r">Total R'),
+            ('. 1 pip = $0.10, so 100 pips = $10 of price movement, and $ risk per 0.01 lot = stop distance in points. Updated every hour, not every tick.',
+             '. 1 pip = $0.01, so 25 pips = $0.25 of price movement, and $ risk per 0.01 lot (10 barrels) = stop distance × 10. Updated every 15 minutes, not every tick.'),
+        ],
+    },
 }
 
 MANIFEST = """{
@@ -175,6 +283,18 @@ ICON_BTC = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 """
 
 
+SLUG = {"XAU": "gold", "BTC": "btc", "WTI": "wti"}
+
+ICON_WTI = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs><linearGradient id="w" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6af0e6"/><stop offset="1" stop-color="#2b6bff"/></linearGradient></defs>
+<rect width="512" height="512" rx="112" fill="#03121a"/>
+<circle cx="256" cy="256" r="150" fill="none" stroke="url(#w)" stroke-width="10" stroke-dasharray="4 22"/>
+<path d="M256 120 C 300 190, 350 240, 350 300 A 94 94 0 0 1 162 300 C 162 240, 212 190, 256 120 Z" fill="url(#w)"/>
+<text x="256" y="320" text-anchor="middle" font-family="Arial, sans-serif" font-weight="800" font-size="62" fill="#00171d">WTI</text>
+</svg>
+"""
+
+
 def page_html(key: str, body: str) -> str:
     p = PAGES[key]
     for a, b in p["replace"]:
@@ -184,9 +304,9 @@ def page_html(key: str, body: str) -> str:
     cur = ' aria-current="page"'
     # standalone pages link to the combined page; inside it (an iframe) the switcher is hidden
     links = "".join(
-        f'<a href="./#{"gold" if k == "XAU" else "btc"}" target="_top"{cur if k == key else ""}>{q["nav"]}</a>'
+        f'<a href="./#{SLUG[k]}" target="_top"{cur if k == key else ""}>{q["nav"]}</a>'
         for k, q in PAGES.items())
-    icon = "icon.svg" if key == "XAU" else "icon-btc.svg"
+    icon = {"XAU": "icon.svg", "BTC": "icon-btc.svg", "WTI": "icon-wti.svg"}[key]
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -214,6 +334,7 @@ def page_html(key: str, body: str) -> str:
 <div id="dash-root">
 {body}
 </div>
+{p.get("js", "")}
 </body>
 </html>
 """
@@ -225,7 +346,7 @@ SHELL = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SMC Radar</title>
-<meta name="description" content="Gold (XAUUSD) and Bitcoin (BTCUSD) Smart Money Concepts radar: H1 swing and M15 scalp signals with a live success tracker. Not financial advice.">
+<meta name="description" content="Gold (XAUUSD), Bitcoin (BTCUSD) and WTI crude oil Smart Money Concepts radar: H1 swing and M15 scalp signals with a live success tracker. Not financial advice.">
 <meta name="theme-color" content="#0b0616">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -233,30 +354,57 @@ SHELL = """<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="SMC Radar">
 <style>
-  /* Layout: a glass market bar on top; each market is its own full dashboard below, kept loaded for instant switching. */
-  :root { --bar-h: 58px; --bg: #0b0616; --pick: linear-gradient(135deg, #e3bb55, #b98a2c); --glow: rgba(227,187,85,.35); }
-  :root[data-asset="btc"] { --bg: #040405; --pick: linear-gradient(135deg, #ff8a1f, #ff3d71); --glow: rgba(255,106,43,.45); }
-  @media (max-width: 640px) { :root { --bg: #e4e4ea; } :root[data-asset="btc"] { --bg: #e7e3dc; } }
-  html, body { margin: 0; height: 100%; background: var(--bg); transition: background .3s; overflow: hidden; }
+  /* Layout: a liquid-glass market bar on top (a water droplet slides to the chosen market and ripples on tap);
+     each market is its own full dashboard below, kept loaded for instant switching. */
+  :root { --bar-h: 58px; --bg: #0b0616; --pick: linear-gradient(135deg, #f0cd6e, #b98a2c); --glow: rgba(227,187,85,.45); --ink: rgba(255,255,255,.8); }
+  :root[data-asset="btc"] { --bg: #040405; --pick: linear-gradient(135deg, #ff9a2e, #ff3d71); --glow: rgba(255,106,43,.5); }
+  :root[data-asset="wti"] { --bg: #03121a; --pick: linear-gradient(135deg, #5ee7df, #1f8fd6); --glow: rgba(46,200,220,.5); }
+  @media (max-width: 640px) {
+    :root { --bg: #e4e4ea; --ink: #34333b; }
+    :root[data-asset="btc"] { --bg: #e7e3dc; } :root[data-asset="wti"] { --bg: #dcebee; }
+  }
+  html, body { margin: 0; height: 100%; background: var(--bg); transition: background .4s; overflow: hidden; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif; }
   .bar { position: fixed; z-index: 10; top: 0; left: 0; right: 0; height: var(--bar-h);
-    padding: calc(env(safe-area-inset-top, 0px) + 8px) max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
+    padding: calc(env(safe-area-inset-top, 0px) + 8px) max(10px, env(safe-area-inset-right)) 8px max(10px, env(safe-area-inset-left));
     display: flex; justify-content: center; align-items: center; box-sizing: content-box; pointer-events: none; }
-  .tabs { pointer-events: auto; display: inline-flex; gap: 4px; padding: 5px; border-radius: 999px; background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.16); backdrop-filter: blur(18px) saturate(170%); -webkit-backdrop-filter: blur(18px) saturate(170%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 10px 30px rgba(0,0,0,.4); }
-  .tabs button { font-weight: 600; font-size: 14px; font-family: inherit; color: rgba(255,255,255,.78); background: transparent; border: 0; cursor: pointer;
-    padding: 11px 20px; border-radius: 999px; white-space: nowrap; transition: color .2s, background .25s, box-shadow .25s; }
+
+  /* liquid glass: frosted, a bright rim on top, a darker one underneath, a soft drop shadow */
+  .tabs { pointer-events: auto; position: relative; isolation: isolate; display: inline-flex; gap: 2px; padding: 6px; border-radius: 999px; overflow: hidden;
+    background: linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,.06));
+    border: 1px solid rgba(255,255,255,.30);
+    backdrop-filter: blur(24px) saturate(190%) brightness(1.08); -webkit-backdrop-filter: blur(24px) saturate(190%) brightness(1.08);
+    box-shadow: inset 0 1.5px 1px rgba(255,255,255,.55), inset 0 -2px 6px rgba(0,0,0,.20), 0 14px 40px rgba(0,0,0,.38); }
+  .tabs::before { content: ""; position: absolute; inset: 1px 12% auto; height: 45%; border-radius: 999px; z-index: 0; pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0)); }
+  /* the droplet: a lens of colour with a specular highlight, sliding with a springy overshoot */
+  .drop { position: absolute; z-index: 1; top: 6px; bottom: 6px; left: 6px; width: 0; border-radius: 999px; pointer-events: none;
+    background: radial-gradient(120% 160% at 28% 18%, rgba(255,255,255,.62) 0%, rgba(255,255,255,.10) 38%, rgba(255,255,255,0) 60%), var(--pick);
+    box-shadow: inset 0 2px 3px rgba(255,255,255,.75), inset 0 -4px 10px rgba(0,0,0,.28), 0 8px 24px var(--glow);
+    transition: left .6s cubic-bezier(.34,1.56,.64,1), width .6s cubic-bezier(.34,1.56,.64,1), background .4s; }
+  .drop.wobble { animation: wobble .6s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes wobble { 0% { transform: scale(1, 1); } 30% { transform: scale(1.14, .84); } 60% { transform: scale(.95, 1.06); } 100% { transform: scale(1, 1); } }
+  .tabs button { position: relative; z-index: 2; font-weight: 600; font-size: 14px; font-family: inherit; color: var(--ink); background: transparent; border: 0; cursor: pointer;
+    padding: 11px 18px; border-radius: 999px; white-space: nowrap; transition: color .3s; -webkit-tap-highlight-color: transparent; }
   .tabs button:hover { color: #fff; }
-  .tabs button[aria-selected="true"] { color: #fff; background: var(--pick); box-shadow: 0 6px 20px var(--glow), inset 0 1px 0 rgba(255,255,255,.35); }
-  .tabs button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .tabs button[aria-selected="true"] { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .tabs button:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
   .tabs small { font-weight: 500; opacity: .75; margin-left: 4px; }
+  /* water ripple where you tap */
+  .ripple { position: absolute; z-index: 1; border-radius: 50%; pointer-events: none; width: 16px; height: 16px; margin: -8px 0 0 -8px;
+    background: radial-gradient(circle, rgba(255,255,255,.55) 0%, rgba(255,255,255,.18) 45%, rgba(255,255,255,0) 70%);
+    box-shadow: 0 0 0 1.5px rgba(255,255,255,.45); animation: ripple .75s ease-out forwards; }
+  @keyframes ripple { from { transform: scale(0); opacity: .9; } to { transform: scale(14); opacity: 0; } }
   @media (max-width: 640px) {
-    .tabs { background: rgba(255,255,255,.6); border-color: rgba(255,255,255,.9); box-shadow: inset 0 1px 0 #fff, 0 8px 24px rgba(20,19,23,.12); }
-    .tabs button { color: #3a3942; padding: 10px 16px; }
+    .tabs { background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.45)); border-color: rgba(255,255,255,.95);
+      box-shadow: inset 0 1.5px 1px #fff, inset 0 -2px 6px rgba(20,19,23,.08), 0 10px 30px rgba(20,19,23,.14); }
+    .tabs button { padding: 10px 13px; font-size: 13.5px; }
+    .tabs button:hover { color: var(--ink); }
     .tabs button[aria-selected="true"] { color: #fff; }
+    .ripple { background: radial-gradient(circle, rgba(255,255,255,.9) 0%, rgba(120,200,220,.25) 45%, rgba(255,255,255,0) 70%); box-shadow: 0 0 0 1.5px rgba(80,160,190,.35); }
   }
-  @media (max-width: 380px) { .tabs small { display: none; } }
+  @media (max-width: 400px) { .tabs small { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .drop { transition: none; } .drop.wobble, .ripple { animation: none; display: none; } }
   .view { position: fixed; left: 0; right: 0; bottom: 0; top: calc(var(--bar-h) + env(safe-area-inset-top, 0px) + 16px); }
   .view iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; }
   .view iframe[hidden] { display: none; }
@@ -265,41 +413,63 @@ SHELL = """<!doctype html>
 <body>
 <div class="bar">
   <div class="tabs" role="tablist" aria-label="Market">
+    <span class="drop" aria-hidden="true"></span>
     <button type="button" role="tab" id="tab-gold" data-asset="gold" aria-selected="true" aria-controls="view-gold">Gold<small>XAUUSD</small></button>
     <button type="button" role="tab" id="tab-btc" data-asset="btc" aria-selected="false" aria-controls="view-btc">Bitcoin<small>BTCUSD</small></button>
+    <button type="button" role="tab" id="tab-wti" data-asset="wti" aria-selected="false" aria-controls="view-wti">WTI<small>Crude oil</small></button>
   </div>
 </div>
 <div class="view">
   <iframe id="view-gold" title="Gold dashboard" src="gold.html"></iframe>
   <iframe id="view-btc" title="Bitcoin dashboard" src="btc.html" hidden></iframe>
+  <iframe id="view-wti" title="WTI crude oil dashboard" src="wti.html" hidden></iframe>
 </div>
 <script>
   (() => {
-    const show = (a) => {
-      if (a !== 'gold' && a !== 'btc') a = 'gold';
+    const ASSETS = { gold: ['Gold', '#0b0616'], btc: ['Bitcoin', '#060608'], wti: ['WTI crude oil', '#03121a'] };
+    const tabs = document.querySelector('.tabs'), drop = tabs.querySelector('.drop');
+    const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const place = (btn, wobble) => {
+      drop.style.left = btn.offsetLeft + 'px'; drop.style.width = btn.offsetWidth + 'px';
+      if (wobble && !calm) { drop.classList.remove('wobble'); void drop.offsetWidth; drop.classList.add('wobble'); }
+    };
+    const show = (a, wobble) => {
+      if (!ASSETS[a]) a = 'gold';
       document.documentElement.dataset.asset = a;
-      document.querySelectorAll('[data-asset][role="tab"]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.asset === a)));
-      document.getElementById('view-gold').hidden = a !== 'gold';
-      document.getElementById('view-btc').hidden = a !== 'btc';
-      document.querySelector('meta[name="theme-color"]').content = a === 'btc' ? '#060608' : '#0b0616';
-      document.title = (a === 'btc' ? 'Bitcoin' : 'Gold') + ' · SMC Radar';
+      let cur;
+      document.querySelectorAll('[data-asset][role="tab"]').forEach((b) => { const on = b.dataset.asset === a; b.setAttribute('aria-selected', String(on)); if (on) cur = b; });
+      place(cur, wobble);
+      Object.keys(ASSETS).forEach((k) => { document.getElementById('view-' + k).hidden = k !== a; });
+      document.querySelector('meta[name="theme-color"]').content = ASSETS[a][1];
+      document.title = ASSETS[a][0] + ' · SMC Radar';
       try { localStorage.setItem('smc-asset', a); } catch (e) { /* private mode */ }
       if (location.hash !== '#' + a) history.replaceState(null, '', '#' + a);
       // a dashboard drawn while hidden needs a resize to size its charts
-      const f = document.getElementById('view-' + a);
-      try { f.contentWindow.dispatchEvent(new Event('resize')); } catch (e) { /* not loaded yet */ }
+      try { document.getElementById('view-' + a).contentWindow.dispatchEvent(new Event('resize')); } catch (e) { /* not loaded yet */ }
     };
-    document.querySelectorAll('[data-asset][role="tab"]').forEach((b) => b.addEventListener('click', () => show(b.dataset.asset)));
-    window.addEventListener('hashchange', () => show(location.hash.slice(1)));
+    tabs.addEventListener('pointerdown', (e) => {
+      if (calm) return;
+      const r = tabs.getBoundingClientRect(), dot = document.createElement('span');
+      dot.className = 'ripple'; dot.style.left = (e.clientX - r.left) + 'px'; dot.style.top = (e.clientY - r.top) + 'px';
+      tabs.append(dot); dot.addEventListener('animationend', () => dot.remove());
+    });
+    document.querySelectorAll('[data-asset][role="tab"]').forEach((b) => b.addEventListener('click', () => show(b.dataset.asset, true)));
+    tabs.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      const list = [...tabs.querySelectorAll('[role="tab"]')], i = list.findIndex((b) => b.getAttribute('aria-selected') === 'true');
+      const n = list[(i + (e.key === 'ArrowRight' ? 1 : list.length - 1)) % list.length]; n.focus(); show(n.dataset.asset, true);
+    });
+    window.addEventListener('hashchange', () => show(location.hash.slice(1), true));
+    window.addEventListener('resize', () => place(tabs.querySelector('[aria-selected="true"]'), false));
     let start = location.hash.slice(1);
-    if (!start) { try { start = localStorage.getItem('smc-asset') || 'gold'; } catch (e) { start = 'gold'; } }
-    show(start);
+    if (!ASSETS[start]) { try { start = localStorage.getItem('smc-asset') || 'gold'; } catch (e) { start = 'gold'; } }
+    drop.style.transition = 'none'; show(start, false); void drop.offsetWidth; drop.style.transition = '';
+    if (document.fonts) document.fonts.ready.then(() => place(tabs.querySelector('[aria-selected="true"]'), false));
   })();
 </script>
 </body>
 </html>
 """
-
 
 def main() -> None:
     ap = argparse.ArgumentParser()
@@ -322,6 +492,7 @@ def main() -> None:
     (out / "manifest.webmanifest").write_text(MANIFEST)
     (out / "icon.svg").write_text(ICON)
     (out / "icon-btc.svg").write_text(ICON_BTC)
+    (out / "icon-wti.svg").write_text(ICON_WTI)
     (out / "index.html").write_text(SHELL)
     (out / ".nojekyll").write_text("")
     print(f"site → {out}")
