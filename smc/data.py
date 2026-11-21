@@ -40,6 +40,8 @@ def source() -> str:
         return "XAU/USD spot (Twelve Data)"
     if vals == {FALLBACK}:
         return "GC=F gold futures (Yahoo, fallback)"
+    if vals == {"BTC-USD"}:
+        return "BTC-USD (Yahoo Finance)"
     return "mixed: " + ", ".join(f"{k}={v}" for k, v in sorted(_used.items()))
 
 

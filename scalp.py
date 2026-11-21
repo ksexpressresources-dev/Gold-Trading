@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from smc import data, scalp
+from smc import data, instruments, scalp
 
 TZ = "Asia/Kuala_Lumpur"
 
@@ -32,14 +32,17 @@ def r2(x, n=2):
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--symbol", default=data.SPOT)
+    ap.add_argument("--asset", default="XAU", help="XAU or BTC (see smc/instruments.py)")
+    ap.add_argument("--symbol", default=None)
     ap.add_argument("--dash", default=None)
     args = ap.parse_args()
 
+    asset = instruments.get(args.asset)
+    args.symbol = args.symbol or asset["symbol"]
     m15 = data.drop_unclosed(data.fetch(args.symbol, "15m"), "15m")
     h1 = data.drop_unclosed(data.fetch(args.symbol, "1h"), "1h")
     d1 = data.drop_unclosed(data.fetch(args.symbol, "1d"), "1d")
-    res = scalp.run(m15, h1, d1)
+    res = scalp.run(m15, h1, d1, scalp.ScalpConfig(cost=asset["cost"]))
     rows, st = res["rows"], res["stats"]
     price = float(m15["close"].iloc[-1])
     last_t = m15.index[-1]
@@ -58,7 +61,7 @@ def main() -> int:
             "h1_sl": r2(r["h1_sl"]), "created": iso(r["created"]),
             "dist": r2((price - r["zone_top"]) if sd > 0 else (r["zone_bottom"] - price)),
             "entry": r2(r["entry"]), "sl": r2(r["sl"]), "tp_half": r2(r["tp_half"]), "tp": r2(r["tp"]),
-            "risk": r2(r.get("risk")), "entry_time": iso(r["entry_t"]), "fresh": False,
+            "risk": r2(r.get("risk")), "risk_usd": r2((r.get("risk") or 0) * asset["lot_mult"]), "entry_time": iso(r["entry_t"]), "fresh": False,
             "action": "",
         }
         if r["state"] in ("ENTRY", "IN TRADE"):
@@ -79,7 +82,7 @@ def main() -> int:
 
     # report
     fmt = lambda ts: pd.Timestamp(ts).tz_convert(TZ).strftime("%d %b %H:%M")
-    print(f"# Gold Scalp M15 · {args.symbol} · {fmt(last_t)} MYT · price {price:.2f} · session {res['session']}")
+    print(f"# {asset['name']} Scalp M15 · {args.symbol} · {fmt(last_t)} MYT · price {price:.2f} · session {res['session']}")
     print(f"Trend 15m {res['trend15'].upper()} · 1H {res['trend1h'].upper()} · ATR15 {a15:.2f}")
     for x in live:
         print(f"- {x['side']} {x['grade']}{' (Recommended: daily EMA200 ✓)' if x['reco'] else ' (against daily EMA200)'} · {x['state']} · "

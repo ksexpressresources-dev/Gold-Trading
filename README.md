@@ -62,7 +62,7 @@ Exit code `2` = a swing ENTRY TRIGGER or a fresh scalp ENTRY.
 > the same history they are tested on, so live results may be weaker. Not financial advice.
 
 ## Public website (GitHub Pages)
-`.github/workflows/radar.yml` runs `radar.py` every 15 minutes (Monday–Friday UTC, plus Sunday evening UTC),
+`.github/workflows/radar.yml` runs `radar.py` for gold and bitcoin every 15 minutes,
 builds the site with `tools/build_site.py` (dashboard.html + `site/dash.js` runtime + `vendor/` libraries)
 and publishes it to **https://ksexpressresources-dev.github.io/Gold-Trading/**. The page refreshes itself every 5 minutes
 and can be installed on a phone with "Add to Home Screen".
@@ -71,3 +71,17 @@ One-time setup in GitHub:
 1. **Settings → Pages → Build and deployment → Source: GitHub Actions**
 2. Optional, for spot XAU/USD prices: **Settings → Secrets and variables → Actions → New repository secret**
    `TWELVEDATA_API_KEY` = your Twelve Data key (without it the scanner uses GC=F futures).
+
+## Bitcoin (BTCUSD)
+The same two models run on Bitcoin (`python radar.py --asset BTC`, settings in `smc/instruments.py`), published at
+**https://ksexpressresources-dev.github.io/Gold-Trading/btc.html** with a bolder palette and glass tabs.
+
+| BTC check (Yahoo BTC-USD) | Trades | Total R | Decision |
+|---|---|---|---|
+| H1 swing, no filter (2 years) | 254 | +21R | Used, thin edge (+0.08R/trade) |
+| H1 swing + gold's filter | 79 | +3R (year 2 -8R) | Rejected |
+| M15 scalp, recommended (daily EMA200 side) | 12 | +4R | Used |
+| M15 scalp, against daily EMA200 | 18 | -10R | Avoid |
+
+Success target on BTC = a **$150** move (about the same 0.27% as gold's 100 pips). Cost per scalp trade: $25.
+$ risk per 0.01 lot = stop distance × 0.01. Bitcoin trades 24/7, so the workflow now runs every 15 minutes every day.

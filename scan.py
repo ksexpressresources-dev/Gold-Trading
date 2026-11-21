@@ -21,6 +21,7 @@ import pandas as pd
 
 from smc import data, engine, export, history
 from smc.indicators import ADX_MIN, Filters
+from smc import instruments
 
 TZ = "Asia/Kuala_Lumpur"
 HTF_FOR = {"5m": "1h", "15m": "1h", "30m": "1h", "1h": "1d"}
@@ -32,13 +33,16 @@ def fmt_t(ts: pd.Timestamp) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--symbol", default=data.SPOT)
+    ap.add_argument("--asset", default="XAU", help="XAU or BTC (see smc/instruments.py)")
+    ap.add_argument("--symbol", default=None)
     ap.add_argument("--tf", default="1h")
     ap.add_argument("--htf", default=None)
     ap.add_argument("--aplus", action="store_true", help="require FVG confluence")
     ap.add_argument("--out", default="reports")
     ap.add_argument("--dash", default=None, help="also write dashboard JSON files to this folder")
     args = ap.parse_args()
+    asset = instruments.get(args.asset)
+    args.symbol = args.symbol or asset["symbol"]
     htf_tf = args.htf or HTF_FOR.get(args.tf, "1d")
     cfg = engine.Config(require_fvg=args.aplus)
 
@@ -71,7 +75,7 @@ def main() -> int:
             fl = filt.at(ltf.index[s.created] + pd.Timedelta(args.tf.replace("m", "min")), s.side)
             signals.append({
                 "ema200_d": fl["ema200_d"], "adx": round(fl["adx"], 1) if fl["adx"] is not None else None,
-                "filter_ok": fl["ema200_d"] and fl["adx_ok"],
+                "filter_ok": (fl["ema200_d"] and fl["adx_ok"]) if asset["swing_filter"] else True,
                 "side": s.side, "grade": s.grade, "score": s.score, "action": action,
                 "trigger": in_zone and s.status == "PENDING",
                 "zone": [round(s.zone_bottom, 2), round(s.zone_top, 2)],
@@ -99,7 +103,7 @@ def main() -> int:
     # ---------- report ----------
     L = []
     w = L.append
-    w(f"# Gold SMC Scan: {args.symbol} {args.tf} (bias {htf_tf})")
+    w(f"# {asset['name']} SMC Scan: {args.symbol} {args.tf} (bias {htf_tf})")
     w(f"_Last candle: {fmt_t(last_t)} (MYT) · Price: **{price:.2f}** · ATR({args.tf}): {a:.2f}_\n")
     w(f"**Trend {args.tf}:** {st.trend.upper()} · **Trend {htf_tf}:** {st_htf.trend.upper()}\n")
 
@@ -115,7 +119,7 @@ def main() -> int:
         w(f"- **Zone (OB):** {s['zone'][0]} – {s['zone'][1]}")
         w(f"- **Entry (50% OB):** {s['entry']}  ·  **SL:** {s['sl']}")
         w(f"- **TP1 (2R):** {s['tp1']}  ·  **TP2:** {s['tp2']} (RR {s['rr_tp2']})")
-        w(f"- Risk: {abs(s['entry'] - s['sl']):.2f} point = **${abs(s['entry'] - s['sl']):.2f} per 0.01 lot**"
+        w(f"- Risk: {abs(s['entry'] - s['sl']):.2f} point = **${abs(s['entry'] - s['sl']) * asset['lot_mult']:.2f} per 0.01 lot**"
           f" (close half at TP1, move SL to BE)")
         w(f"- Liquidity sweep: {s['sweep']} · BOS: {s['bos']}")
         w(f"- FVG confluence: {'✅' if s['fvg'] else '❌'} · HTF bias aligned: "
@@ -181,7 +185,7 @@ def main() -> int:
         export.write(Path(args.dash), symbol=args.symbol, tf=args.tf, htf_tf=htf_tf, ltf=ltf,
                      st=st, st_htf=st_htf, signals=signals, atr=float(a), price=price,
                      an_ltf=an_ltf, sum_ltf=sum_ltf, an_htf=an_htf, sum_htf=sum_htf,
-                     bt_ltf=bt_ltf, bt_htf=bt_htf, bt_f=bt_f, data_source=data.source())
+                     bt_ltf=bt_ltf, bt_htf=bt_htf, bt_f=bt_f, data_source=data.source(), asset=asset)
     print(report)
     return 2 if triggers else 0
 

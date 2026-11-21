@@ -17,7 +17,7 @@ def _r(x, n=2):
 
 
 def write(out: Path, *, symbol, tf, htf_tf, ltf, st, st_htf, signals, atr, price,
-          an_ltf, sum_ltf, an_htf, sum_htf, bt_ltf, bt_htf, bt_f=None, data_source: str = "", bars: int = 120) -> list[Path]:
+          an_ltf, sum_ltf, an_htf, sum_htf, bt_ltf, bt_htf, bt_f=None, data_source: str = "", asset: dict | None = None, bars: int = 120) -> list[Path]:
     out.mkdir(parents=True, exist_ok=True)
     n = len(ltf)
     lo_i = max(0, n - bars)
@@ -37,7 +37,7 @@ def write(out: Path, *, symbol, tf, htf_tf, ltf, st, st_htf, signals, atr, price
             "zone_bottom": s["zone"][0], "zone_top": s["zone"][1],
             "entry": s["entry"], "sl": s["sl"], "tp1": s["tp1"], "tp2": s["tp2"],
             "rr_tp2": s["rr_tp2"], "risk_pts": round(abs(s["entry"] - s["sl"]), 2),
-            "risk_usd_001": round(abs(s["entry"] - s["sl"]), 2),
+            "risk_usd_001": round(abs(s["entry"] - s["sl"]) * (asset or {}).get("lot_mult", 1.0), 2),
             "sweep": s["sweep"], "bos": s["bos"],
             "fvg": bool(s["fvg"]), "htf_aligned": bool(s["htf_aligned"]),
             "expires_in_bars": s["expires_in_bars"], "new": bool(s["new"]),
@@ -62,7 +62,8 @@ def write(out: Path, *, symbol, tf, htf_tf, ltf, st, st_htf, signals, atr, price
     bt = lambda b, k: _r(b.get(k)) if b.get("trades") else None
     aplus = (bt_ltf.get("by_grade") or {}).get("A+", {})
     summary = [{
-        "symbol": symbol, "source": data_source, "tf": tf, "htf": htf_tf, "time": _iso(ltf.index[-1]),
+        "symbol": symbol, "source": data_source, "asset": (asset or {}).get("key", "XAU"),
+        "ticker": (asset or {}).get("ticker", "XAUUSD"), "filter_used": bool((asset or {}).get("swing_filter", True)), "tf": tf, "htf": htf_tf, "time": _iso(ltf.index[-1]),
         "generated": _iso(pd.Timestamp.now(tz="UTC")),
         "price": _r(price), "atr": _r(atr),
         "prev_close": _r(ltf["close"].iloc[-25]) if n > 25 else None,

@@ -4,7 +4,8 @@
    by GitHub Actions) and data/research.json. */
 (() => {
   const st = { loaders: {}, data: {}, status: {}, draws: [], mounted: new Map(), onData: [] };
-  const FILES = { research: 'data/research.json' };
+  const BASE = window.GR_DATA || 'data/';
+  const FILES = { research: BASE + 'research.json' };
 
   window.dash = {
     colors: ['#2962ff', '#26a69a', '#ef5350', '#f7a600'],
@@ -36,7 +37,7 @@
   async function load() {
     const bust = '?t=' + Date.now();
     try {
-      const bundle = await fetch('data/bundle.json' + bust).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
+      const bundle = await fetch(BASE + 'bundle.json' + bust).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
       for (const [id, fn] of Object.entries(st.loaders)) {
         try { st.data[id] = fn({ answer: bundle }); st.status[id] = 'ok'; } catch (e) { st.status[id] = 'error'; console.error(id, e); }
       }

@@ -20,6 +20,12 @@ import pandas as pd
 
 PIP = 0.10
 SUCCESS_PIPS = 100
+
+
+def configure(pip: float, success_pips: float) -> None:
+    """Switch the pip size and success target (per asset, see smc/instruments.py)."""
+    global PIP, SUCCESS_PIPS
+    PIP, SUCCESS_PIPS = pip, success_pips
 TZ = "Asia/Kuala_Lumpur"
 HOLD = {"H1": 72, "M15": 96}           # bars a trade is given to reach the target
 
@@ -47,7 +53,7 @@ def _judge(df, start, sd, entry, sl, hold, same_bar_sl=None):
     return "RUNNING", None, best
 
 
-def swing_signals(h1, st, filt, since):
+def swing_signals(h1, st, filt, since, use_filter=True):
     out = []
     step = pd.Timedelta("1h")
     for s in st.setups:
@@ -57,7 +63,7 @@ def swing_signals(h1, st, filt, since):
         sd = 1 if s.side == "BUY" else -1
         fl = filt.at(t, s.side)
         row = {"model": "H1", "time": t, "side": s.side, "grade": s.grade,
-               "filter_ok": bool(fl["ema200_d"] and fl["adx_ok"]),
+               "filter_ok": bool(fl["ema200_d"] and fl["adx_ok"]) if use_filter else True,
                "entry": s.entry, "sl": s.sl, "exec_time": None, "done_time": None, "best_pips": 0.0}
         if s.fill_idx is not None:
             status, k, best = _judge(h1, s.fill_idx + 1, sd, s.entry, s.sl, HOLD["H1"], same_bar_sl=s.fill_idx)

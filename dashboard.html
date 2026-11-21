@@ -596,7 +596,7 @@
         const t = new Date(+new Date(from) - lag * 60000); t.setUTCSeconds(0, 0);
         const m = t.getUTCHours() * 60 + t.getUTCMinutes();
         t.setUTCHours(0, Math.floor((m - off) / every) * every + off + every, 0, 0);
-        while (t.getUTCDay() === 0 || t.getUTCDay() === 6) { t.setUTCDate(t.getUTCDate() + 1); t.setUTCHours(0, off, 0, 0); }
+        while (!window.GR_WEEKEND && (t.getUTCDay() === 0 || t.getUTCDay() === 6)) { t.setUTCDate(t.getUTCDate() + 1); t.setUTCHours(0, off, 0, 0); }
         return new Date(+t + lag * 60000);
       },
       cd: (ms) => {
@@ -793,7 +793,7 @@
       el.replaceChildren();
       const row = G.el('div', 'gr-isl-row');
       row.append(G.el('span', 'gr-isl-dot' + (hot ? ' trig' : (s && s.status === 'IN TRADE') || (q && q.state === 'IN TRADE') ? ' live' : '')),
-        G.el('span', 'gr-isl-sym', 'XAU'), G.mark(G.el('span', 'gr-isl-px', G.f2(+sum.price)), 'summary', 'price', 0),
+        G.el('span', 'gr-isl-sym', window.GR_SYM || 'XAU'), G.mark(G.el('span', 'gr-isl-px', G.f2(+sum.price)), 'summary', 'price', 0),
         G.el('span', 'gr-isl-chip' + (s && s.status === 'TRIGGER' ? ' trig' : ''), s ? `H1 ${s.side} ${s.status === 'TRIGGER' ? 'TRIGGER' : s.status === 'IN TRADE' ? 'running' : 'waiting'}` : 'H1 none'),
         G.el('span', 'gr-isl-chip' + (q && q.fresh ? ' trig' : ''), q ? `M15 ${q.side} ${q.fresh ? 'ENTER' : q.state === 'IN TRADE' ? 'running' : 'waiting'}` : 'M15 none'));
       el.append(row);
@@ -802,7 +802,7 @@
       if (s) {
         const i = sw.indexOf(s);
         grid.append(cell('H1 entry', G.f2(s.entry), '', ['setups', 'entry', i]), cell('H1 SL', G.f2(s.sl), 'gr-down', ['setups', 'sl', i]),
-          cell('H1 TP1', G.f2(s.tp1), 'gr-up', ['setups', 'tp1', i]), cell('Filter', s.filter_ok ? 'Passes' : 'Fails', s.filter_ok ? 'gr-up' : 'gr-down'));
+          cell('H1 TP1', G.f2(s.tp1), 'gr-up', ['setups', 'tp1', i]), ...(window.GR_FILTER === false ? [] : [cell('Filter', s.filter_ok ? 'Passes' : 'Fails', s.filter_ok ? 'gr-up' : 'gr-down')]));
       }
       if (q) {
         const i = sc.indexOf(q);
@@ -861,7 +861,7 @@
     const rows = window.GR.rows('setups');
     if (!rows) { el.textContent = '—'; return; }
     const s = window.GR.pickSwing(rows);
-    el.textContent = s ? `${s.side} · grade ${s.grade} · ${s.filter_ok ? 'passes filter' : 'fails filter'}` : 'No active setup';
+    el.textContent = s ? `${s.side} · grade ${s.grade} · ${window.GR_FILTER === false ? 'no filter on this asset' : s.filter_ok ? 'passes filter' : 'fails filter'}` : 'No active setup';
   });
   dash.draw('h1-dial', (el) => {
     const rows = window.GR.rows('setups');
@@ -884,8 +884,8 @@
     const s = G.pickSwing(rows);
     if (!s) { el.textContent = 'No setup'; return; }
     const inZone = sum.price >= s.zone_bottom && sum.price <= s.zone_top;
-    const prog = ((sum.price - s.entry) * (s.side === 'BUY' ? 1 : -1)) / 0.1;
-    el.textContent = s.status === 'IN TRADE' ? `Running · ${G.sgn(prog, '.0f')} pips from entry` : inZone ? 'Inside the zone' : 'Outside the zone';
+    const prog = ((sum.price - s.entry) * (s.side === 'BUY' ? 1 : -1)) / (window.GR_PIP || 0.1);
+    el.textContent = s.status === 'IN TRADE' ? `Running · ${G.sgn(prog, '.0f')} ${window.GR_UNIT || 'pips'} from entry` : inZone ? 'Inside the zone' : 'Outside the zone';
     el.classList.toggle('bad', s.status === 'IN TRADE' && prog < 0);
   });
   dash.draw('h1-adx', (el) => {
@@ -940,8 +940,8 @@
     const s = rows.length ? G.pickScalp(rows) : null;
     if (!s) { el.textContent = 'No zone'; return; }
     if (s.entry != null) {
-      const prog = ((sum.price - s.entry) * (s.side === 'BUY' ? 1 : -1)) / 0.1;
-      el.textContent = `${G.scalpWord(s)} · ${G.sgn(prog, '.0f')} pips`;
+      const prog = ((sum.price - s.entry) * (s.side === 'BUY' ? 1 : -1)) / (window.GR_PIP || 0.1);
+      el.textContent = `${G.scalpWord(s)} · ${G.sgn(prog, '.0f')} ${window.GR_UNIT || 'pips'}`;
       el.classList.toggle('bad', prog < 0);
     } else { el.textContent = `${G.scalpWord(s)} · ${G.f2(Math.max(0, s.dist))} pt away`; }
   });
@@ -959,7 +959,7 @@
       const top = G.el('div', 'gr-setup-top');
       top.append(G.el('span', 'gr-side ' + (r.side === 'BUY' ? 'gr-up' : 'gr-down'), r.side), G.el('span', 'gr-pill', `Grade ${r.grade} · ${r.score}/5`),
         G.el('span', 'gr-st ' + (r.status === 'TRIGGER' ? 's-running' : r.status === 'IN TRADE' ? 's-success' : 's-waiting'), r.status === 'TRIGGER' ? 'ENTRY TRIGGER' : r.status === 'IN TRADE' ? 'Entry already hit' : 'Wait for retrace'),
-        r.filter_ok ? G.el('span', 'gr-reco', 'Passes filter') : G.el('span', 'gr-pill', 'Fails filter'));
+        window.GR_FILTER === false ? G.el('span', 'gr-pill', 'No filter on this asset') : r.filter_ok ? G.el('span', 'gr-reco', 'Passes filter') : G.el('span', 'gr-pill', 'Fails filter'));
       const lv = G.el('div', 'gr-levels');
       const item = (lab, field, txt, cls, extra) => { const d = G.el('div', 'gr-lv ' + (extra || '')); d.append(G.el('span', 'lab', lab), G.mark(G.el('span', 'val ' + (cls || ''), txt), 'setups', field, i)); return d; };
       const zone = G.el('div', 'gr-lv'); zone.append(G.el('span', 'lab', 'OB zone'));
@@ -998,7 +998,7 @@
       const zv = G.el('span', 'val'); zv.append(G.mark(G.el('span', null, G.f2(r.zone_bottom)), 's_signals', 'zone_bottom', i), ' – ', G.mark(G.el('span', null, G.f2(r.zone_top)), 's_signals', 'zone_top', i));
       zone.append(zv); lv.append(zone);
       if (r.entry != null) lv.append(item('Entry', 'entry', G.f2(r.entry), '', 'entry'), item('Stop loss', 'sl', G.f2(r.sl), 'gr-down'),
-        item('TP1 (1.5R)', 'tp_half', G.f2(r.tp_half), 'gr-up'), item('TP2 (3R)', 'tp', G.f2(r.tp), 'gr-up'), item('Risk / 0.01 lot', 'risk', '$' + G.f2(r.risk)));
+        item('TP1 (1.5R)', 'tp_half', G.f2(r.tp_half), 'gr-up'), item('TP2 (3R)', 'tp', G.f2(r.tp), 'gr-up'), item('Risk / 0.01 lot', r.risk_usd != null ? 'risk_usd' : 'risk', '$' + G.f2(r.risk_usd ?? r.risk)));
       else lv.append(item('Distance to zone', 'dist', r.dist > 0 ? `${G.f2(r.dist)} pt` : 'In the zone'), item('Cancelled beyond', 'h1_sl', G.f2(r.h1_sl), 'gr-down'));
       const meta = G.el('div', 'gr-meta');
       [r.action, `Daily EMA200: ${r.ema200_d ? 'aligned ✓' : 'against ✗'}`, `Zone since ${G.t(r.created)} MYT`, r.entry_time ? `CHoCH at ${G.t(r.entry_time)} MYT` : null]
@@ -1046,7 +1046,7 @@
   }));
   table('t-log', 't_log', (tb, rows) => rows.forEach((r) => {
     const G = window.GR, tr = G.el('tr'); tr.dataset.key = r.key;
-    td(tr, G.t(r.time)); td(tr, r.model); td(tr, r.side + (r.filter_ok ? ' ✓' : ''), r.side === 'BUY' ? 'gr-up' : 'gr-down');
+    td(tr, G.t(r.time)); td(tr, r.model); td(tr, r.side + (r.filter_ok && (window.GR_FILTER !== false || r.model === 'M15') ? ' ✓' : ''), r.side === 'BUY' ? 'gr-up' : 'gr-down');
     td(tr, r.entry == null ? '—' : G.f2(r.entry), 'r'); td(tr, r.sl == null ? '—' : G.f2(r.sl), 'r');
     td(tr, '').append(G.el('span', 'gr-st ' + G.statusCls(r.status), G.statusWord(r.status)));
     td(tr, r.entry == null ? '—' : d3.format('.0f')(r.best_pips), 'r'); tb.append(tr);
@@ -1212,7 +1212,7 @@
       st.showLegend = (b) => {
         b = b || last;
         const chg = b.close - b.open, col = chg >= 0 ? up : dn;
-        st.legend.replaceChildren(G.el('b', null, `XAUUSD · ${opt.tf}  `));
+        st.legend.replaceChildren(G.el('b', null, `${window.GR_TICKER || 'XAUUSD'} · ${opt.tf}  `));
         [['O', b.open], ['H', b.high], ['L', b.low], ['C', b.close]].forEach(([k, v]) => {
           st.legend.append(G.el('span', null, ` ${k} `));
           const s = G.el('span', null, d3.format(',.2f')(v)); s.style.color = col; st.legend.append(s);

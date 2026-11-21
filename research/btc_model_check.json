@@ -1,0 +1,6 @@
+[{"key":"swing","strategy":"H1 swing, all setups (2 years)","trades":254,"test_r":21.0,"verdict":"Passed (thin edge, +0.08R/trade)"},
+{"key":"swing_ema","strategy":"H1 swing + daily EMA200","trades":133,"test_r":8.5,"verdict":"Rejected (year 2 negative)"},
+{"key":"swing_gold","strategy":"H1 swing + gold filter (EMA200 + ADX)","trades":79,"test_r":3.0,"verdict":"Rejected (year 2 -8R)"},
+{"key":"scalp_reco","strategy":"M15 scalp, recommended (daily EMA200)","trades":12,"test_r":4.0,"verdict":"Passed (small sample)"},
+{"key":"scalp_all","strategy":"M15 scalp, all entries (60 days)","trades":30,"test_r":-6.0,"verdict":"Failed"},
+{"key":"scalp_against","strategy":"M15 scalp, against daily EMA200","trades":18,"test_r":-10.0,"verdict":"Failed"}]

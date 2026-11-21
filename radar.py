@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from smc import data, engine, scalp, tracking
+from smc import data, engine, instruments, scalp, tracking
 from smc.indicators import Filters
 
 ROOT = Path(__file__).resolve().parent
@@ -29,12 +29,16 @@ ROOT = Path(__file__).resolve().parent
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", default="reports/bundle.json")
+    ap.add_argument("--asset", default="XAU", help="XAU or BTC (see smc/instruments.py)")
+    ap.add_argument("--out", default=None, help="default reports/bundle.json (XAU) or reports/<asset>/bundle.json")
     args = ap.parse_args()
-    tmp = ROOT / "reports"
+    asset = instruments.get(args.asset)
+    tmp = ROOT / "reports" if asset["key"] == "XAU" else ROOT / "reports" / asset["key"].lower()
+    args.out = args.out or str((tmp / "bundle.json").relative_to(ROOT))
+    tracking.configure(asset["pip"], asset["success_pips"])
     codes = {}
     for script, out in (("scan.py", "dash"), ("scalp.py", "scalp")):
-        p = subprocess.run([sys.executable, str(ROOT / script), "--dash", str(tmp / out)],
+        p = subprocess.run([sys.executable, str(ROOT / script), "--asset", asset["key"], "--dash", str(tmp / out)],
                            cwd=ROOT, capture_output=True, text=True)
         if p.returncode not in (0, 2):
             print(p.stdout, p.stderr, file=sys.stderr)
@@ -49,21 +53,23 @@ def main() -> int:
         bundle["s_" + k] = json.loads((tmp / "scalp" / f"scalp_{k}.json").read_text())
 
     # tracking: rebuild every signal of both models and judge it
-    h1 = data.drop_unclosed(data.fetch(data.SPOT, "1h"), "1h")
-    d1 = data.drop_unclosed(data.fetch(data.SPOT, "1d"), "1d")
-    m15 = data.drop_unclosed(data.fetch(data.SPOT, "15m"), "15m")
+    sym = asset["symbol"]
+    h1 = data.drop_unclosed(data.fetch(sym, "1h"), "1h")
+    d1 = data.drop_unclosed(data.fetch(sym, "1d"), "1d")
+    m15 = data.drop_unclosed(data.fetch(sym, "15m"), "15m")
     cfg = engine.Config()
     st = engine.run(h1, cfg, engine.trend_series(d1, cfg))
     filt = Filters(d1, h1)
     now = pd.Timestamp.now(tz="UTC")
     since = now - pd.Timedelta(days=15)
-    sw = tracking.swing_signals(h1, st, filt, since)
-    sc = tracking.scalp_signals(m15, scalp.run(m15, h1, d1)["rows"], since)
+    sw = tracking.swing_signals(h1, st, filt, since, use_filter=asset["swing_filter"])
+    sc = tracking.scalp_signals(m15, scalp.run(m15, h1, d1, scalp.ScalpConfig(cost=asset["cost"]))["rows"], since)
     log, hourly, daily = tracking.build(h1, m15, sw, sc, now)
     bundle["t_log"], bundle["t_hourly"], bundle["t_daily"] = log, hourly, daily
 
     week = now - pd.Timedelta(days=7)
-    summ = {"generated": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "source": data.source(), "success_pips": tracking.SUCCESS_PIPS,
+    summ = {"generated": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "source": data.source(), "asset": asset["key"], "ticker": asset["ticker"],
+            "success_pips": tracking.SUCCESS_PIPS, "weekend": asset["weekend"],
             "pip": tracking.PIP}
     for m, rows in (("h1", sw), ("m15", sc)):
         w = [r for r in rows if r["time"] >= week]
