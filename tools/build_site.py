@@ -41,6 +41,7 @@ BASE_CSS = """
   .assets a:hover { color: #fff; }
   .assets a[aria-current="page"] { color: #fff; background: var(--site-pick); box-shadow: 0 6px 20px var(--site-glow), inset 0 1px 0 rgba(255,255,255,.35); }
   .assets a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .embedded .assets { display: none; }
   @media (max-width: 640px) {
     .assets nav { background: rgba(255,255,255,.55); border-color: rgba(255,255,255,.85); box-shadow: inset 0 1px 0 #fff, 0 8px 24px rgba(20,19,23,.10); }
     .assets a { color: #3a3942; padding: 9px 13px; }
@@ -102,7 +103,7 @@ BTC_CSS = """
 
 PAGES = {
     "XAU": {
-        "file": "index.html", "data": "data/", "bundle": "reports/bundle.json", "research": "research/scalp_research.json",
+        "file": "gold.html", "data": "data/", "bundle": "reports/bundle.json", "research": "research/scalp_research.json",
         "title": "Gold SMC Radar", "nav": "Gold · XAUUSD",
         "desc": "Gold (XAUUSD) Smart Money Concepts radar: H1 swing and M15 scalp signals with a live success tracker. Not financial advice.",
         "theme": "#120a22", "site_bg": "#0b0616", "site_bg_m": "#e4e4ea",
@@ -181,8 +182,9 @@ def page_html(key: str, body: str) -> str:
             raise SystemExit(f"build_site: text to replace not found for {key}: {a[:60]}")
         body = body.replace(a, b)
     cur = ' aria-current="page"'
+    # standalone pages link to the combined page; inside it (an iframe) the switcher is hidden
     links = "".join(
-        f'<a href="{"./" if q["file"] == "index.html" else q["file"]}"{cur if k == key else ""}>{q["nav"]}</a>'
+        f'<a href="./#{"gold" if k == "XAU" else "btc"}" target="_top"{cur if k == key else ""}>{q["nav"]}</a>'
         for k, q in PAGES.items())
     icon = "icon.svg" if key == "XAU" else "icon-btc.svg"
     return f"""<!doctype html>
@@ -203,7 +205,7 @@ def page_html(key: str, body: str) -> str:
 {BASE_CSS}
 {p["css"]}
 </style>
-<script>{p["settings"]}</script>
+<script>{p["settings"]} if (window.top !== window.self) document.documentElement.classList.add("embedded");</script>
 <script src="d3.min.js"></script>
 <script src="dash.js"></script>
 </head>
@@ -212,6 +214,88 @@ def page_html(key: str, body: str) -> str:
 <div id="dash-root">
 {body}
 </div>
+</body>
+</html>
+"""
+
+
+SHELL = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SMC Radar</title>
+<meta name="description" content="Gold (XAUUSD) and Bitcoin (BTCUSD) Smart Money Concepts radar: H1 swing and M15 scalp signals with a live success tracker. Not financial advice.">
+<meta name="theme-color" content="#0b0616">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SMC Radar">
+<style>
+  /* Layout: a glass market bar on top; each market is its own full dashboard below, kept loaded for instant switching. */
+  :root { --bar-h: 58px; --bg: #0b0616; --pick: linear-gradient(135deg, #e3bb55, #b98a2c); --glow: rgba(227,187,85,.35); }
+  :root[data-asset="btc"] { --bg: #040405; --pick: linear-gradient(135deg, #ff8a1f, #ff3d71); --glow: rgba(255,106,43,.45); }
+  @media (max-width: 640px) { :root { --bg: #e4e4ea; } :root[data-asset="btc"] { --bg: #e7e3dc; } }
+  html, body { margin: 0; height: 100%; background: var(--bg); transition: background .3s; overflow: hidden; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif; }
+  .bar { position: fixed; z-index: 10; top: 0; left: 0; right: 0; height: var(--bar-h);
+    padding: calc(env(safe-area-inset-top, 0px) + 8px) max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
+    display: flex; justify-content: center; align-items: center; box-sizing: content-box; pointer-events: none; }
+  .tabs { pointer-events: auto; display: inline-flex; gap: 4px; padding: 5px; border-radius: 999px; background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.16); backdrop-filter: blur(18px) saturate(170%); -webkit-backdrop-filter: blur(18px) saturate(170%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 10px 30px rgba(0,0,0,.4); }
+  .tabs button { font-weight: 600; font-size: 14px; font-family: inherit; color: rgba(255,255,255,.78); background: transparent; border: 0; cursor: pointer;
+    padding: 11px 20px; border-radius: 999px; white-space: nowrap; transition: color .2s, background .25s, box-shadow .25s; }
+  .tabs button:hover { color: #fff; }
+  .tabs button[aria-selected="true"] { color: #fff; background: var(--pick); box-shadow: 0 6px 20px var(--glow), inset 0 1px 0 rgba(255,255,255,.35); }
+  .tabs button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .tabs small { font-weight: 500; opacity: .75; margin-left: 4px; }
+  @media (max-width: 640px) {
+    .tabs { background: rgba(255,255,255,.6); border-color: rgba(255,255,255,.9); box-shadow: inset 0 1px 0 #fff, 0 8px 24px rgba(20,19,23,.12); }
+    .tabs button { color: #3a3942; padding: 10px 16px; }
+    .tabs button[aria-selected="true"] { color: #fff; }
+  }
+  @media (max-width: 380px) { .tabs small { display: none; } }
+  .view { position: fixed; left: 0; right: 0; bottom: 0; top: calc(var(--bar-h) + env(safe-area-inset-top, 0px) + 16px); }
+  .view iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; }
+  .view iframe[hidden] { display: none; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="tabs" role="tablist" aria-label="Market">
+    <button type="button" role="tab" id="tab-gold" data-asset="gold" aria-selected="true" aria-controls="view-gold">Gold<small>XAUUSD</small></button>
+    <button type="button" role="tab" id="tab-btc" data-asset="btc" aria-selected="false" aria-controls="view-btc">Bitcoin<small>BTCUSD</small></button>
+  </div>
+</div>
+<div class="view">
+  <iframe id="view-gold" title="Gold dashboard" src="gold.html"></iframe>
+  <iframe id="view-btc" title="Bitcoin dashboard" src="btc.html" hidden></iframe>
+</div>
+<script>
+  (() => {
+    const show = (a) => {
+      if (a !== 'gold' && a !== 'btc') a = 'gold';
+      document.documentElement.dataset.asset = a;
+      document.querySelectorAll('[data-asset][role="tab"]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.asset === a)));
+      document.getElementById('view-gold').hidden = a !== 'gold';
+      document.getElementById('view-btc').hidden = a !== 'btc';
+      document.querySelector('meta[name="theme-color"]').content = a === 'btc' ? '#060608' : '#0b0616';
+      document.title = (a === 'btc' ? 'Bitcoin' : 'Gold') + ' · SMC Radar';
+      try { localStorage.setItem('smc-asset', a); } catch (e) { /* private mode */ }
+      if (location.hash !== '#' + a) history.replaceState(null, '', '#' + a);
+      // a dashboard drawn while hidden needs a resize to size its charts
+      const f = document.getElementById('view-' + a);
+      try { f.contentWindow.dispatchEvent(new Event('resize')); } catch (e) { /* not loaded yet */ }
+    };
+    document.querySelectorAll('[data-asset][role="tab"]').forEach((b) => b.addEventListener('click', () => show(b.dataset.asset)));
+    window.addEventListener('hashchange', () => show(location.hash.slice(1)));
+    let start = location.hash.slice(1);
+    if (!start) { try { start = localStorage.getItem('smc-asset') || 'gold'; } catch (e) { start = 'gold'; } }
+    show(start);
+  })();
+</script>
 </body>
 </html>
 """
@@ -238,6 +322,7 @@ def main() -> None:
     (out / "manifest.webmanifest").write_text(MANIFEST)
     (out / "icon.svg").write_text(ICON)
     (out / "icon-btc.svg").write_text(ICON_BTC)
+    (out / "index.html").write_text(SHELL)
     (out / ".nojekyll").write_text("")
     print(f"site → {out}")
 

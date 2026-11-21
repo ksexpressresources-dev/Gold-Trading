@@ -73,8 +73,7 @@ One-time setup in GitHub:
    `TWELVEDATA_API_KEY` = your Twelve Data key (without it the scanner uses GC=F futures).
 
 ## Bitcoin (BTCUSD)
-The same two models run on Bitcoin (`python radar.py --asset BTC`, settings in `smc/instruments.py`), published at
-**https://ksexpressresources-dev.github.io/Gold-Trading/btc.html** with a bolder palette and glass tabs.
+The same two models run on Bitcoin (`python radar.py --asset BTC`, settings in `smc/instruments.py`), shown on the same site under the **Bitcoin** tab (or directly at `btc.html`) with a bolder palette and glass tabs.
 
 | BTC check (Yahoo BTC-USD) | Trades | Total R | Decision |
 |---|---|---|---|
@@ -85,3 +84,8 @@ The same two models run on Bitcoin (`python radar.py --asset BTC`, settings in `
 
 Success target on BTC = a **$150** move (about the same 0.27% as gold's 100 pips). Cost per scalp trade: $25.
 $ risk per 0.01 lot = stop distance × 0.01. Bitcoin trades 24/7, so the workflow now runs every 15 minutes every day.
+
+## One link for both markets
+**https://ksexpressresources-dev.github.io/Gold-Trading/** opens the combined page: a glass **Gold | Bitcoin** tab bar on top,
+with both dashboards kept loaded underneath so switching is instant. The last choice is remembered;
+`#gold` / `#btc` in the link opens a specific market. `gold.html` and `btc.html` still work on their own.
