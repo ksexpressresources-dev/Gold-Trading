@@ -3,9 +3,13 @@ name: SMC Radar website
 # Scans gold and bitcoin every 15 minutes and publishes both dashboards to GitHub Pages:
 #   https://ksexpressresources-dev.github.io/Gold-Trading/          (gold)
 #   https://ksexpressresources-dev.github.io/Gold-Trading/btc.html  (bitcoin)
+#
+# GitHub often starts scheduled runs late (about hourly when busy), so each run scans and
+# publishes four times, 15 minutes apart. The concurrency group queues the next run, so the
+# site keeps updating every quarter hour. A failed Pages deploy is retried once.
 on:
   schedule:
-    - cron: "*/15 * * * *"       # every day: bitcoin trades 24/7 (gold data simply stays put at weekends)
+    - cron: "*/15 * * * *"
   push:
     branches: [claude/funny-ritchie-qt1dqv]
   workflow_dispatch:
@@ -16,43 +20,138 @@ permissions:
   id-token: write
 
 concurrency:
-  group: gold-radar
+  group: smc-radar
   cancel-in-progress: false
 
 jobs:
   scan-and-publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 14
+    timeout-minutes: 70
     environment:
       name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      url: https://ksexpressresources-dev.github.io/Gold-Trading/
+    env:
+      # optional: spot XAU/USD from Twelve Data; without it the scanner falls back to GC=F futures
+      TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Install dependencies
         run: pip install pandas numpy requests
 
-      - name: Scan gold (XAUUSD)
-        env:
-          # optional: spot XAU/USD from Twelve Data; without it the scanner falls back to GC=F futures
-          TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
-        run: python radar.py --asset XAU || [ $? -eq 2 ] || echo "::warning::gold scan failed"
-
-      - name: Scan bitcoin (BTCUSD)
-        run: python radar.py --asset BTC || [ $? -eq 2 ] || echo "::warning::bitcoin scan failed"
-
-      - name: Build site
-        run: python tools/build_site.py --out _site
-
       - uses: actions/configure-pages@v5
 
-      - uses: actions/upload-pages-artifact@v3
+      # ---------------- round 1 ----------------
+      - name: "Round 1: scan gold and bitcoin, build site"
+        run: |
+          python radar.py --asset XAU || [ $? -eq 2 ] || echo "::warning::gold scan failed"
+          python radar.py --asset BTC || [ $? -eq 2 ] || echo "::warning::bitcoin scan failed"
+          rm -rf _site && python tools/build_site.py --out _site
+
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: _site
+          name: pages-1
 
-      - id: deploy
+      - id: deploy1
         uses: actions/deploy-pages@v4
+        continue-on-error: true
+        with:
+          artifact_name: pages-1
+
+      - name: "Round 1: wait before retrying the deploy"
+        if: steps.deploy1.outcome == 'failure'
+        run: sleep 20
+
+      - if: steps.deploy1.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: pages-1
+
+      # ---------------- round 2 ----------------
+      - name: "Round 2: scan gold and bitcoin, build site"
+        run: |
+          now=$(date +%s); next=$(( (now / 900 + 1) * 900 + 60 )); echo "waiting $((next - now))s for the next quarter hour"; sleep $((next - now))
+          python radar.py --asset XAU || [ $? -eq 2 ] || echo "::warning::gold scan failed"
+          python radar.py --asset BTC || [ $? -eq 2 ] || echo "::warning::bitcoin scan failed"
+          rm -rf _site && python tools/build_site.py --out _site
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+          name: pages-2
+
+      - id: deploy2
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+        with:
+          artifact_name: pages-2
+
+      - name: "Round 2: wait before retrying the deploy"
+        if: steps.deploy2.outcome == 'failure'
+        run: sleep 20
+
+      - if: steps.deploy2.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: pages-2
+
+      # ---------------- round 3 ----------------
+      - name: "Round 3: scan gold and bitcoin, build site"
+        run: |
+          now=$(date +%s); next=$(( (now / 900 + 1) * 900 + 60 )); echo "waiting $((next - now))s for the next quarter hour"; sleep $((next - now))
+          python radar.py --asset XAU || [ $? -eq 2 ] || echo "::warning::gold scan failed"
+          python radar.py --asset BTC || [ $? -eq 2 ] || echo "::warning::bitcoin scan failed"
+          rm -rf _site && python tools/build_site.py --out _site
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+          name: pages-3
+
+      - id: deploy3
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+        with:
+          artifact_name: pages-3
+
+      - name: "Round 3: wait before retrying the deploy"
+        if: steps.deploy3.outcome == 'failure'
+        run: sleep 20
+
+      - if: steps.deploy3.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: pages-3
+
+      # ---------------- round 4 ----------------
+      - name: "Round 4: scan gold and bitcoin, build site"
+        run: |
+          now=$(date +%s); next=$(( (now / 900 + 1) * 900 + 60 )); echo "waiting $((next - now))s for the next quarter hour"; sleep $((next - now))
+          python radar.py --asset XAU || [ $? -eq 2 ] || echo "::warning::gold scan failed"
+          python radar.py --asset BTC || [ $? -eq 2 ] || echo "::warning::bitcoin scan failed"
+          rm -rf _site && python tools/build_site.py --out _site
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+          name: pages-4
+
+      - id: deploy4
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+        with:
+          artifact_name: pages-4
+
+      - name: "Round 4: wait before retrying the deploy"
+        if: steps.deploy4.outcome == 'failure'
+        run: sleep 20
+
+      - if: steps.deploy4.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: pages-4

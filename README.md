@@ -62,7 +62,7 @@ Exit code `2` = a swing ENTRY TRIGGER or a fresh scalp ENTRY.
 > the same history they are tested on, so live results may be weaker. Not financial advice.
 
 ## Public website (GitHub Pages)
-`.github/workflows/radar.yml` runs `radar.py` for gold and bitcoin every 15 minutes,
+`.github/workflows/radar.yml` runs `radar.py` for gold and bitcoin every 15 minutes (four rounds per run, because GitHub often starts scheduled runs late),
 builds the site with `tools/build_site.py` (dashboard.html + `site/dash.js` runtime + `vendor/` libraries)
 and publishes it to **https://ksexpressresources-dev.github.io/Gold-Trading/**. The page refreshes itself every 5 minutes
 and can be installed on a phone with "Add to Home Screen".
